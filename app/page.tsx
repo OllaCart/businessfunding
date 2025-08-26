@@ -1,12 +1,43 @@
-"use client"
-
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Anchor, Shield, Fuel, Wrench, Star, ArrowRight } from "lucide-react"
 import { Suspense } from "react"
+import { createClient } from "@/lib/supabase/server"
+
+interface DockSlip {
+  id: string
+  slip_number: string
+  length_capacity: number
+  beam_capacity: number
+  slip_type: string
+  monthly_rate: number
+  is_available: boolean
+  description: string
+  amenities: string[]
+  has_water: boolean
+  has_electric: boolean
+  electric_amp: number
+  has_cable: boolean
+  has_wifi: boolean
+  has_pump_out: boolean
+}
+
+const getSlipTypeLabel = (type: string) => {
+  switch (type) {
+    case "premium":
+      return "Premium"
+    case "covered":
+      return "Covered"
+    case "uncovered":
+      return "Open"
+    default:
+      return type
+  }
+}
 
 function HeroVideoSkeleton() {
   return (
@@ -43,7 +74,17 @@ function HeroVideo() {
   )
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  
+  const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
+  
+  if (error) {
+    console.error("Error fetching slips:", error)
+  }
+  
+  const availableSlips = slips?.filter((slip) => slip.is_available) || []
+
   return (
     <div className="min-h-screen">
       <MarinaHeader />
@@ -154,7 +195,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Slips Section */}
+      {/* Available Slips Section */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -162,27 +203,63 @@ export default function HomePage() {
               Premium Dock Slips Available
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose from our selection of slips.
+              Browse our currently available slips with real-time availability and pricing.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          {/* Horizontally Scrollable Slips */}
+          <div className="mb-12">
+            <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
+              {availableSlips.map((slip) => (
+                <Card key={slip.id} className="min-w-[320px] max-w-[320px] overflow-hidden hover:shadow-xl transition-shadow flex-shrink-0">
+                  <div className="h-48 bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center relative">
+                    <Anchor className="h-16 w-16 text-primary" />
+                    <Badge className="absolute top-3 right-3 bg-green-600 text-white">
+                      Available
+                    </Badge>
+                  </div>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-serif font-semibold text-lg">Slip {slip.slip_number}</h3>
+                      <Badge variant="outline" className="text-xs">
+                        {getSlipTypeLabel(slip.slip_type)}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Capacity:</span>
+                        <span className="font-medium">{slip.length_capacity}' × {slip.beam_capacity}'</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Monthly Rate:</span>
+                        <span className="font-bold text-primary">${slip.monthly_rate.toLocaleString()}</span>
+                      </div>
+                    </div>
 
-            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
-                <Anchor className="h-16 w-16 text-secondary" />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="font-serif font-semibold text-xl mb-2">Open Slips</h3>
-                <p className="text-muted-foreground mb-4">
-                  Floating dock wet slips with essential amenities and easy access.
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">31-80 ft capacity</span>
-                </div>
-              </CardContent>
-            </Card>
+                    {slip.amenities && slip.amenities.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs text-muted-foreground mb-2">Amenities:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {slip.amenities.slice(0, 4).map((amenity: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {amenity}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
+                    <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90">
+                      <Link href="/slips">
+                        View Details
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
 
           <div className="text-center">
