@@ -1,30 +1,34 @@
-# 📧 Email Notification Setup
+# 📧 Email Notification Setup (Google Workspace)
 
 ## Overview
-The Marina By-The-Sea website now includes comprehensive email notifications for waitlist submissions. When someone joins the waitlist, emails are sent to:
+The Marina By-The-Sea website now includes comprehensive email notifications for waitlist submissions using Google Workspace (Gmail). When someone joins the waitlist, emails are sent to:
 1. **All admin users** - Notification of new submission
 2. **The submitter** - Confirmation and welcome message
 
 ## Setup Requirements
 
-### 1. Resend Account
-- Sign up at [resend.com](https://resend.com)
-- Get your API key from the dashboard
+### 1. Google Workspace Account
+- Ensure you have a Google Workspace account (or Gmail account)
+- Enable 2-Factor Authentication (required for app passwords)
 
-### 2. Environment Variables
+### 2. Generate App Password
+1. Go to [Google Account Security](https://myaccount.google.com/security)
+2. Enable 2-Step Verification if not already enabled
+3. Go to "App passwords" (under 2-Step Verification)
+4. Generate a new app password for "Mail"
+5. Copy the 16-character password
+
+### 3. Environment Variables
 Add these to your `.env.local` file:
 
 ```bash
-# Email Configuration (Resend)
-RESEND_API_KEY=your_resend_api_key_here
+# Email Configuration (Google Workspace)
+GMAIL_USER=your-email@gmail.com
+GMAIL_APP_PASSWORD=your_16_character_app_password
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://marinabts.vercel.app
 ```
-
-### 3. Domain Verification
-- Verify your domain with Resend
-- Update the `from` email in `lib/email.ts` to use your verified domain
 
 ## Features
 
@@ -48,7 +52,8 @@ NEXT_PUBLIC_SITE_URL=https://marinabts.vercel.app
 ## Technical Details
 
 ### Email Service
-- **Provider**: Resend (reliable, developer-friendly)
+- **Provider**: Google Workspace (Gmail) via SMTP
+- **Authentication**: App-specific passwords for security
 - **Fallback**: System continues working even if emails fail
 - **Logging**: All email attempts are logged for debugging
 
@@ -92,19 +97,21 @@ NEXT_PUBLIC_SITE_URL=https://marinabts.vercel.app
 ## Troubleshooting
 
 ### Common Issues
-1. **Emails not sending**: Check RESEND_API_KEY
-2. **Admin emails empty**: Verify admin_profiles table has emails
-3. **Domain issues**: Ensure domain is verified with Resend
-4. **Rate limits**: Resend has generous limits for most use cases
+1. **Emails not sending**: Check GMAIL_USER and GMAIL_APP_PASSWORD
+2. **Authentication errors**: Verify app password is correct and 2FA is enabled
+3. **Admin emails empty**: Verify admin_profiles table has emails
+4. **Rate limits**: Gmail has daily sending limits (500-2000 emails/day)
 
 ### Debug Steps
 1. Check console logs for error messages
-2. Verify environment variables are set
-3. Test Resend API key separately
-4. Check admin_profiles table structure
+2. Verify environment variables are set correctly
+3. Test Gmail credentials separately
+4. Ensure 2-Factor Authentication is enabled
+5. Check admin_profiles table structure
 
 ## Support
 For technical issues with the email system, check:
-- Resend documentation: [docs.resend.com](https://docs.resend.com)
+- Google Workspace documentation: [support.google.com](https://support.google.com)
+- Gmail SMTP settings: [support.google.com/mail/answer/7126229](https://support.google.com/mail/answer/7126229)
 - Console logs for detailed error messages
 - Database structure in `scripts/001_create_marina_tables.sql`
