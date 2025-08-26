@@ -95,10 +95,6 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-  let post = null
-  let relatedPosts = null
-  let error = null
-
   console.log("PostPage: Starting to fetch post with slug:", params.slug)
 
   try {
@@ -127,79 +123,70 @@ export default async function PostPage({ params }: PostPageProps) {
     })
 
     if (postError) {
-      error = postError
       console.error("PostPage: Post query error:", postError)
-    } else if (postData) {
-      post = postData
-      console.log("PostPage: Post found successfully:", post.id)
+      notFound()
+    }
 
-      // Get related posts based on tags only if post exists and has tags
-      if (post.tags && post.tags.length > 0) {
-        try {
-          console.log("PostPage: Fetching related posts for tags:", post.tags)
-          const { data: relatedData } = await supabase
-            .from("posts")
-            .select("id, title, slug, excerpt, featured_image_url, created_at, tags")
-            .neq("id", post.id)
-            .eq("is_published", true)
-            .overlaps("tags", post.tags)
-            .order("created_at", { ascending: false })
-            .limit(3)
+    if (!postData) {
+      console.log("PostPage: No post data returned for slug:", params.slug)
+      notFound()
+    }
 
-          relatedPosts = relatedData
-          console.log("PostPage: Related posts fetched:", relatedPosts?.length || 0)
-        } catch (relatedError) {
-          console.error("Error fetching related posts:", relatedError)
-          // Don't fail the main post if related posts fail
-        }
-      } else {
-        console.log("PostPage: No tags found for post, skipping related posts")
+    // At this point, postData is guaranteed to exist
+    const post = postData
+    console.log("PostPage: Post found successfully:", post.id)
+
+    // Get related posts based on tags only if post exists and has tags
+    let relatedPosts = null
+    if (post.tags && post.tags.length > 0) {
+      try {
+        console.log("PostPage: Fetching related posts for tags:", post.tags)
+        const { data: relatedData } = await supabase
+          .from("posts")
+          .select("id, title, slug, excerpt, featured_image_url, created_at, tags")
+          .neq("id", post.id)
+          .eq("is_published", true)
+          .overlaps("tags", post.tags)
+          .order("created_at", { ascending: false })
+          .limit(3)
+
+        relatedPosts = relatedData
+        console.log("PostPage: Related posts fetched:", relatedPosts?.length || 0)
+      } catch (relatedError) {
+        console.error("Error fetching related posts:", relatedError)
+        // Don't fail the main post if related posts fail
       }
     } else {
-      console.log("PostPage: No post data returned for slug:", params.slug)
+      console.log("PostPage: No tags found for post, skipping related posts")
     }
-  } catch (err) {
-    console.error("PostPage: Error creating Supabase client:", err)
-    error = err
-  }
 
-  // Check for errors or missing post early
-  if (error || !post) {
-    console.error("PostPage: Post not found or error occurred:", { 
-      error: error instanceof Error ? error.message : String(error), 
-      post: !!post, 
-      slug: params.slug 
-    })
-    notFound()
-  }
+    console.log("PostPage: Rendering post successfully:", post.title)
 
-  console.log("PostPage: Rendering post successfully:", post.title)
+    // At this point, post is guaranteed to exist
+    const formatDate = (dateString: string) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    }
 
-  // At this point, post is guaranteed to exist
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
+    const formatContent = (content: string) => {
+      // Simple content formatting - in a real app you might use a markdown parser
+      return content.split("\n").map((paragraph, index) => (
+        <p key={index} className="mb-4 leading-relaxed">
+          {paragraph}
+        </p>
+      ))
+    }
 
-  const formatContent = (content: string) => {
-    // Simple content formatting - in a real app you might use a markdown parser
-    return content.split("\n").map((paragraph, index) => (
-      <p key={index} className="mb-4 leading-relaxed">
-        {paragraph}
-      </p>
-    ))
-  }
+    const calculateReadingTime = (content: string) => {
+      const wordsPerMinute = 200
+      const words = content.trim().split(/\s+/).length
+      return Math.ceil(words / wordsPerMinute)
+    }
 
-  const calculateReadingTime = (content: string) => {
-    const wordsPerMinute = 200
-    const words = content.trim().split(/\s+/).length
-    return Math.ceil(words / wordsPerMinute)
-  }
-
-  const readingTime = post.reading_time || calculateReadingTime(post.content)
+    const readingTime = post.reading_time || calculateReadingTime(post.content)
 
   return (
     <div className="min-h-screen bg-background">
@@ -384,4 +371,8 @@ export default async function PostPage({ params }: PostPageProps) {
       <MarinaFooter />
     </div>
   )
+  } catch (error) {
+    console.error("PostPage: Unexpected error:", error)
+    notFound()
+  }
 }
