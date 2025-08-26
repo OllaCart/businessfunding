@@ -10,6 +10,21 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { createClient } from '@/lib/supabase/client'
 
+interface CurrentOccupant {
+  id: string
+  slip_id: string
+  full_name: string
+  email: string
+  phone: string
+  boat_name: string
+  boat_length: number
+  boat_beam: number
+  contract_start_date: string
+  contract_end_date: string
+  monthly_rate: number
+  notes: string
+}
+
 interface DockSlip {
   id: string
   slip_number: string
@@ -19,10 +34,7 @@ interface DockSlip {
   is_available: boolean
   show_price: boolean
   amenities: string[]
-  occupant_name?: string
-  occupant_email?: string
-  occupant_phone?: string
-  contract_end_date?: string
+  current_occupant_id?: string
 }
 
 interface WaitlistEntry {
@@ -38,7 +50,13 @@ interface WaitlistEntry {
   priority_order?: number
 }
 
-function PipelineView({ slips, waitlistEntries }: { slips: DockSlip[], waitlistEntries: WaitlistEntry[] }) {
+function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry }: { 
+  slips: DockSlip[], 
+  waitlistEntries: WaitlistEntry[],
+  currentOccupants: CurrentOccupant[],
+  onUpdateOccupant: (occupant: CurrentOccupant) => void,
+  onDuplicateEntry: (entry: WaitlistEntry, targetSlipId: string) => void
+}) {
   const [draggedEntry, setDraggedEntry] = useState<WaitlistEntry | null>(null)
   const [emailDialog, setEmailDialog] = useState<{
     isOpen: boolean
@@ -48,6 +66,24 @@ function PipelineView({ slips, waitlistEntries }: { slips: DockSlip[], waitlistE
     isOpen: false,
     entry: null,
     action: null
+  })
+
+  const [occupantEditDialog, setOccupantEditDialog] = useState<{
+    isOpen: boolean
+    occupant: CurrentOccupant | null
+  }>({
+    isOpen: false,
+    occupant: null
+  })
+
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    isOpen: boolean
+    entry: WaitlistEntry | null
+    targetSlipId: string | null
+  }>({
+    isOpen: false,
+    entry: null,
+    targetSlipId: null
   })
 
   const [emailContent, setEmailContent] = useState('')
@@ -62,11 +98,18 @@ function PipelineView({ slips, waitlistEntries }: { slips: DockSlip[], waitlistE
     
     if (!draggedEntry) return
 
-    // Here you would update the database to move the entry
-    // For now, we'll just log the action
-    console.log(`Moving entry ${draggedEntry.full_name} to ${targetSlipId || 'general'}`)
+    if (targetSlipId === 'duplicate') {
+      // Open duplicate dialog
+      setDuplicateDialog({
+        isOpen: true,
+        entry: draggedEntry,
+        targetSlipId: null
+      })
+    } else if (targetSlipId) {
+      // Move entry to specific slip
+      onDuplicateEntry(draggedEntry, targetSlipId)
+    }
     
-    // TODO: Implement database update
     setDraggedEntry(null)
   }
 
@@ -126,21 +169,8 @@ The Marina By-The-Sea Team`
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
   }
 
-  const getOccupiedEntries = () => {
-    return slips
-      .filter(slip => !slip.is_available)
-      .map(slip => ({
-        id: `occupied-${slip.id}`,
-        full_name: slip.occupant_name || 'Unknown',
-        email: slip.occupant_email || 'No email',
-        phone: slip.occupant_phone || 'No phone',
-        boat_length: 0,
-        selected_slips: [],
-        message: '',
-        status: 'converted' as const,
-        created_at: new Date().toISOString(),
-        contract_end_date: slip.contract_end_date
-      }))
+  const getOccupantForSlip = (slipId: string) => {
+    return currentOccupants.find(occupant => occupant.slip_id === slipId)
   }
 
   const getEntryStatusColor = (status: string) => {
@@ -153,7 +183,7 @@ The Marina By-The-Sea Team`
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Waitlist Pipeline</h1>
         <div className="text-sm text-gray-600">
@@ -162,12 +192,17 @@ The Marina By-The-Sea Team`
       </div>
 
       {/* Pipeline Rows */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* General Interest Row */}
-        <div className="border-2 border-dashed border-blue-200 rounded-lg p-4 bg-blue-50">
+        <div 
+          className="border-2 border-dashed border-blue-200 rounded-lg p-4 bg-blue-50 min-h-[200px]"
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, null)}
+        >
           <div className="text-center mb-4 text-blue-700">
             <h3 className="font-bold text-lg">General Interest</h3>
             <div className="text-sm">Any Available Slip</div>
+            <div className="text-xs text-blue-600 mt-1">Drag entries here to remove from specific slips</div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {getGeneralEntries().map((entry, index) => (
@@ -190,7 +225,7 @@ The Marina By-The-Sea Team`
                       {new Date(entry.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -198,6 +233,18 @@ The Marina By-The-Sea Team`
                       onClick={() => onSendEmail(entry, 'notify')}
                     >
                       📧 Status Update
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs"
+                      onClick={() => setDuplicateDialog({
+                        isOpen: true,
+                        entry,
+                        targetSlipId: null
+                      })}
+                    >
+                      📋 Duplicate to Slip
                     </Button>
                   </div>
                 </CardContent>
@@ -213,134 +260,124 @@ The Marina By-The-Sea Team`
         </div>
 
         {/* Slip Rows */}
-        {slips.map(slip => (
-          <div 
-            key={slip.id}
-            className={`border-2 border-dashed rounded-lg p-4 ${
-              slip.is_available 
-                ? 'border-green-200 bg-green-50' 
-                : 'border-red-200 bg-red-50'
-            }`}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, slip.id)}
-          >
-            <div className={`text-center mb-4 ${
-              slip.is_available ? 'text-green-700' : 'text-red-700'
-            }`}>
-              <h3 className="font-bold text-lg">Slip {slip.slip_number}</h3>
-              <div className="text-sm">
-                <div>{slip.length_capacity}' × {slip.beam_capacity}'</div>
-                <div className="font-medium">
-                  {slip.is_available ? 'Available' : 'Occupied'}
-                </div>
-                {slip.show_price && <div>${slip.monthly_rate}/month</div>}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {getEntriesForSlip(slip.id).map((entry, index) => (
-                <Card 
-                  key={entry.id} 
-                  className="cursor-move hover:shadow-md transition-shadow"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, entry)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="font-medium text-sm">{entry.full_name}</div>
-                      <Badge className={`text-xs ${getEntryStatusColor(entry.status)}`}>
-                        #{index + 1}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-gray-600 space-y-1">
-                      <div>{entry.email}</div>
-                      {entry.phone && <div>{entry.phone}</div>}
-                      <div>{entry.boat_length}' boat</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(entry.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="mt-3 space-y-2">
-                      {slip.is_available && index === 0 && (
-                        <Button
-                          size="sm"
-                          className="w-full text-xs bg-green-600 hover:bg-green-700"
-                          onClick={() => onSendEmail(entry, 'call')}
-                        >
-                          🚀 Email First in Line
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full text-xs"
-                        onClick={() => onSendEmail(entry, 'notify')}
-                      >
-                        📧 Status Update
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {getEntriesForSlip(slip.id).length === 0 && (
-                <div className="text-center text-gray-500 py-8 col-span-full">
-                  <div className="text-2xl mb-2">📭</div>
-                  <div className="text-sm">No entries for this slip</div>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {/* Currently Occupied Row */}
-        <div className="border-2 border-dashed border-red-200 rounded-lg p-4 bg-red-50">
-          <div className="text-center mb-4 text-red-700">
-            <h3 className="font-bold text-lg">Currently Occupied</h3>
-            <div className="text-sm">Contract Active</div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {getOccupiedEntries().map((entry, index) => (
-              <Card 
-                key={entry.id} 
-                className="cursor-move hover:shadow-md transition-shadow"
-                draggable
-                onDragStart={(e) => handleDragStart(e, entry)}
-              >
-                <CardContent className="p-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="font-medium text-sm">{entry.full_name}</div>
-                    <Badge className="text-xs bg-red-100 text-red-800">Occupied</Badge>
+        {slips.map(slip => {
+          const occupant = getOccupantForSlip(slip.id)
+          return (
+            <div 
+              key={slip.id}
+              className={`border-2 border-dashed rounded-lg p-4 min-h-[200px] ${
+                slip.is_available 
+                  ? 'border-green-200 bg-green-50' 
+                  : 'border-red-200 bg-red-50'
+              }`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, slip.id)}
+            >
+              <div className={`text-center mb-4 ${
+                slip.is_available ? 'text-green-700' : 'text-red-700'
+              }`}>
+                <h3 className="font-bold text-lg">Slip {slip.slip_number}</h3>
+                <div className="text-sm">
+                  <div>{slip.length_capacity}' × {slip.beam_capacity}'</div>
+                  <div className="font-medium">
+                    {slip.is_available ? 'Available' : 'Occupied'}
                   </div>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    <div>{entry.email}</div>
-                    {entry.phone && <div>{entry.phone}</div>}
-                    {entry.contract_end_date && (
-                      <div className="text-red-600 font-medium">
-                        Contract: {new Date(entry.contract_end_date).toLocaleDateString()}
+                  {slip.show_price && <div>${slip.monthly_rate}/month</div>}
+                </div>
+                
+                {/* Show current occupant if slip is occupied */}
+                {!slip.is_available && occupant && (
+                  <div className="mt-2 p-2 bg-white rounded border">
+                    <div className="text-xs font-medium text-red-700">Current Occupant</div>
+                    <div className="text-xs">{occupant.full_name}</div>
+                    <div className="text-xs">{occupant.boat_name}</div>
+                    {occupant.contract_end_date && (
+                      <div className="text-xs text-red-600">
+                        Contract: {new Date(occupant.contract_end_date).toLocaleDateString()}
                       </div>
                     )}
-                  </div>
-                  <div className="mt-3">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="w-full text-xs"
-                      onClick={() => onSendEmail(entry, 'notify')}
+                      className="w-full text-xs mt-2"
+                      onClick={() => setOccupantEditDialog({
+                        isOpen: true,
+                        occupant
+                      })}
                     >
-                      📧 Contact Occupant
+                      ✏️ Edit Occupant
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-            {getOccupiedEntries().length === 0 && (
-              <div className="text-center text-gray-500 py-8 col-span-full">
-                <div className="text-2xl mb-2">📭</div>
-                <div className="text-sm">No occupied slips</div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {getEntriesForSlip(slip.id).map((entry, index) => (
+                  <Card 
+                    key={entry.id} 
+                    className="cursor-move hover:shadow-md transition-shadow"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, entry)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-medium text-sm">{entry.full_name}</div>
+                        <Badge className={`text-xs ${getEntryStatusColor(entry.status)}`}>
+                          #{index + 1}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-600 space-y-1">
+                        <div>{entry.email}</div>
+                        {entry.phone && <div>{entry.phone}</div>}
+                        <div>{entry.boat_length}' boat</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(entry.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {slip.is_available && index === 0 && (
+                          <Button
+                            size="sm"
+                            className="w-full text-xs bg-green-600 hover:bg-green-700"
+                            onClick={() => onSendEmail(entry, 'call')}
+                          >
+                            🚀 Email First in Line
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => onSendEmail(entry, 'notify')}
+                        >
+                          📧 Status Update
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => setDuplicateDialog({
+                            isOpen: true,
+                            entry,
+                            targetSlipId: null
+                          })}
+                        >
+                          📋 Duplicate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {getEntriesForSlip(slip.id).length === 0 && (
+                  <div className="text-center text-gray-500 py-8 col-span-full">
+                    <div className="text-2xl mb-2">📭</div>
+                    <div className="text-sm">No entries for this slip</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Email Dialog */}
@@ -427,13 +464,213 @@ The Marina By-The-Sea Team`
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Occupant Edit Dialog */}
+      <Dialog open={occupantEditDialog.isOpen} onOpenChange={(open) => 
+        setOccupantEditDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Current Occupant</DialogTitle>
+          </DialogHeader>
+          
+          {occupantEditDialog.occupant && (
+            <OccupantEditForm 
+              occupant={occupantEditDialog.occupant}
+              onSave={(updatedOccupant) => {
+                onUpdateOccupant(updatedOccupant)
+                setOccupantEditDialog({ isOpen: false, occupant: null })
+              }}
+              onCancel={() => setOccupantEditDialog({ isOpen: false, occupant: null })}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Entry Dialog */}
+      <Dialog open={duplicateDialog.isOpen} onOpenChange={(open) => 
+        setDuplicateDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Duplicate Entry to Slip</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="target-slip">Select Target Slip:</Label>
+              <select 
+                id="target-slip"
+                className="w-full p-2 border rounded"
+                onChange={(e) => setDuplicateDialog(prev => ({ ...prev, targetSlipId: e.target.value }))}
+              >
+                <option value="">Choose a slip...</option>
+                {slips.map(slip => (
+                  <option key={slip.id} value={slip.id}>
+                    Slip {slip.slip_number} ({slip.length_capacity}' × {slip.beam_capacity}')
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setDuplicateDialog({ isOpen: false, entry: null, targetSlipId: null })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                disabled={!duplicateDialog.targetSlipId}
+                onClick={() => {
+                  if (duplicateDialog.entry && duplicateDialog.targetSlipId) {
+                    onDuplicateEntry(duplicateDialog.entry, duplicateDialog.targetSlipId)
+                    setDuplicateDialog({ isOpen: false, entry: null, targetSlipId: null })
+                  }
+                }}
+              >
+                Duplicate
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+  )
+}
+
+function OccupantEditForm({ occupant, onSave, onCancel }: {
+  occupant: CurrentOccupant
+  onSave: (occupant: CurrentOccupant) => void
+  onCancel: () => void
+}) {
+  const [formData, setFormData] = useState(occupant)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(formData)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="full-name">Full Name</Label>
+          <Input
+            id="full-name"
+            value={formData.full_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="phone">Phone</Label>
+          <Input
+            id="phone"
+            value={formData.phone || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="boat-name">Boat Name</Label>
+          <Input
+            id="boat-name"
+            value={formData.boat_name || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, boat_name: e.target.value }))}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="boat-length">Boat Length (ft)</Label>
+          <Input
+            id="boat-length"
+            type="number"
+            value={formData.boat_length || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, boat_length: parseInt(e.target.value) || 0 }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="boat-beam">Boat Beam (ft)</Label>
+          <Input
+            id="boat-beam"
+            type="number"
+            value={formData.boat_beam || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, boat_beam: parseInt(e.target.value) || 0 }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="monthly-rate">Monthly Rate</Label>
+          <Input
+            id="monthly-rate"
+            type="number"
+            step="0.01"
+            value={formData.monthly_rate || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, monthly_rate: parseFloat(e.target.value) || 0 }))}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="contract-start">Contract Start</Label>
+          <Input
+            id="contract-start"
+            type="date"
+            value={formData.contract_start_date || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, contract_start_date: e.target.value }))}
+          />
+        </div>
+        <div>
+          <Label htmlFor="contract-end">Contract End</Label>
+          <Input
+            id="contract-end"
+            type="date"
+            value={formData.contract_end_date || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, contract_end_date: e.target.value }))}
+          />
+        </div>
+      </div>
+      
+      <div>
+        <Label htmlFor="notes">Notes</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+          rows={3}
+        />
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          Save Changes
+        </Button>
+      </div>
+    </form>
   )
 }
 
 export default function AdminWaitlistPage() {
   const [slips, setSlips] = useState<DockSlip[]>([])
   const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([])
+  const [currentOccupants, setCurrentOccupants] = useState<CurrentOccupant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -490,6 +727,13 @@ export default function AdminWaitlistPage() {
           .order('created_at', { ascending: false })
         
         if (waitlistError) throw waitlistError
+
+        // Fetch current occupants
+        const { data: occupantsData, error: occupantsError } = await supabase
+          .from('current_occupants')
+          .select('*')
+        
+        if (occupantsError) throw occupantsError
         
         // Validate and clean waitlist data
         const validatedWaitlistData = (waitlistData || []).map(entry => ({
@@ -501,9 +745,11 @@ export default function AdminWaitlistPage() {
         
         console.log('Raw waitlist data:', waitlistData)
         console.log('Validated waitlist data:', validatedWaitlistData)
+        console.log('Current occupants:', occupantsData)
         
         setSlips(slipsData || [])
         setWaitlistEntries(validatedWaitlistData)
+        setCurrentOccupants(occupantsData || [])
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again.')
@@ -514,6 +760,72 @@ export default function AdminWaitlistPage() {
 
     checkAuthAndFetchData()
   }, [])
+
+  const handleUpdateOccupant = async (updatedOccupant: CurrentOccupant) => {
+    try {
+      const supabase = createClient()
+      
+      const { error } = await supabase
+        .from('current_occupants')
+        .update(updatedOccupant)
+        .eq('id', updatedOccupant.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setCurrentOccupants(prev => 
+        prev.map(occupant => 
+          occupant.id === updatedOccupant.id ? updatedOccupant : occupant
+        )
+      )
+      
+      alert('Occupant information updated successfully!')
+    } catch (error) {
+      console.error('Error updating occupant:', error)
+      alert('Failed to update occupant information')
+    }
+  }
+
+  const handleDuplicateEntry = async (entry: WaitlistEntry, targetSlipId: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Create a new entry with the target slip
+      const newEntry = {
+        ...entry,
+        id: undefined, // Let Supabase generate new ID
+        selected_slips: [targetSlipId],
+        created_at: new Date().toISOString()
+      }
+      
+      const { error } = await supabase
+        .from('waitlist')
+        .insert(newEntry)
+      
+      if (error) throw error
+      
+      // Refresh data
+      const { data: waitlistData, error: waitlistError } = await supabase
+        .from('waitlist')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (waitlistError) throw waitlistError
+      
+      const validatedWaitlistData = (waitlistData || []).map(entry => ({
+        ...entry,
+        selected_slips: Array.isArray(entry.selected_slips) ? entry.selected_slips : [],
+        boat_length: entry.boat_length || 0,
+        status: entry.status || 'pending'
+      }))
+      
+      setWaitlistEntries(validatedWaitlistData)
+      alert('Entry duplicated successfully!')
+    } catch (error) {
+      console.error('Error duplicating entry:', error)
+      alert('Failed to duplicate entry')
+    }
+  }
 
   if (loading) {
     return (
@@ -559,7 +871,13 @@ export default function AdminWaitlistPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <PipelineView slips={slips} waitlistEntries={waitlistEntries} />
+      <PipelineView 
+        slips={slips} 
+        waitlistEntries={waitlistEntries}
+        currentOccupants={currentOccupants}
+        onUpdateOccupant={handleUpdateOccupant}
+        onDuplicateEntry={handleDuplicateEntry}
+      />
     </div>
   )
 }

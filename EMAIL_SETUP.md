@@ -23,8 +23,9 @@ Add these to your `.env.local` file:
 
 ```bash
 # Email Configuration (Google Workspace)
-GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASSWORD=your_16_character_app_password
+GMAIL_USER=info@marinabts.com
+GMAIL_APP_PASSWORD=hanb xvhh nygl fbcm
+
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://marinabts.vercel.app
