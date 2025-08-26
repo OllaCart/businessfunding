@@ -13,8 +13,8 @@ export function MarinaFooter() {
               <span className="font-serif font-bold text-xl">Marina By-The-Sea</span>
             </Link>
             <p className="text-sidebar-foreground/80 mb-4 max-w-md">
-              Experience luxury on the water with our premium floating dock slips in Lauderdale By-The-Sea, protected harbor, and exceptional
-              location. Your vessel deserves the finest waterfront experience.
+              Experience life on the water in Lauderdale By-The-Sea with our premium floating dock slips, protected harbor, and exceptional
+              location.
             </p>
           </div>
 
