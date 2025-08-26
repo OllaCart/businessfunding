@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-
 import { createClient } from '@/lib/supabase/client'
 
 interface DockSlip {
@@ -20,6 +19,10 @@ interface DockSlip {
   is_available: boolean
   show_price: boolean
   amenities: string[]
+  occupant_name?: string
+  occupant_email?: string
+  occupant_phone?: string
+  contract_end_date?: string
 }
 
 interface WaitlistEntry {
@@ -32,48 +35,62 @@ interface WaitlistEntry {
   message: string
   status: 'pending' | 'contacted' | 'converted'
   created_at: string
+  priority_order?: number
 }
 
-interface PipelineViewProps {
-  slips: DockSlip[]
-  waitlistEntries: WaitlistEntry[]
+interface ColumnProps {
+  title: string
+  entries: WaitlistEntry[]
+  slip?: DockSlip
+  onSendEmail: (entry: WaitlistEntry, action: 'notify' | 'call') => void
+  onDragOver: (e: React.DragEvent) => void
+  onDrop: (e: React.DragEvent) => void
+  isGeneral?: boolean
+  isOccupied?: boolean
 }
 
-function PipelineView({ slips, waitlistEntries }: PipelineViewProps) {
+function WaitlistColumn({ title, entries, slip, onSendEmail, onDragOver, onDrop, isGeneral, isOccupied }: ColumnProps) {
   const [emailDialog, setEmailDialog] = useState<{
     isOpen: boolean
     entry: WaitlistEntry | null
-    slip: DockSlip | null
     action: 'notify' | 'call' | null
   }>({
     isOpen: false,
     entry: null,
-    slip: null,
     action: null
   })
 
   const [emailContent, setEmailContent] = useState('')
   const [emailSubject, setEmailSubject] = useState('')
 
-  const openEmailDialog = (entry: WaitlistEntry, slip: DockSlip, action: 'notify' | 'call') => {
+  const getEntryStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'contacted': return 'bg-blue-100 text-blue-800'
+      case 'converted': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const openEmailDialog = (entry: WaitlistEntry, action: 'notify' | 'call') => {
     let subject = ''
     let content = ''
 
     if (action === 'notify') {
-      subject = `Slip ${slip.slip_number} Status Update - Marina By-The-Sea`
+      subject = `Slip ${slip?.slip_number || 'General'} Status Update - Marina By-The-Sea`
       content = `Dear ${entry.full_name},
 
-We wanted to update you on the status of Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}').
+We wanted to update you on the status of ${slip ? `Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}')` : 'available slips'}.
 
 [Your status update message here]
 
 Best regards,
 The Marina By-The-Sea Team`
     } else if (action === 'call') {
-      subject = `Slip ${slip.slip_number} Available - Marina By-The-Sea`
+      subject = `Slip ${slip?.slip_number || 'General'} Available - Marina By-The-Sea`
       content = `Dear ${entry.full_name},
 
-Great news! Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}') has become available.
+Great news! ${slip ? `Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}')` : 'A slip matching your requirements'} has become available.
 
 Please call us at (954) 790-1588 to discuss this opportunity and arrange a viewing.
 
@@ -86,13 +103,12 @@ The Marina By-The-Sea Team`
     setEmailDialog({
       isOpen: true,
       entry,
-      slip,
       action
     })
   }
 
   const sendEmail = async () => {
-    if (!emailDialog.entry || !emailDialog.slip) return
+    if (!emailDialog.entry) return
 
     try {
       const response = await fetch('/api/send-admin-email', {
@@ -105,14 +121,14 @@ The Marina By-The-Sea Team`
           subject: emailSubject,
           content: emailContent,
           entryId: emailDialog.entry.id,
-          slipId: emailDialog.slip.id,
+          slipId: slip?.id || null,
           action: emailDialog.action
         })
       })
 
       if (response.ok) {
         alert('Email sent successfully!')
-        setEmailDialog({ isOpen: false, entry: null, slip: null, action: null })
+        setEmailDialog({ isOpen: false, entry: null, action: null })
       } else {
         alert('Failed to send email')
       }
@@ -122,110 +138,110 @@ The Marina By-The-Sea Team`
     }
   }
 
-  const getWaitlistEntriesForSlip = (slipId: string) => {
-    return waitlistEntries.filter(entry => 
-      entry.selected_slips && Array.isArray(entry.selected_slips) && entry.selected_slips.includes(slipId)
-    )
+  const handleDragStart = (e: React.DragEvent, entry: WaitlistEntry) => {
+    e.dataTransfer.setData('text/plain', JSON.stringify(entry))
   }
 
-  const getSlipStatusColor = (slip: DockSlip) => {
-    return slip.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+  const getColumnColor = () => {
+    if (isGeneral) return 'bg-blue-50 border-blue-200'
+    if (isOccupied) return 'bg-red-50 border-red-200'
+    if (slip?.is_available) return 'bg-green-50 border-green-200'
+    return 'bg-gray-50 border-gray-200'
   }
 
-  const getEntryStatusColor = (entry: WaitlistEntry) => {
-    switch (entry.status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800'
-      case 'contacted': return 'bg-blue-100 text-blue-800'
-      case 'converted': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
+  const getColumnTitleColor = () => {
+    if (isGeneral) return 'text-blue-700'
+    if (isOccupied) return 'text-red-700'
+    if (slip?.is_available) return 'text-green-700'
+    return 'text-gray-700'
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Waitlist Pipeline</h1>
-        <div className="text-sm text-gray-600">
-          {waitlistEntries.length} entries • {slips.length} slips
-        </div>
+    <div 
+      className={`min-h-screen border-2 border-dashed rounded-lg p-4 ${getColumnColor()}`}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+    >
+      <div className={`text-center mb-4 ${getColumnTitleColor()}`}>
+        <h3 className="font-bold text-lg">{title}</h3>
+        {slip && (
+          <div className="text-sm">
+            <div>{slip.length_capacity}' × {slip.beam_capacity}'</div>
+            <div className="font-medium">
+              {slip.is_available ? 'Available' : 'Occupied'}
+            </div>
+            {slip.show_price && <div>${slip.monthly_rate}/month</div>}
+          </div>
+        )}
+        {isGeneral && (
+          <div className="text-sm">
+            <div>Any Available Slip</div>
+            <div className="font-medium">General Interest</div>
+          </div>
+        )}
+        {isOccupied && (
+          <div className="text-sm">
+            <div>Currently Occupied</div>
+            <div className="font-medium">Contract Active</div>
+          </div>
+        )}
       </div>
 
-      {/* Pipeline Grid */}
-      <div className="grid gap-4" style={{ 
-        gridTemplateColumns: `200px repeat(${slips.length}, 1fr)` 
-      }}>
-        {/* Header Row */}
-        <div className="font-semibold text-gray-700 p-2">Waitlist Entries</div>
-        {slips.map(slip => (
-          <div key={slip.id} className="text-center font-semibold text-gray-700 p-2">
-            <div className="text-lg">Slip {slip.slip_number}</div>
-            <div className="text-sm text-gray-500">
-              {slip.length_capacity}' × {slip.beam_capacity}'
-            </div>
-            <Badge className={`mt-1 ${getSlipStatusColor(slip)}`}>
-              {slip.is_available ? 'Available' : 'Occupied'}
-            </Badge>
-          </div>
-        ))}
-
-        {/* Waitlist Entries Rows */}
-        {waitlistEntries.map(entry => (
-          <div key={entry.id} className="contents">
-            {/* Entry Name */}
-            <div className="p-3 border-r border-gray-200 bg-gray-50">
-              <div className="font-medium">{entry.full_name}</div>
-              <div className="text-sm text-gray-600">{entry.email}</div>
-              <div className="text-xs text-gray-500">
-                {entry.boat_length}' boat • {entry.status}
+      <div className="space-y-3">
+        {entries.map((entry, index) => (
+          <Card 
+            key={entry.id} 
+            className="cursor-move hover:shadow-md transition-shadow"
+            draggable
+            onDragStart={(e) => handleDragStart(e, entry)}
+          >
+            <CardContent className="p-3">
+              <div className="flex justify-between items-start mb-2">
+                <div className="font-medium text-sm">{entry.full_name}</div>
+                <Badge className={`text-xs ${getEntryStatusColor(entry.status)}`}>
+                  #{index + 1}
+                </Badge>
               </div>
-              <Badge className={`mt-1 ${getEntryStatusColor(entry)}`}>
-                {entry.status}
-              </Badge>
-            </div>
-
-            {/* Slip Columns */}
-            {slips.map(slip => {
-              const isInterested = entry.selected_slips && Array.isArray(entry.selected_slips) && entry.selected_slips.includes(slip.id)
-              const isAvailable = slip.is_available
               
-              return (
-                <div key={`${entry.id}-${slip.id}`} className="p-2 border-b border-gray-200">
-                  {isInterested ? (
-                    <div className="space-y-2">
-                      <div className="text-xs text-center p-1 bg-blue-50 text-blue-700 rounded">
-                        Interested
-                      </div>
-                      
-                      {isAvailable ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full text-xs"
-                          onClick={() => openEmailDialog(entry, slip, 'call')}
-                        >
-                          📞 Call to Discuss
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full text-xs"
-                          onClick={() => openEmailDialog(entry, slip, 'notify')}
-                        >
-                          📧 Status Update
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-400 text-center p-2">
-                      -
-                    </div>
-                  )}
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>{entry.email}</div>
+                {entry.phone && <div>{entry.phone}</div>}
+                <div>{entry.boat_length}' boat</div>
+                <div className="text-xs text-gray-500">
+                  {new Date(entry.created_at).toLocaleDateString()}
                 </div>
-              )
-            })}
-          </div>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {slip?.is_available && index === 0 && (
+                  <Button
+                    size="sm"
+                    className="w-full text-xs bg-green-600 hover:bg-green-700"
+                    onClick={() => openEmailDialog(entry, 'call')}
+                  >
+                    🚀 Email First in Line
+                  </Button>
+                )}
+                
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full text-xs"
+                  onClick={() => openEmailDialog(entry, 'notify')}
+                >
+                  📧 Status Update
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
+
+        {entries.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            <div className="text-2xl mb-2">📭</div>
+            <div className="text-sm">No entries</div>
+          </div>
+        )}
       </div>
 
       {/* Email Dialog */}
@@ -272,7 +288,7 @@ The Marina By-The-Sea Team`
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
-                onClick={() => setEmailDialog({ isOpen: false, entry: null, slip: null, action: null })}
+                onClick={() => setEmailDialog({ isOpen: false, entry: null, action: null })}
               >
                 Cancel
               </Button>
@@ -287,6 +303,116 @@ The Marina By-The-Sea Team`
   )
 }
 
+function PipelineView({ slips, waitlistEntries }: { slips: DockSlip[], waitlistEntries: WaitlistEntry[] }) {
+  const [draggedEntry, setDraggedEntry] = useState<WaitlistEntry | null>(null)
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
+  const handleDrop = (e: React.DragEvent, targetSlipId: string | null) => {
+    e.preventDefault()
+    
+    if (!draggedEntry) return
+
+    // Here you would update the database to move the entry
+    // For now, we'll just log the action
+    console.log(`Moving entry ${draggedEntry.full_name} to ${targetSlipId || 'general'}`)
+    
+    // TODO: Implement database update
+    setDraggedEntry(null)
+  }
+
+  const getEntriesForSlip = (slipId: string) => {
+    return waitlistEntries
+      .filter(entry => 
+        entry.selected_slips && Array.isArray(entry.selected_slips) && entry.selected_slips.includes(slipId)
+      )
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  }
+
+  const getGeneralEntries = () => {
+    return waitlistEntries
+      .filter(entry => 
+        !entry.selected_slips || !Array.isArray(entry.selected_slips) || entry.selected_slips.length === 0
+      )
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  }
+
+  const getOccupiedEntries = () => {
+    return slips
+      .filter(slip => !slip.is_available)
+      .map(slip => ({
+        id: `occupied-${slip.id}`,
+        full_name: slip.occupant_name || 'Unknown',
+        email: slip.occupant_email || 'No email',
+        phone: slip.occupant_phone || 'No phone',
+        boat_length: 0,
+        selected_slips: [],
+        message: '',
+        status: 'converted' as const,
+        created_at: new Date().toISOString(),
+        contract_end_date: slip.contract_end_date
+      }))
+  }
+
+  const getEntryStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'contacted': return 'bg-blue-100 text-blue-800'
+      case 'converted': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Waitlist Pipeline</h1>
+        <div className="text-sm text-gray-600">
+          {waitlistEntries.length} entries • {slips.length} slips
+        </div>
+      </div>
+
+      {/* Pipeline Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        {/* General Column */}
+        <WaitlistColumn
+          title="General Interest"
+          entries={getGeneralEntries()}
+          onSendEmail={(entry, action) => console.log('Send email to general entry:', entry, action)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, null)}
+          isGeneral={true}
+        />
+
+        {/* Slip Columns */}
+        {slips.map(slip => (
+          <WaitlistColumn
+            key={slip.id}
+            title={`Slip ${slip.slip_number}`}
+            entries={getEntriesForSlip(slip.id)}
+            slip={slip}
+            onSendEmail={(entry, action) => console.log('Send email to slip entry:', entry, action)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, slip.id)}
+          />
+        ))}
+
+        {/* Occupied Column */}
+        <WaitlistColumn
+          title="Currently Occupied"
+          entries={getOccupiedEntries()}
+          onSendEmail={(entry, action) => console.log('Send email to occupied entry:', entry, action)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, 'occupied')}
+          isOccupied={true}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function AdminWaitlistPage() {
   const [slips, setSlips] = useState<DockSlip[]>([])
   const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([])
@@ -297,8 +423,6 @@ export default function AdminWaitlistPage() {
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
       try {
-
-
         let supabase
         try {
           supabase = createClient()
