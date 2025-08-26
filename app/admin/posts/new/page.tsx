@@ -11,9 +11,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { ArrowLeft, Save, Eye, EyeOff, Tag, Clock, Link as LinkIcon } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import Image from "next/image"
 
 export default function NewPostPage() {
   const router = useRouter()
@@ -236,15 +238,12 @@ export default function NewPostPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="featured_image_url">Featured Image URL</Label>
-              <Input
-                id="featured_image_url"
-                value={formData.featured_image_url}
-                onChange={(e) => handleInputChange("featured_image_url", e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+            <ImageUpload
+              value={formData.featured_image_url}
+              onChange={(value) => handleInputChange("featured_image_url", value)}
+              label="Featured Image"
+              placeholder="Upload an image or enter URL"
+            />
           </CardContent>
         </Card>
 
@@ -508,6 +507,18 @@ export default function NewPostPage() {
           <CardContent>
             <div className="prose max-w-none">
               <h1 className="text-3xl font-bold mb-4">{formData.title || "Post Title"}</h1>
+              
+              {formData.featured_image_url && (
+                <div className="relative w-full h-64 mb-6 rounded-lg overflow-hidden">
+                  <Image
+                    src={formData.featured_image_url}
+                    alt="Featured image preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              
               {formData.excerpt && (
                 <p className="text-lg text-muted-foreground mb-6 italic">{formData.excerpt}</p>
               )}

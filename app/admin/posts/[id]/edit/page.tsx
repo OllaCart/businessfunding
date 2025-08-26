@@ -10,9 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { ImageUpload } from "@/components/ui/image-upload"
 import { ArrowLeft, Save, Eye, EyeOff, Tag, Link as LinkIcon, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import Image from "next/image"
 
 interface Post {
   id: string
@@ -312,15 +314,12 @@ export default function EditPostPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="featured_image_url">Featured Image URL</Label>
-              <Input
-                id="featured_image_url"
-                value={formData.featured_image_url || ""}
-                onChange={(e) => handleInputChange("featured_image_url", e.target.value)}
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+            <ImageUpload
+              value={formData.featured_image_url || ""}
+              onChange={(value) => handleInputChange("featured_image_url", value)}
+              label="Featured Image"
+              placeholder="Upload an image or enter URL"
+            />
           </CardContent>
         </Card>
 
@@ -597,6 +596,16 @@ export default function EditPostPage() {
                   {formData.tags.map((tag, index) => (
                     <Badge key={index} variant="outline">{tag}</Badge>
                   ))}
+                </div>
+              )}
+              {formData.featured_image_url && (
+                <div className="relative w-full h-64 mb-6 rounded-lg overflow-hidden">
+                  <Image
+                    src={formData.featured_image_url}
+                    alt={formData.title || "Featured Image"}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
               )}
               <div className="whitespace-pre-wrap">{formData.content || "Post content will appear here..."}</div>
