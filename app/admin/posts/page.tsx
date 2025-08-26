@@ -71,6 +71,11 @@ export default async function AdminPostsPage() {
                       <Badge variant={post.is_published ? "default" : "secondary"}>
                         {post.is_published ? "Published" : "Draft"}
                       </Badge>
+                      {post.slug && (
+                        <Badge variant="outline" className="text-xs">
+                          /{post.slug}
+                        </Badge>
+                      )}
                     </div>
 
                     {post.excerpt && <p className="text-muted-foreground mb-3 line-clamp-2">{post.excerpt}</p>}

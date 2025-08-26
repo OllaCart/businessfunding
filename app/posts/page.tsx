@@ -117,9 +117,18 @@ export default async function PostsPage() {
                           )}
                         </div>
                         <CardTitle className="font-serif text-2xl lg:text-3xl mb-4">{posts[0].title}</CardTitle>
+                        {posts[0].tags && posts[0].tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {posts[0].tags.map((tag, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                         <p className="text-muted-foreground mb-6 leading-relaxed">{getExcerpt(posts[0])}</p>
                         <Button asChild className="w-fit bg-primary hover:bg-primary/90">
-                          <Link href={`/posts/${posts[0].id}`}>
+                          <Link href={`/posts/${posts[0].slug || posts[0].id}`}>
                             Read Full Update
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
@@ -169,9 +178,18 @@ export default async function PostsPage() {
                           <CardTitle className="font-serif text-lg leading-tight">{post.title}</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {post.tags.slice(0, 3).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                           <p className="text-muted-foreground text-sm mb-4 leading-relaxed">{getExcerpt(post)}</p>
                           <Button asChild variant="outline" size="sm" className="w-full bg-transparent">
-                            <Link href={`/posts/${post.id}`}>Read More</Link>
+                            <Link href={`/posts/${post.slug || post.id}`}>Read More</Link>
                           </Button>
                         </CardContent>
                       </Card>
