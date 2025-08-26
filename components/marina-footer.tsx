@@ -89,7 +89,7 @@ export function MarinaFooter() {
         </div>
 
         <div className="border-t border-sidebar-border mt-8 pt-8 text-center">
-          <p className="text-sidebar-foreground/60 text-sm">© 2024 Marina By-The-Sea. All rights reserved.</p>
+          <p className="text-sidebar-foreground/60 text-sm">© 2025 Marina By-The-Sea. All rights reserved.</p>
         </div>
       </div>
     </footer>
