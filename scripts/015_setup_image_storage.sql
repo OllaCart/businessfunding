@@ -2,9 +2,15 @@
 -- This script creates the storage policies for the marina-assets bucket
 -- Note: Storage buckets are created through the Supabase dashboard
 
+-- Drop existing policies if they exist to avoid conflicts
+DROP POLICY IF EXISTS "Allow authenticated users to upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public read access to images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to update images" ON storage.objects;
+DROP POLICY IF EXISTS "Allow authenticated users to delete images" ON storage.objects;
+
 -- Create policy to allow authenticated users to upload images
 -- This policy allows any authenticated user to upload to the marina-assets bucket
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to upload images" ON storage.objects
+CREATE POLICY "Allow authenticated users to upload images" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'marina-assets' AND 
   auth.role() = 'authenticated'
@@ -12,14 +18,14 @@ FOR INSERT WITH CHECK (
 
 -- Create policy to allow public read access to images
 -- This policy allows anyone to view images in the marina-assets bucket
-CREATE POLICY IF NOT EXISTS "Allow public read access to images" ON storage.objects
+CREATE POLICY "Allow public read access to images" ON storage.objects
 FOR SELECT USING (
   bucket_id = 'marina-assets'
 );
 
 -- Create policy to allow authenticated users to update images
 -- This policy allows authenticated users to update images in the marina-assets bucket
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to update images" ON storage.objects
+CREATE POLICY "Allow authenticated users to update images" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'marina-assets' AND 
   auth.role() = 'authenticated'
@@ -27,7 +33,7 @@ FOR UPDATE USING (
 
 -- Create policy to allow authenticated users to delete images
 -- This policy allows authenticated users to delete images in the marina-assets bucket
-CREATE POLICY IF NOT EXISTS "Allow authenticated users to delete images" ON storage.objects
+CREATE POLICY "Allow authenticated users to delete images" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'marina-assets' AND 
   auth.role() = 'authenticated'
