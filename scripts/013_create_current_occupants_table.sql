@@ -1,7 +1,7 @@
 -- Create current_occupants table for tracking who is currently in each slip
 CREATE TABLE IF NOT EXISTS public.current_occupants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slip_id UUID REFERENCES public.dock_slips(id) ON DELETE CASCADE,
+  slip_id UUID REFERENCES public.dock_slips(id) ON DELETE CASCADE UNIQUE,
   full_name TEXT NOT NULL DEFAULT 'Slipholder',
   email TEXT,
   phone TEXT,
@@ -37,6 +37,7 @@ CREATE INDEX IF NOT EXISTS idx_current_occupants_contract_end ON public.current_
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.current_occupants TO authenticated;
 
 -- Insert default occupants for currently occupied slips
+-- Use a more robust approach that handles potential duplicates
 INSERT INTO public.current_occupants (slip_id, full_name, email, phone, boat_name, boat_length, boat_beam, monthly_rate)
 SELECT 
   id,
@@ -49,7 +50,7 @@ SELECT
   monthly_rate
 FROM public.dock_slips 
 WHERE is_available = false
-ON CONFLICT (slip_id) DO NOTHING;
+  AND id NOT IN (SELECT slip_id FROM public.current_occupants WHERE slip_id IS NOT NULL);
 
 -- Update dock_slips to reference current_occupants
 ALTER TABLE public.dock_slips 
@@ -60,3 +61,10 @@ UPDATE public.dock_slips
 SET current_occupant_id = co.id
 FROM public.current_occupants co
 WHERE dock_slips.id = co.slip_id;
+
+-- Verify the setup
+SELECT 
+  'Setup Complete' as status,
+  COUNT(*) as total_occupants,
+  COUNT(CASE WHEN slip_id IS NOT NULL THEN 1 END) as linked_occupants
+FROM public.current_occupants;
