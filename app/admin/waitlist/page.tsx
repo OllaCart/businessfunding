@@ -290,11 +290,37 @@ export default function AdminWaitlistPage() {
   const [slips, setSlips] = useState<DockSlip[]>([])
   const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    const fetchData = async () => {
+    const checkAuthAndFetchData = async () => {
       try {
         const supabase = createClient()
+        
+        // Check authentication first
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError || !currentUser) {
+          setError('Authentication required. Please log in.')
+          setLoading(false)
+          return
+        }
+
+        // Check if user is admin
+        const { data: adminProfile, error: adminError } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single()
+
+        if (adminError || !adminProfile) {
+          setError('Admin access required.')
+          setLoading(false)
+          return
+        }
+
+        setUser(currentUser)
         
         // Fetch slips
         const { data: slipsData, error: slipsError } = await supabase
@@ -316,12 +342,13 @@ export default function AdminWaitlistPage() {
         setWaitlistEntries(waitlistData || [])
       } catch (error) {
         console.error('Error fetching data:', error)
+        setError('Failed to load data. Please try again.')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
+    checkAuthAndFetchData()
   }, [])
 
   if (loading) {
@@ -330,6 +357,37 @@ export default function AdminWaitlistPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-4 text-lg">Loading waitlist pipeline...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          {error.includes('Authentication') && (
+            <a 
+              href="/auth/login" 
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Login
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-lg">Verifying access...</p>
         </div>
       </div>
     )
