@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Contact Submission] Creating Supabase client...')
-    const supabase = createClient()
+    const supabase = await createClient()
     console.log('[Contact Submission] Supabase client created')
 
     // Save contact submission to database
