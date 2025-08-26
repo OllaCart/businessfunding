@@ -106,8 +106,11 @@ function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupa
         targetSlipId: null
       })
     } else if (targetSlipId) {
-      // Move entry to specific slip
-      onDuplicateEntry(draggedEntry, targetSlipId)
+      // Move entry to specific slip (update selected_slips)
+      handleMoveEntryToSlip(draggedEntry, targetSlipId)
+    } else {
+      // Remove from specific slips (move to general interest)
+      handleMoveToGeneral(draggedEntry)
     }
     
     setDraggedEntry(null)
@@ -151,6 +154,62 @@ The Marina By-The-Sea Team`
       entry,
       action
     })
+  }
+
+  const handleMoveEntryToSlip = async (entry: WaitlistEntry, targetSlipId: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Update the entry's selected_slips to include the target slip
+      const updatedSlips = [...(entry.selected_slips || []), targetSlipId]
+      
+      console.log('Moving entry to slip:', { entry: entry.full_name, targetSlip: targetSlipId, updatedSlips })
+      
+      const { error } = await supabase
+        .from('waitlist')
+        .update({ selected_slips: updatedSlips })
+        .eq('id', entry.id)
+      
+      if (error) {
+        console.error('Error moving entry:', error)
+        throw new Error(`Database error: ${error.message}`)
+      }
+      
+      // Refresh data by calling the parent's refresh function
+      onDuplicateEntry(entry, targetSlipId)
+      alert(`Entry moved to Slip ${targetSlipId} successfully!`)
+    } catch (error) {
+      console.error('Error moving entry:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to move entry: ${errorMessage}`)
+    }
+  }
+
+  const handleMoveToGeneral = async (entry: WaitlistEntry) => {
+    try {
+      const supabase = createClient()
+      
+      // Remove from all specific slips (move to general interest)
+      console.log('Moving entry to general interest:', entry.full_name)
+      
+      const { error } = await supabase
+        .from('waitlist')
+        .update({ selected_slips: [] })
+        .eq('id', entry.id)
+      
+      if (error) {
+        console.error('Error moving entry to general:', error)
+        throw new Error(`Database error: ${error.message}`)
+      }
+      
+      // Refresh data by calling the parent's refresh function
+      onDuplicateEntry(entry, 'general')
+      alert('Entry moved to general interest successfully!')
+    } catch (error) {
+      console.error('Error moving entry to general:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to move entry: ${errorMessage}`)
+    }
   }
 
   const getEntriesForSlip = (slipId: string) => {
