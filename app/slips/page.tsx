@@ -115,7 +115,7 @@ export default async function SlipsPage() {
             </Card>
             <Card className="text-center bg-white/90 backdrop-blur-sm">
               <CardContent className="p-6">
-                <div className="text-3xl font-bold text-secondary mb-2">{slips?.length || 0}</div>
+                <div className="text-3xl font-bold text-primary mb-2">{slips?.length || 0}</div>
                 <div className="text-muted-foreground">Total Slips</div>
               </CardContent>
             </Card>

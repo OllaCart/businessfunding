@@ -96,13 +96,26 @@ export default function NewPostPage() {
         throw new Error("Not authenticated")
       }
 
+      // Prepare insert data with only required fields
+      const insertData: any = {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || null,
+        featured_image_url: formData.featured_image_url || null,
+        is_published: formData.is_published,
+        author_id: user.id
+      }
+
+      // Add SEO fields if they have values
+      if (formData.meta_title) insertData.meta_title = formData.meta_title
+      if (formData.meta_description) insertData.meta_description = formData.meta_description
+      if (formData.slug) insertData.slug = formData.slug
+      if (formData.tags.length > 0) insertData.tags = formData.tags
+      if (formData.canonical_url) insertData.canonical_url = formData.canonical_url
+
       const { error } = await supabase
         .from("posts")
-        .insert({
-          ...formData,
-          author_id: user.id,
-          tags: formData.tags.length > 0 ? formData.tags : null
-        })
+        .insert(insertData)
 
       if (error) throw error
 

@@ -156,21 +156,26 @@ export default function EditPostPage() {
         throw new Error("Not authenticated")
       }
 
+      // Only update fields that exist and have values
+      const updateData: any = {
+        title: formData.title,
+        content: formData.content,
+        excerpt: formData.excerpt || null,
+        featured_image_url: formData.featured_image_url || null,
+        is_published: formData.is_published,
+        updated_at: new Date().toISOString()
+      }
+
+      // Add SEO fields if they exist
+      if (formData.meta_title !== undefined) updateData.meta_title = formData.meta_title || null
+      if (formData.meta_description !== undefined) updateData.meta_description = formData.meta_description || null
+      if (formData.slug !== undefined) updateData.slug = formData.slug || null
+      if (formData.tags !== undefined) updateData.tags = formData.tags?.length ? formData.tags : null
+      if (formData.canonical_url !== undefined) updateData.canonical_url = formData.canonical_url || null
+
       const { error } = await supabase
         .from("posts")
-        .update({
-          title: formData.title,
-          content: formData.content,
-          excerpt: formData.excerpt,
-          featured_image_url: formData.featured_image_url,
-          meta_title: formData.meta_title,
-          meta_description: formData.meta_description,
-          slug: formData.slug,
-          tags: formData.tags?.length ? formData.tags : null,
-          canonical_url: formData.canonical_url,
-          is_published: formData.is_published,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq("id", formData.id)
 
       if (error) throw error
