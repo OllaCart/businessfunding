@@ -69,12 +69,22 @@ export default function AdminSlipsPage() {
       const { data, error } = await supabase.from("dock_slips").select("*").order("slip_number")
 
       if (error) throw error
-      setSlips(data || [])
+      
+      // Ensure all slips have the required fields with fallbacks
+      const processedSlips = (data || []).map(slip => ({
+        ...slip,
+        length_capacity: slip.length_capacity || slip.capacity || 25,
+        beam_capacity: slip.beam_capacity || Math.max(8, Math.min((slip.length_capacity || slip.capacity || 25) / 3, 20)),
+        show_price: slip.show_price !== undefined ? slip.show_price : true,
+        amenities: slip.amenities || []
+      }))
+      
+      setSlips(processedSlips)
     } catch (error) {
       console.error("Error fetching slips:", error)
       toast({
         title: "Error",
-        description: "Failed to fetch dock slips",
+        description: "Failed to fetch dock slips. Please ensure the database schema is up to date.",
         variant: "destructive",
       })
     } finally {
@@ -143,6 +153,11 @@ export default function AdminSlipsPage() {
     e.preventDefault()
 
     try {
+      // Validate required fields
+      if (!formData.length_capacity || !formData.beam_capacity || !formData.monthly_rate) {
+        throw new Error("Length, beam, and monthly rate are required")
+      }
+
       const slipData = {
         slip_number: formData.slip_number,
         length_capacity: Number.parseInt(formData.length_capacity),
@@ -150,8 +165,8 @@ export default function AdminSlipsPage() {
         monthly_rate: Number.parseFloat(formData.monthly_rate),
         is_available: formData.is_available,
         show_price: formData.show_price,
-        description: formData.description,
-        amenities: formData.amenities,
+        description: formData.description || "",
+        amenities: formData.amenities || [],
       }
 
       if (editingSlip) {
@@ -170,7 +185,7 @@ export default function AdminSlipsPage() {
       console.error("Error saving slip:", error)
       toast({
         title: "Error",
-        description: "Failed to save slip",
+        description: error instanceof Error ? error.message : "Failed to save slip. Please check the database schema.",
         variant: "destructive",
       })
     }
