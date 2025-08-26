@@ -171,11 +171,14 @@ export async function sendAdminEmail({
   fromName: string
 }) {
   console.log('[v0] Starting admin email process...')
+  console.log('[v0] GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set')
+  console.log('[v0] GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? 'Set' : 'Not set')
   
   const transporter = createTransporter()
   if (!transporter) {
     console.warn('[v0] Gmail not configured - skipping admin email')
-    return
+    // Return success to prevent API failures when email is not configured
+    return { success: false, reason: 'Gmail not configured' }
   }
 
   try {
@@ -188,9 +191,11 @@ export async function sendAdminEmail({
     })
     
     console.log(`[v0] Admin email sent to ${to}`)
+    return { success: true }
   } catch (error) {
     console.error('[v0] Failed to send admin email:', error)
-    throw error
+    // Return error info instead of throwing to prevent API failures
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 

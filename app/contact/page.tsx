@@ -30,23 +30,28 @@ export default function ContactPage() {
     setIsSubmitting(true)
     setError(null)
 
-    const supabase = createClient()
-
     try {
-      const { error } = await supabase.from("contact_submissions").insert([
-        {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          subject: formData.subject || null,
-          message: formData.message,
+      const response = await fetch('/api/contact-submission', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ])
+        body: JSON.stringify(formData)
+      })
 
-      if (error) throw error
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to submit contact form')
+      }
 
-      setIsSubmitted(true)
-      setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
+      const result = await response.json()
+      
+      if (result.success) {
+        setIsSubmitted(true)
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
+      } else {
+        throw new Error(result.error || 'Failed to submit contact form')
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

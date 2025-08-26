@@ -4,7 +4,7 @@ import { sendAdminEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -42,15 +42,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Send the main email
-    await sendAdminEmail({
+    const mainEmailResult = await sendAdminEmail({
       to,
       subject,
       content,
       fromName: adminProfile.full_name
     })
 
+    if (!mainEmailResult.success) {
+      console.warn('Main email failed:', mainEmailResult.reason || mainEmailResult.error)
+      // Continue with other operations even if main email fails
+    }
+
     // Send copy to the admin who sent the message
-    await sendAdminEmail({
+    const adminCopyResult = await sendAdminEmail({
       to: adminProfile.email,
       subject: `[COPY] ${subject}`,
       content: `This is a copy of the message you sent:
@@ -64,6 +69,10 @@ ${content}
 Sent via Marina By-The-Sea Admin Panel`,
       fromName: 'System Copy'
     })
+
+    if (!adminCopyResult.success) {
+      console.warn('Admin copy failed:', adminCopyResult.reason || adminCopyResult.error)
+    }
 
     // If this is a post announcement, send to all slipholders and waitlisted users
     if (isPostAnnouncement && postId) {
@@ -111,7 +120,7 @@ async function sendPostAnnouncementToUsers(
   adminName: string
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get all current occupants (slipholders)
     const { data: occupants, error: occupantsError } = await supabase
@@ -139,7 +148,7 @@ async function sendPostAnnouncementToUsers(
     const allUsers = new Map()
     
     // Add occupants
-    occupants?.forEach(occupant => {
+    occupants?.forEach((occupant: { email: string; full_name: string }) => {
       if (occupant.email) {
         allUsers.set(occupant.email, {
           email: occupant.email,
@@ -150,7 +159,7 @@ async function sendPostAnnouncementToUsers(
     })
 
     // Add waitlist users (overwrite if already exists to avoid duplicates)
-    waitlistUsers?.forEach(waitlistUser => {
+    waitlistUsers?.forEach((waitlistUser: { email: string; full_name: string }) => {
       if (waitlistUser.email) {
         allUsers.set(waitlistUser.email, {
           email: waitlistUser.email,
@@ -178,12 +187,19 @@ Best regards,
 The Marina By-The-Sea Team
 - ${adminName}`
 
-        await sendAdminEmail({
+        const emailResult = await sendAdminEmail({
           to: user.email,
           subject: `Marina Update: ${postTitle}`,
           content: userAnnouncement,
           fromName: adminName
         })
+
+        if (!emailResult.success) {
+          console.warn(`Failed to send announcement to ${user.email}:`, emailResult.reason || emailResult.error)
+          // Continue with other users even if one fails
+        } else {
+          console.log(`Announcement sent successfully to ${user.email}`)
+        }
 
         // Small delay to avoid overwhelming email servers
         await new Promise(resolve => setTimeout(resolve, 100))
