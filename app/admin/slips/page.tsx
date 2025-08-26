@@ -19,9 +19,11 @@ import { useToast } from "@/hooks/use-toast"
 interface DockSlip {
   id: string
   slip_number: string
-  capacity: number
+  length_capacity: number
+  beam_capacity: number
   monthly_rate: number
   is_available: boolean
+  show_price: boolean
   description: string
   amenities: string[]
   created_at: string
@@ -46,9 +48,11 @@ export default function AdminSlipsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formData, setFormData] = useState({
     slip_number: "",
-    capacity: "",
+    length_capacity: "",
+    beam_capacity: "",
     monthly_rate: "",
     is_available: true,
+    show_price: true,
     description: "",
     amenities: [] as string[],
   })
@@ -109,9 +113,11 @@ export default function AdminSlipsPage() {
     setEditingSlip(slip)
     setFormData({
       slip_number: slip.slip_number,
-      capacity: slip.capacity.toString(),
+      length_capacity: slip.length_capacity.toString(),
+      beam_capacity: slip.beam_capacity.toString(),
       monthly_rate: slip.monthly_rate.toString(),
       is_available: slip.is_available,
+      show_price: slip.show_price ?? true,
       description: slip.description,
       amenities: slip.amenities,
     })
@@ -122,9 +128,11 @@ export default function AdminSlipsPage() {
     setEditingSlip(null)
     setFormData({
       slip_number: "",
-      capacity: "",
+      length_capacity: "",
+      beam_capacity: "",
       monthly_rate: "",
       is_available: true,
+      show_price: true,
       description: "",
       amenities: [],
     })
@@ -137,9 +145,11 @@ export default function AdminSlipsPage() {
     try {
       const slipData = {
         slip_number: formData.slip_number,
-        capacity: Number.parseInt(formData.capacity),
+        length_capacity: Number.parseInt(formData.length_capacity),
+        beam_capacity: Number.parseInt(formData.beam_capacity),
         monthly_rate: Number.parseFloat(formData.monthly_rate),
         is_available: formData.is_available,
+        show_price: formData.show_price,
         description: formData.description,
         amenities: formData.amenities,
       }
@@ -275,8 +285,12 @@ export default function AdminSlipsPage() {
                 </div>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Up to {slip.capacity} ft</span>
-                <span className="font-semibold">${slip.monthly_rate}/mo</span>
+                                      <span className="text-muted-foreground">{slip.length_capacity}' L × {slip.beam_capacity}' W</span>
+                                      {slip.show_price ? (
+                        <span className="font-semibold">${slip.monthly_rate}/mo</span>
+                      ) : (
+                        <span className="text-muted-foreground">Price upon request</span>
+                      )}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -336,30 +350,45 @@ export default function AdminSlipsPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="capacity">Capacity (ft) *</Label>
+                <Label htmlFor="length_capacity">Length Capacity (ft) *</Label>
                 <Input
-                  id="capacity"
+                  id="length_capacity"
                   type="number"
-                  value={formData.capacity}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, capacity: e.target.value }))}
+                  value={formData.length_capacity}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, length_capacity: e.target.value }))}
                   placeholder="e.g. 25"
                   required
                 />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="monthly_rate">Monthly Rate ($) *</Label>
-              <Input
-                id="monthly_rate"
-                type="number"
-                step="0.01"
-                value={formData.monthly_rate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, monthly_rate: e.target.value }))}
-                placeholder="e.g. 450.00"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="beam_capacity">Beam Capacity (ft) *</Label>
+                <Input
+                  id="beam_capacity"
+                  type="number"
+                  value={formData.beam_capacity}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, beam_capacity: e.target.value }))}
+                  placeholder="e.g. 10"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="monthly_rate">Monthly Rate ($) *</Label>
+                <Input
+                  id="monthly_rate"
+                  type="number"
+                  step="0.01"
+                  value={formData.monthly_rate}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, monthly_rate: e.target.value }))}
+                  placeholder="e.g. 450.00"
+                  required
+                />
+              </div>
             </div>
+
+
 
             <div>
               <Label htmlFor="description">Description</Label>
@@ -402,6 +431,15 @@ export default function AdminSlipsPage() {
                 onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, is_available: checked }))}
               />
               <Label htmlFor="is_available">Available for rent</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show_price"
+                checked={formData.show_price}
+                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, show_price: checked }))}
+              />
+              <Label htmlFor="show_price">Show price publicly</Label>
             </div>
 
             <div className="flex justify-end space-x-2">

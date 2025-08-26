@@ -135,7 +135,11 @@ export default async function SlipsPage() {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-primary">${slip.monthly_rate}/mo</span>
+                      {slip.show_price ? (
+                        <span className="text-2xl font-bold text-primary">${slip.monthly_rate}/mo</span>
+                      ) : (
+                        <span className="text-lg text-muted-foreground">Price upon request</span>
+                      )}
                       <div className="text-sm text-muted-foreground">
                         <div>
                           {slip.length_capacity}' L × {slip.beam_capacity}' W
@@ -254,7 +258,11 @@ export default async function SlipsPage() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-muted-foreground">${slip.monthly_rate}/mo</span>
+                      {slip.show_price ? (
+                        <span className="text-2xl font-bold text-muted-foreground">${slip.monthly_rate}/mo</span>
+                      ) : (
+                        <span className="text-lg text-muted-foreground">Price upon request</span>
+                      )}
                       <div className="text-sm text-muted-foreground">
                         <div>
                           {slip.length_capacity}' L × {slip.beam_capacity}' W
