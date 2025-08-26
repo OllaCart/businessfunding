@@ -124,7 +124,7 @@ The Marina By-The-Sea Team`
 
   const getWaitlistEntriesForSlip = (slipId: string) => {
     return waitlistEntries.filter(entry => 
-      entry.selected_slips.includes(slipId)
+      entry.selected_slips && Array.isArray(entry.selected_slips) && entry.selected_slips.includes(slipId)
     )
   }
 
@@ -185,7 +185,7 @@ The Marina By-The-Sea Team`
 
             {/* Slip Columns */}
             {slips.map(slip => {
-              const isInterested = entry.selected_slips.includes(slip.id)
+              const isInterested = entry.selected_slips && Array.isArray(entry.selected_slips) && entry.selected_slips.includes(slip.id)
               const isAvailable = slip.is_available
               
               return (
@@ -349,8 +349,19 @@ export default function AdminWaitlistPage() {
         
         if (waitlistError) throw waitlistError
         
+        // Validate and clean waitlist data
+        const validatedWaitlistData = (waitlistData || []).map(entry => ({
+          ...entry,
+          selected_slips: Array.isArray(entry.selected_slips) ? entry.selected_slips : [],
+          boat_length: entry.boat_length || 0,
+          status: entry.status || 'pending'
+        }))
+        
+        console.log('Raw waitlist data:', waitlistData)
+        console.log('Validated waitlist data:', validatedWaitlistData)
+        
         setSlips(slipsData || [])
-        setWaitlistEntries(waitlistData || [])
+        setWaitlistEntries(validatedWaitlistData)
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again.')
