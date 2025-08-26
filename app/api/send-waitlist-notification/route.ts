@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       await sendWaitlistNotificationToAdmins(submission, slipDetails)
       
       // Send confirmation to the user
-      await sendWaitlistConfirmationToUser(submission)
+      await sendWaitlistConfirmationToUser(submission, slipDetails)
       
       console.log('[v0] Waitlist notifications sent successfully')
     } catch (emailError) {

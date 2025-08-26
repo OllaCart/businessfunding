@@ -159,7 +159,7 @@ This is an automated notification from Marina By-The-Sea
   }
 }
 
-export async function sendWaitlistConfirmationToUser(submission: WaitlistSubmission) {
+export async function sendWaitlistConfirmationToUser(submission: WaitlistSubmission, slipDetails: SlipInfo[]) {
   console.log('[v0] Starting user confirmation process...')
   
   const transporter = createTransporter()
@@ -179,7 +179,11 @@ Email: ${submission.email}
 Phone: ${submission.phone || 'Not provided'}
 Boat Length: ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}
 
-🚤 INTERESTED SLIPS: ${submission.selected_slips.length > 0 ? submission.selected_slips.join(', ') : 'Any available'}
+🚤 INTERESTED SLIPS: ${submission.selected_slips.length > 0 ? 
+  submission.selected_slips.map(slipId => {
+    const slip = slipDetails.find(s => s.id === slipId);
+    return slip ? `Slip ${slip.slip_number}` : `Slip ${slipId}`;
+  }).join(', ') : 'Any available'}
 
 💬 MESSAGE: ${submission.message || 'No additional message'}
 
@@ -216,7 +220,11 @@ Phone: (954) 790-1588
         <p><strong>Email:</strong> ${submission.email}</p>
         <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
         <p><strong>Boat Length:</strong> ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}</p>
-        <p><strong>Interested Slips:</strong> ${submission.selected_slips.length > 0 ? submission.selected_slips.join(', ') : 'Any available'}</p>
+        <p><strong>Interested Slips:</strong> ${submission.selected_slips.length > 0 ? 
+          submission.selected_slips.map(slipId => {
+            const slip = slipDetails.find(s => s.id === slipId);
+            return slip ? `Slip ${slip.slip_number}` : `Slip ${slipId}`;
+          }).join(', ') : 'Any available'}</p>
         ${submission.message ? `<p><strong>Message:</strong> ${submission.message}</p>` : ''}
       </div>
       
