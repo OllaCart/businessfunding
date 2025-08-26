@@ -2,17 +2,25 @@ import nodemailer from 'nodemailer'
 
 // Initialize Gmail transporter
 const createTransporter = () => {
+  console.log('[v0] Creating Gmail transporter...')
+  console.log('[v0] GMAIL_USER:', process.env.GMAIL_USER ? 'Set' : 'Not set')
+  console.log('[v0] GMAIL_APP_PASSWORD:', process.env.GMAIL_APP_PASSWORD ? 'Set' : 'Not set')
+  
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.warn('[v0] Gmail credentials not configured')
     return null
   }
 
-  return nodemailer.createTransporter({
+  const transporter = nodemailer.createTransporter({
     service: 'gmail',
     auth: {
-      user: process.env.GMAIL_USER, // Your Gmail address
-      pass: process.env.GMAIL_APP_PASSWORD // App-specific password
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD
     }
   })
+
+  console.log('[v0] Gmail transporter created successfully')
+  return transporter
 }
 
 export interface WaitlistSubmission {
@@ -38,16 +46,20 @@ export async function sendWaitlistNotificationToAdmins(
   submission: WaitlistSubmission,
   slipDetails: SlipInfo[]
 ) {
+  console.log('[v0] Starting admin notification process...')
+  
   const transporter = createTransporter()
   if (!transporter) {
-    console.warn('Gmail not configured - skipping admin notification')
+    console.warn('[v0] Gmail not configured - skipping admin notification')
     return
   }
 
+  console.log('[v0] Fetching admin emails...')
   const adminEmails = await getAdminEmails()
+  console.log('[v0] Admin emails found:', adminEmails)
   
   if (adminEmails.length === 0) {
-    console.warn('No admin emails found for waitlist notification')
+    console.warn('[v0] No admin emails found for waitlist notification')
     return
   }
 
@@ -148,9 +160,11 @@ This is an automated notification from Marina By-The-Sea
 }
 
 export async function sendWaitlistConfirmationToUser(submission: WaitlistSubmission) {
+  console.log('[v0] Starting user confirmation process...')
+  
   const transporter = createTransporter()
   if (!transporter) {
-    console.warn('Gmail not configured - skipping user confirmation')
+    console.warn('[v0] Gmail not configured - skipping user confirmation')
     return
   }
 

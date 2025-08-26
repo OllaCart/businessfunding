@@ -57,6 +57,21 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
     const supabase = createClient()
 
     try {
+      // Check if email already exists
+      const { data: existingEntry } = await supabase
+        .from("waitlist")
+        .select("id, created_at")
+        .eq("email", formData.email)
+        .single()
+
+      if (existingEntry) {
+        // Show duplicate message
+        setIsSubmitted(true)
+        setError("duplicate")
+        return
+      }
+
+      // Insert new waitlist entry
       const { error } = await supabase.from("waitlist").insert([
         {
           email: formData.email,
@@ -70,6 +85,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
 
       if (error) throw error
 
+      // Send email notifications
       try {
         await fetch("/api/send-waitlist-notification", {
           method: "POST",
@@ -117,6 +133,31 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
   }
 
   if (isSubmitted) {
+    if (error === "duplicate") {
+      return (
+        <div className="text-center py-8">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="h-8 w-8 text-orange-600" />
+          </div>
+          <h3 className="font-semibold text-xl mb-2">Already on the List!</h3>
+          <p className="text-muted-foreground mb-6">
+            We already have your email on our waitlist. Please call us directly at <strong>(954) 790-1588</strong> to discuss your specific needs and get personalized assistance.
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => setIsSubmitted(false)} variant="outline">
+              Submit Different Email
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              <p>Or call us now:</p>
+              <a href="tel:+19547901588" className="text-primary font-semibold hover:underline">
+                (954) 790-1588
+              </a>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
