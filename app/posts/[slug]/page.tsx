@@ -41,14 +41,23 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   try {
     const supabase = await createClient()
     
-    const { data: post } = await supabase
+    const { data: post, error: postError } = await supabase
       .from("posts")
       .select("title, excerpt, meta_title, meta_description, featured_image_url")
       .eq("slug", params.slug)
       .eq("is_published", true)
       .single()
 
+    if (postError) {
+      console.error("Error fetching post for metadata:", postError)
+      return {
+        title: "Post Not Found",
+        description: "The requested post could not be found."
+      }
+    }
+
     if (!post) {
+      console.log("Post not found for metadata generation:", params.slug)
       return {
         title: "Post Not Found",
         description: "The requested post could not be found."
@@ -77,6 +86,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     }
   } catch (err) {
     console.error("Error generating metadata:", err)
+    // Return a safe fallback
     return {
       title: "Post Not Found",
       description: "The requested post could not be found."
@@ -89,8 +99,11 @@ export default async function PostPage({ params }: PostPageProps) {
   let relatedPosts = null
   let error = null
 
+  console.log("PostPage: Starting to fetch post with slug:", params.slug)
+
   try {
     const supabase = await createClient()
+    console.log("PostPage: Supabase client created successfully")
 
     const { data: postData, error: postError } = await supabase
       .from("posts")
@@ -105,17 +118,28 @@ export default async function PostPage({ params }: PostPageProps) {
       .eq("is_published", true)
       .single()
 
+    console.log("PostPage: Query result:", { 
+      hasData: !!postData, 
+      hasError: !!postError, 
+      errorMessage: postError?.message,
+      postId: postData?.id,
+      postTitle: postData?.title
+    })
+
     if (postError) {
       error = postError
+      console.error("PostPage: Post query error:", postError)
     } else if (postData) {
       post = postData
+      console.log("PostPage: Post found successfully:", post.id)
 
       // Get related posts based on tags only if post exists and has tags
       if (post.tags && post.tags.length > 0) {
         try {
+          console.log("PostPage: Fetching related posts for tags:", post.tags)
           const { data: relatedData } = await supabase
             .from("posts")
-            .select("id, title, slug, excerpt, featured_image_url, created_at")
+            .select("id, title, slug, excerpt, featured_image_url, created_at, tags")
             .neq("id", post.id)
             .eq("is_published", true)
             .overlaps("tags", post.tags)
@@ -123,22 +147,33 @@ export default async function PostPage({ params }: PostPageProps) {
             .limit(3)
 
           relatedPosts = relatedData
+          console.log("PostPage: Related posts fetched:", relatedPosts?.length || 0)
         } catch (relatedError) {
           console.error("Error fetching related posts:", relatedError)
           // Don't fail the main post if related posts fail
         }
+      } else {
+        console.log("PostPage: No tags found for post, skipping related posts")
       }
+    } else {
+      console.log("PostPage: No post data returned for slug:", params.slug)
     }
   } catch (err) {
-    console.error("Error creating Supabase client:", err)
+    console.error("PostPage: Error creating Supabase client:", err)
     error = err
   }
 
   // Check for errors or missing post early
   if (error || !post) {
-    console.error("Post not found or error occurred:", { error, post: !!post, slug: params.slug })
+    console.error("PostPage: Post not found or error occurred:", { 
+      error: error instanceof Error ? error.message : String(error), 
+      post: !!post, 
+      slug: params.slug 
+    })
     notFound()
   }
+
+  console.log("PostPage: Rendering post successfully:", post.title)
 
   // At this point, post is guaranteed to exist
   const formatDate = (dateString: string) => {
@@ -224,7 +259,7 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* Tags */}
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
-                {post.tags.map((tag, index) => (
+                {post.tags.map((tag: string, index: number) => (
                   <Badge key={index} variant="secondary" className="gap-1">
                     <Tag className="h-3 w-3" />
                     {tag}
@@ -304,7 +339,7 @@ export default async function PostPage({ params }: PostPageProps) {
                       )}
                       {relatedPost.tags && relatedPost.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-4">
-                          {relatedPost.tags.slice(0, 2).map((tag, index) => (
+                          {relatedPost.tags.slice(0, 2).map((tag: string, index: number) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {tag}
                             </Badge>
