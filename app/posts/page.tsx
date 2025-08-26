@@ -51,7 +51,15 @@ export default async function PostsPage() {
 
   if (error) {
     console.error("Error fetching posts:", error)
+    // Don't fail the page, just show no posts
   }
+
+  // Log the state for debugging
+  console.log("Posts page state:", { 
+    postsCount: posts?.length || 0, 
+    hasError: !!error, 
+    errorMessage: error instanceof Error ? error.message : String(error)
+  })
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {

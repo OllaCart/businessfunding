@@ -107,21 +107,26 @@ export default async function PostPage({ params }: PostPageProps) {
 
     if (postError) {
       error = postError
-    } else {
+    } else if (postData) {
       post = postData
 
-      // Get related posts based on tags
+      // Get related posts based on tags only if post exists and has tags
       if (post.tags && post.tags.length > 0) {
-        const { data: relatedData } = await supabase
-          .from("posts")
-          .select("id, title, slug, excerpt, featured_image_url, created_at")
-          .neq("id", post.id)
-          .eq("is_published", true)
-          .overlaps("tags", post.tags)
-          .order("created_at", { ascending: false })
-          .limit(3)
+        try {
+          const { data: relatedData } = await supabase
+            .from("posts")
+            .select("id, title, slug, excerpt, featured_image_url, created_at")
+            .neq("id", post.id)
+            .eq("is_published", true)
+            .overlaps("tags", post.tags)
+            .order("created_at", { ascending: false })
+            .limit(3)
 
-        relatedPosts = relatedData
+          relatedPosts = relatedData
+        } catch (relatedError) {
+          console.error("Error fetching related posts:", relatedError)
+          // Don't fail the main post if related posts fail
+        }
       }
     }
   } catch (err) {
@@ -129,10 +134,13 @@ export default async function PostPage({ params }: PostPageProps) {
     error = err
   }
 
+  // Check for errors or missing post early
   if (error || !post) {
+    console.error("Post not found or error occurred:", { error, post: !!post, slug: params.slug })
     notFound()
   }
 
+  // At this point, post is guaranteed to exist
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
