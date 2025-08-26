@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Anchor, Shield, Fuel, Wrench, Star, ArrowRight } from "lucide-react"
 import { Suspense } from "react"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 
 interface DockSlip {
   id: string
@@ -63,9 +63,6 @@ function HeroVideo() {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
           poster="/images/marina-overview.jpg"
-          onError={(e) => {
-            e.currentTarget.style.display = "none"
-          }}
         >
           <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dji_fly_0_0_0_1726323726600_video_cache%20%281%29-5ZK1KE1Z9PYRlJKRNDVkeJjkpmbQb2.MOV" type="video/mp4" />
         </video>
@@ -75,15 +72,24 @@ function HeroVideo() {
 }
 
 export default async function HomePage() {
-  const supabase = await createClient()
+  let availableSlips: DockSlip[] = []
   
-  const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
+
   
-  if (error) {
-    console.error("Error fetching slips:", error)
+  try {
+    const supabase = createPublicClient()
+    const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
+    
+    if (error) {
+      console.error("Error fetching slips:", error)
+    } else if (slips) {
+      availableSlips = slips.filter((slip) => slip.is_available) || []
+    }
+  } catch (error) {
+    console.error("Failed to fetch slips:", error)
+    // Fallback to empty array if database connection fails
+    availableSlips = []
   }
-  
-  const availableSlips = slips?.filter((slip) => slip.is_available) || []
 
   return (
     <div className="min-h-screen">
@@ -209,8 +215,9 @@ export default async function HomePage() {
 
           {/* Horizontally Scrollable Slips */}
           <div className="mb-12">
-            <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
-              {availableSlips.map((slip) => (
+            {availableSlips.length > 0 ? (
+              <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
+                {availableSlips.map((slip) => (
                 <Card key={slip.id} className="min-w-[320px] max-w-[320px] overflow-hidden hover:shadow-xl transition-shadow flex-shrink-0">
                   <div className="h-48 bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center relative">
                     <Anchor className="h-16 w-16 text-primary" />
@@ -256,10 +263,24 @@ export default async function HomePage() {
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                                      </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Anchor className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">No Slips Currently Available</h3>
+                <p className="text-muted-foreground mb-6">
+                  All our dock slips are currently occupied. Join our waitlist to be notified when slips become available.
+                </p>
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Link href="/waitlist">Join Waitlist</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="text-center">
