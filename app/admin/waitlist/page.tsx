@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+
 import { createClient } from '@/lib/supabase/client'
 
 interface DockSlip {
@@ -296,7 +297,17 @@ export default function AdminWaitlistPage() {
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
       try {
-        const supabase = createClient()
+
+
+        let supabase
+        try {
+          supabase = createClient()
+        } catch (clientError) {
+          console.error('Failed to create Supabase client:', clientError)
+          setError('Configuration error. Please check environment variables.')
+          setLoading(false)
+          return
+        }
         
         // Check authentication first
         const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
