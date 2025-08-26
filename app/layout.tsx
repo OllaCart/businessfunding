@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     "dock slips",
     "boat storage",
     "marine services",
-    "Bay Town",
+    "Lauderdale By-The-Sea",
     "luxury marina",
     "boat rental",
     "harbor",

@@ -13,8 +13,8 @@ export function MarinaFooter() {
               <span className="font-serif font-bold text-xl">MarinaBy-The-Sea</span>
             </Link>
             <p className="text-sidebar-foreground/80 mb-4 max-w-md">
-              Experience luxury on the water with our premium dock slips, full-service marina amenities, and exceptional
-              customer service. Your vessel deserves the finest waterfront experience.
+              Experience luxury on the water with our premium floating dock slips in Lauderdale By-The-Sea, protected harbor, and exceptional
+              location. Your vessel deserves the finest waterfront experience.
             </p>
             <div className="flex space-x-4">
               <Link href="#" className="text-sidebar-foreground/60 hover:text-sidebar-primary transition-colors">
@@ -84,7 +84,7 @@ export function MarinaFooter() {
                 <span className="text-sidebar-foreground/80 text-sm">
                   123 Harbor Drive
                   <br />
-                  Bay Town, FL 33101
+                  Lauderdale By-The-Sea, FL 33308
                 </span>
               </li>
               <li className="flex items-center space-x-2">

@@ -71,7 +71,7 @@ export default function ContactPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">Contact Us</h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Get in touch with our team to learn more about our services, schedule a tour, or inquire about dock slip
+              Get in touch with our team to learn more about our services, schedule a tour, or inquire about slip
               availability.
             </p>
           </div>
@@ -95,9 +95,9 @@ export default function ContactPage() {
                       <div>
                         <h3 className="font-semibold text-lg mb-1">Visit Us</h3>
                         <p className="text-muted-foreground">
-                          123 Harbor Drive
+                          230 Basin Drive
                           <br />
-                          Bay Town, FL 33101
+                          Lauderdale By-The-Sea, FL 33308
                         </p>
                       </div>
                     </div>
@@ -113,9 +113,8 @@ export default function ContactPage() {
                       <div>
                         <h3 className="font-semibold text-lg mb-1">Call Us</h3>
                         <p className="text-muted-foreground">
-                          Main: (555) 123-4567
-                          <br />
-                          Emergency: (555) 123-4568
+                          Main: (954) 123-4567
+                          <br/>
                         </p>
                       </div>
                     </div>
@@ -131,9 +130,7 @@ export default function ContactPage() {
                       <div>
                         <h3 className="font-semibold text-lg mb-1">Email Us</h3>
                         <p className="text-muted-foreground">
-                          General: info@marinabts.com
-                          <br />
-                          Reservations: reservations@marinabts.com
+                          General: dylan@dreamsdev.co
                         </p>
                       </div>
                     </div>
@@ -153,7 +150,7 @@ export default function ContactPage() {
                           <br />
                           Saturday - Sunday: 9:00 AM - 5:00 PM
                           <br />
-                          <span className="text-primary font-medium">24/7 Security & Emergency Support</span>
+                          <span className="text-primary font-medium">24/7 Security</span>
                         </p>
                       </div>
                     </div>

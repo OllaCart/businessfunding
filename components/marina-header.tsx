@@ -17,8 +17,8 @@ export function MarinaHeader() {
             <Image
               src="/images/marina-logo.svg"
               alt="MarinaBy-The-Sea Logo"
-              width={40}
-              height={40}
+              width={80}
+              height={80}
               className="h-10 w-auto"
             />
             <span className="font-serif font-bold text-xl text-foreground">MarinaBy-The-Sea</span>
@@ -27,7 +27,7 @@ export function MarinaHeader() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/slips" className="text-foreground hover:text-primary transition-colors">
-              Dock Slips
+              Slips
             </Link>
             <Link href="/about" className="text-foreground hover:text-primary transition-colors">
               About
@@ -58,7 +58,7 @@ export function MarinaHeader() {
                 className="text-foreground hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Dock Slips
+                Slips
               </Link>
               <Link
                 href="/about"
