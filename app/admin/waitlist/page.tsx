@@ -50,12 +50,13 @@ interface WaitlistEntry {
   priority_order?: number
 }
 
-function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry }: { 
+function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry, setWaitlistEntries }: { 
   slips: DockSlip[], 
   waitlistEntries: WaitlistEntry[],
   currentOccupants: CurrentOccupant[],
   onUpdateOccupant: (occupant: CurrentOccupant) => void,
-  onDuplicateEntry: (entry: WaitlistEntry, targetSlipId: string) => void
+  onDuplicateEntry: (entry: WaitlistEntry, targetSlipId: string) => void,
+  setWaitlistEntries: (entries: WaitlistEntry[]) => void
 }) {
   const [draggedEntry, setDraggedEntry] = useState<WaitlistEntry | null>(null)
   const [emailDialog, setEmailDialog] = useState<{
@@ -160,8 +161,15 @@ The Marina By-The-Sea Team`
     try {
       const supabase = createClient()
       
+      // Check if entry is already on this slip
+      const currentSlips = entry.selected_slips || []
+      if (currentSlips.includes(targetSlipId)) {
+        alert('Entry is already on this slip!')
+        return
+      }
+      
       // Update the entry's selected_slips to include the target slip
-      const updatedSlips = [...(entry.selected_slips || []), targetSlipId]
+      const updatedSlips = [...currentSlips, targetSlipId]
       
       console.log('Moving entry to slip:', { entry: entry.full_name, targetSlip: targetSlipId, updatedSlips })
       
@@ -175,8 +183,8 @@ The Marina By-The-Sea Team`
         throw new Error(`Database error: ${error.message}`)
       }
       
-      // Refresh data by calling the parent's refresh function
-      onDuplicateEntry(entry, targetSlipId)
+      // Refresh the waitlist data to show the updated entry
+      await refreshWaitlistData()
       alert(`Entry moved to Slip ${targetSlipId} successfully!`)
     } catch (error) {
       console.error('Error moving entry:', error)
@@ -202,13 +210,38 @@ The Marina By-The-Sea Team`
         throw new Error(`Database error: ${error.message}`)
       }
       
-      // Refresh data by calling the parent's refresh function
-      onDuplicateEntry(entry, 'general')
+      // Refresh the waitlist data to show the updated entry
+      await refreshWaitlistData()
       alert('Entry moved to general interest successfully!')
     } catch (error) {
       console.error('Error moving entry to general:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       alert(`Failed to move entry: ${errorMessage}`)
+    }
+  }
+
+  const refreshWaitlistData = async () => {
+    try {
+      const supabase = createClient()
+      
+      const { data: waitlistData, error: waitlistError } = await supabase
+        .from('waitlist')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (waitlistError) throw waitlistError
+      
+      const validatedWaitlistData = (waitlistData || []).map(entry => ({
+        ...entry,
+        selected_slips: Array.isArray(entry.selected_slips) ? entry.selected_slips : [],
+        boat_length: entry.boat_length || 0,
+        status: entry.status || 'pending'
+      }))
+      
+      // Update the parent component's state
+      setWaitlistEntries(validatedWaitlistData)
+    } catch (error) {
+      console.error('Error refreshing waitlist data:', error)
     }
   }
 
@@ -1002,6 +1035,7 @@ export default function AdminWaitlistPage() {
         currentOccupants={currentOccupants}
         onUpdateOccupant={handleUpdateOccupant}
         onDuplicateEntry={handleDuplicateEntry}
+        setWaitlistEntries={setWaitlistEntries}
       />
     </div>
   )
