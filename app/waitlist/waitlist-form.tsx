@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { createClient } from "@/lib/supabase/client"
+import { createPublicClient } from "@/lib/supabase/public"
 import { CheckCircle, Anchor } from "lucide-react"
 
 interface DockSlip {
@@ -54,17 +54,18 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
     setIsSubmitting(true)
     setError(null)
 
-    const supabase = createClient()
+    const supabase = createPublicClient()
 
     try {
       // Check if email already exists
-      const { data: existingEntry } = await supabase
+      const { data: existingEntries, error: checkError } = await supabase
         .from("waitlist")
-        .select("id, created_at")
+        .select("id")
         .eq("email", formData.email)
-        .single()
 
-      if (existingEntry) {
+      if (checkError) {
+        console.error("[v0] Error checking for duplicate email:", checkError)
+      } else if (existingEntries && existingEntries.length > 0) {
         // Show duplicate message
         setIsSubmitted(true)
         setError("duplicate")
