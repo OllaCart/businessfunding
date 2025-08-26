@@ -506,10 +506,14 @@ The Marina By-The-Sea Team`
       <Dialog open={occupantEditDialog.isOpen} onOpenChange={(open) => 
         setOccupantEditDialog(prev => ({ ...prev, isOpen: open }))
       }>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="occupant-edit-dialog-description">
           <DialogHeader>
             <DialogTitle>Edit Current Occupant</DialogTitle>
           </DialogHeader>
+          
+          <div id="occupant-edit-dialog-description" className="text-sm text-gray-600 mb-4">
+            Update the occupant information for this slip. All changes will be saved immediately to the database.
+          </div>
           
           {occupantEditDialog.occupant && (
             <OccupantEditForm 
@@ -528,12 +532,16 @@ The Marina By-The-Sea Team`
       <Dialog open={duplicateDialog.isOpen} onOpenChange={(open) => 
         setDuplicateDialog(prev => ({ ...prev, isOpen: open }))
       }>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="duplicate-dialog-description">
           <DialogHeader>
             <DialogTitle>Duplicate Entry to Slip</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
+            <div id="duplicate-dialog-description" className="text-sm text-gray-600">
+              Select which slip to duplicate this waitlist entry to. This will create a new entry with the same contact information but for the selected slip.
+            </div>
+            
             <div>
               <Label htmlFor="target-slip">Select Target Slip:</Label>
               <select 
@@ -832,19 +840,31 @@ export default function AdminWaitlistPage() {
     try {
       const supabase = createClient()
       
-      // Create a new entry with the target slip
+      // Create a new entry with the target slip, excluding the id field
       const newEntry = {
-        ...entry,
-        id: undefined, // Let Supabase generate new ID
+        full_name: entry.full_name,
+        email: entry.email,
+        phone: entry.phone,
+        boat_length: entry.boat_length,
         selected_slips: [targetSlipId],
+        message: entry.message,
+        status: entry.status,
         created_at: new Date().toISOString()
       }
       
-      const { error } = await supabase
+      console.log('Attempting to duplicate entry:', { original: entry, new: newEntry })
+      
+      const { data: insertResult, error } = await supabase
         .from('waitlist')
         .insert(newEntry)
+        .select()
       
-      if (error) throw error
+      if (error) {
+        console.error('Supabase insert error:', error)
+        throw new Error(`Database error: ${error.message}`)
+      }
+      
+      console.log('Successfully duplicated entry:', insertResult)
       
       // Refresh data
       const { data: waitlistData, error: waitlistError } = await supabase
@@ -852,7 +872,10 @@ export default function AdminWaitlistPage() {
         .select('*')
         .order('created_at', { ascending: false })
       
-      if (waitlistError) throw waitlistError
+      if (waitlistError) {
+        console.error('Error refreshing waitlist data:', waitlistError)
+        throw new Error(`Failed to refresh data: ${waitlistError.message}`)
+      }
       
       const validatedWaitlistData = (waitlistData || []).map(entry => ({
         ...entry,
@@ -865,7 +888,8 @@ export default function AdminWaitlistPage() {
       alert('Entry duplicated successfully!')
     } catch (error) {
       console.error('Error duplicating entry:', error)
-      alert('Failed to duplicate entry')
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to duplicate entry: ${errorMessage}`)
     }
   }
 
