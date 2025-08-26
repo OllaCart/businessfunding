@@ -133,15 +133,6 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound()
   }
 
-  // Get related posts based on tags
-  const { data: relatedPosts } = await supabase
-    .from("posts")
-    .select("id, title, excerpt, created_at, slug, tags")
-    .eq("is_published", true)
-    .neq("id", post.id)
-    .order("created_at", { ascending: false })
-    .limit(3)
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
