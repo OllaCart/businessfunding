@@ -24,19 +24,30 @@ interface Post {
 }
 
 export default async function PostsPage() {
-  const supabase = await createClient()
+  let posts = null
+  let error = null
 
-  const { data: posts, error } = await supabase
-    .from("posts")
-    .select(`
-      *,
-      admin_profiles (
-        full_name,
-        email
-      )
-    `)
-    .eq("is_published", true)
-    .order("created_at", { ascending: false })
+  try {
+    const supabase = await createClient()
+
+    const { data: postsData, error: postsError } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        admin_profiles (
+          full_name,
+          email
+        )
+      `)
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+
+    posts = postsData
+    error = postsError
+  } catch (err) {
+    console.error("Error creating Supabase client:", err)
+    error = err
+  }
 
   if (error) {
     console.error("Error fetching posts:", error)

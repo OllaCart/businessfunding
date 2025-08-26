@@ -97,7 +97,7 @@ export default async function AdminPostsPage() {
                   <div className="flex items-center space-x-2 ml-4">
                     {post.is_published && (
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/posts/${post.id}`} target="_blank">
+                        <Link href={`/posts/${post.slug || post.id}`} target="_blank">
                           <Eye className="h-4 w-4 mr-1" />
                           View
                         </Link>

@@ -38,59 +38,96 @@ interface PostPageProps {
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const supabase = await createClient()
-  
-  const { data: post } = await supabase
-    .from("posts")
-    .select("title, excerpt, meta_title, meta_description, featured_image_url")
-    .eq("slug", params.slug)
-    .eq("is_published", true)
-    .single()
+  try {
+    const supabase = await createClient()
+    
+    const { data: post } = await supabase
+      .from("posts")
+      .select("title, excerpt, meta_title, meta_description, featured_image_url")
+      .eq("slug", params.slug)
+      .eq("is_published", true)
+      .single()
 
-  if (!post) {
+    if (!post) {
+      return {
+        title: "Post Not Found",
+        description: "The requested post could not be found."
+      }
+    }
+
+    const title = post.meta_title || post.title
+    const description = post.meta_description || post.excerpt || "Marina update and news from Marina By-The-Sea."
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        images: post.featured_image_url ? [post.featured_image_url] : [],
+        publishedTime: new Date().toISOString(),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: post.featured_image_url ? [post.featured_image_url] : [],
+      },
+    }
+  } catch (err) {
+    console.error("Error generating metadata:", err)
     return {
       title: "Post Not Found",
       description: "The requested post could not be found."
     }
   }
-
-  const title = post.meta_title || post.title
-  const description = post.meta_description || post.excerpt || "Marina update and news from Marina By-The-Sea."
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      images: post.featured_image_url ? [post.featured_image_url] : [],
-      publishedTime: new Date().toISOString(),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: post.featured_image_url ? [post.featured_image_url] : [],
-    },
-  }
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-  const supabase = await createClient()
+  let post = null
+  let relatedPosts = null
+  let error = null
 
-  const { data: post, error } = await supabase
-    .from("posts")
-    .select(`
-      *,
-      admin_profiles (
-        full_name,
-        email
-      )
-    `)
-    .eq("slug", params.slug)
-    .eq("is_published", true)
-    .single()
+  try {
+    const supabase = await createClient()
+
+    const { data: postData, error: postError } = await supabase
+      .from("posts")
+      .select(`
+        *,
+        admin_profiles (
+          full_name,
+          email
+        )
+      `)
+      .eq("slug", params.slug)
+      .eq("is_published", true)
+      .single()
+
+    if (postError) {
+      error = postError
+    } else {
+      post = postData
+
+      // Get related posts based on tags
+      if (post.tags && post.tags.length > 0) {
+        const { data: relatedData } = await supabase
+          .from("posts")
+          .select("id, title, slug, excerpt, featured_image_url, created_at")
+          .neq("id", post.id)
+          .eq("is_published", true)
+          .overlaps("tags", post.tags)
+          .order("created_at", { ascending: false })
+          .limit(3)
+
+        relatedPosts = relatedData
+      }
+    }
+  } catch (err) {
+    console.error("Error creating Supabase client:", err)
+    error = err
+  }
 
   if (error || !post) {
     notFound()
