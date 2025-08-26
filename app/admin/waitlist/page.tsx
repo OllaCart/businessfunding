@@ -50,12 +50,13 @@ interface WaitlistEntry {
   priority_order?: number
 }
 
-function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry, setWaitlistEntries }: { 
+function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry, onDeleteEntry, setWaitlistEntries }: { 
   slips: DockSlip[], 
   waitlistEntries: WaitlistEntry[],
   currentOccupants: CurrentOccupant[],
   onUpdateOccupant: (occupant: CurrentOccupant) => void,
   onDuplicateEntry: (entry: WaitlistEntry, targetSlipId: string) => void,
+  onDeleteEntry: (entry: WaitlistEntry) => void,
   setWaitlistEntries: (entries: WaitlistEntry[]) => void
 }) {
   const [draggedEntry, setDraggedEntry] = useState<WaitlistEntry | null>(null)
@@ -85,6 +86,14 @@ function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupa
     isOpen: false,
     entry: null,
     targetSlipId: null
+  })
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean
+    entry: WaitlistEntry | null
+  }>({
+    isOpen: false,
+    entry: null
   })
 
   const [emailContent, setEmailContent] = useState('')
@@ -365,6 +374,17 @@ The Marina By-The-Sea Team`
                     >
                       📋 Duplicate to Slip
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full text-xs text-red-600 border-red-600 hover:bg-red-50"
+                      onClick={() => setDeleteDialog({
+                        isOpen: true,
+                        entry
+                      })}
+                    >
+                      🗑️ Delete
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -492,6 +512,17 @@ The Marina By-The-Sea Team`
                           })}
                         >
                           📋 Duplicate
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs text-red-600 border-red-600 hover:bg-red-50"
+                          onClick={() => setDeleteDialog({
+                            isOpen: true,
+                            entry
+                          })}
+                        >
+                          🗑️ Delete
                         </Button>
                       </div>
                     </CardContent>
@@ -667,6 +698,49 @@ The Marina By-The-Sea Team`
                 }}
               >
                 Duplicate
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Entry Dialog */}
+      <Dialog open={deleteDialog.isOpen} onOpenChange={(open) => 
+        setDeleteDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-md" aria-describedby="delete-dialog-description">
+          <DialogHeader>
+            <DialogTitle>Delete Waitlist Entry</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div id="delete-dialog-description" className="text-sm text-gray-600">
+              This will remove {deleteDialog.entry?.full_name} from the waitlist and send them a notification email. They can rejoin the waitlist at any time.
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="text-yellow-800 text-sm">
+                <strong>Note:</strong> The user account will be maintained, but they will be removed from all slip waitlists.
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialog({ isOpen: false, entry: null })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  if (deleteDialog.entry) {
+                    onDeleteEntry(deleteDialog.entry)
+                    setDeleteDialog({ isOpen: false, entry: null })
+                  }
+                }}
+              >
+                Delete Entry
               </Button>
             </div>
           </div>
@@ -985,6 +1059,83 @@ export default function AdminWaitlistPage() {
     }
   }
 
+  const handleDeleteEntry = async (entry: WaitlistEntry) => {
+    try {
+      const supabase = createClient()
+      
+      // Send a warning email to the user
+      const warningSubject = `Your Waitlist Entry on Marina By-The-Sea has been deleted`
+      const warningContent = `Dear ${entry.full_name},
+
+We regret to inform you that your waitlist entry for a slip at Marina By-The-Sea has been deleted. This action was taken because we were unable to accommodate your request for a slip based on current availability.
+
+You are welcome to re-apply for a slip at any time.
+
+Best regards,
+The Marina By-The-Sea Team`
+
+      const emailResponse = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: entry.email,
+          subject: warningSubject,
+          content: warningContent,
+          entryId: entry.id,
+          slipId: null,
+          action: 'notify'
+        })
+      })
+
+      if (!emailResponse.ok) {
+        console.error('Failed to send warning email for deletion')
+        throw new Error('Failed to send warning email for deletion')
+      }
+
+      // Remove from all specific slips
+      console.log('Attempting to delete entry from all slips:', entry.full_name)
+      
+      const { error: deleteError } = await supabase
+        .from('waitlist')
+        .update({ selected_slips: [] })
+        .eq('id', entry.id)
+      
+      if (deleteError) {
+        console.error('Supabase delete error:', deleteError)
+        throw new Error(`Database error: ${deleteError.message}`)
+      }
+      
+      console.log('Successfully deleted entry from all slips:', entry.full_name)
+      
+      // Refresh data
+      const { data: waitlistData, error: waitlistError } = await supabase
+        .from('waitlist')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (waitlistError) {
+        console.error('Error refreshing waitlist data after deletion:', waitlistError)
+        throw new Error(`Failed to refresh data: ${waitlistError.message}`)
+      }
+      
+      const validatedWaitlistData = (waitlistData || []).map(entry => ({
+        ...entry,
+        selected_slips: Array.isArray(entry.selected_slips) ? entry.selected_slips : [],
+        boat_length: entry.boat_length || 0,
+        status: entry.status || 'pending'
+      }))
+      
+      setWaitlistEntries(validatedWaitlistData)
+      alert('Entry deleted successfully!')
+    } catch (error) {
+      console.error('Error deleting entry:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to delete entry: ${errorMessage}`)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -1035,6 +1186,7 @@ export default function AdminWaitlistPage() {
         currentOccupants={currentOccupants}
         onUpdateOccupant={handleUpdateOccupant}
         onDuplicateEntry={handleDuplicateEntry}
+        onDeleteEntry={handleDeleteEntry}
         setWaitlistEntries={setWaitlistEntries}
       />
     </div>

@@ -1,0 +1,501 @@
+"use client"
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { createClient } from '@/lib/supabase/client'
+
+interface AdminProfile {
+  id: string
+  email: string
+  full_name: string
+  role: 'admin' | 'pending_admin'
+  created_at: string
+  approved_by?: string
+  approved_at?: string
+}
+
+interface AdminRequest {
+  id: string
+  email: string
+  full_name: string
+  role: 'pending_admin'
+  created_at: string
+  message?: string
+}
+
+export default function AdminSettingsPage() {
+  const [currentAdmin, setCurrentAdmin] = useState<AdminProfile | null>(null)
+  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([])
+  const [allAdmins, setAllAdmins] = useState<AdminProfile[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+  
+  // Form states
+  const [editName, setEditName] = useState('')
+  const [isEditing, setIsEditing] = useState(false)
+  const [approvalDialog, setApprovalDialog] = useState<{
+    isOpen: boolean
+    request: AdminRequest | null
+    message: string
+  }>({
+    isOpen: false,
+    request: null,
+    message: ''
+  })
+
+  useEffect(() => {
+    const checkAuthAndFetchData = async () => {
+      try {
+        let supabase
+        try {
+          supabase = createClient()
+        } catch (clientError) {
+          console.error('Failed to create Supabase client:', clientError)
+          setError('Configuration error. Please check environment variables.')
+          setLoading(false)
+          return
+        }
+        
+        // Check authentication first
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (authError || !currentUser) {
+          setError('Authentication required. Please log in.')
+          setLoading(false)
+          return
+        }
+
+        // Check if user is admin
+        const { data: adminProfile, error: adminError } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single()
+
+        if (adminError || !adminProfile || adminProfile.role !== 'admin') {
+          setError('Admin access required.')
+          setLoading(false)
+          return
+        }
+
+        setUser(currentUser)
+        setCurrentAdmin(adminProfile)
+        setEditName(adminProfile.full_name)
+        
+        // Fetch all admin profiles
+        const { data: allAdminsData, error: adminsError } = await supabase
+          .from('admin_profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (adminsError) throw adminsError
+        
+        setAllAdmins(allAdminsData || [])
+        
+        // Filter pending admin requests
+        const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+        setAdminRequests(pendingRequests)
+        
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setError('Failed to load data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkAuthAndFetchData()
+  }, [])
+
+  const handleUpdateName = async () => {
+    if (!currentAdmin || !editName.trim()) return
+    
+    try {
+      const supabase = createClient()
+      
+      const { error } = await supabase
+        .from('admin_profiles')
+        .update({ full_name: editName.trim() })
+        .eq('id', currentAdmin.id)
+      
+      if (error) throw error
+      
+      // Update local state
+      setCurrentAdmin(prev => prev ? { ...prev, full_name: editName.trim() } : null)
+      setAllAdmins(prev => prev.map(admin => 
+        admin.id === currentAdmin.id ? { ...admin, full_name: editName.trim() } : admin
+      ))
+      
+      setIsEditing(false)
+      alert('Name updated successfully!')
+    } catch (error) {
+      console.error('Error updating name:', error)
+      alert('Failed to update name. Please try again.')
+    }
+  }
+
+  const handleApproveAdmin = async (request: AdminRequest, message: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Update the pending admin to approved admin
+      const { error: updateError } = await supabase
+        .from('admin_profiles')
+        .update({ 
+          role: 'admin',
+          approved_by: currentAdmin?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', request.id)
+      
+      if (updateError) throw updateError
+      
+      // Send approval email
+      await sendApprovalEmail(request.email, request.full_name, message)
+      
+      // Refresh data
+      const { data: allAdminsData, error: adminsError } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (adminsError) throw adminsError
+      
+      setAllAdmins(allAdminsData || [])
+      const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+      setAdminRequests(pendingRequests)
+      
+      setApprovalDialog({ isOpen: false, request: null, message: '' })
+      alert('Admin request approved successfully!')
+    } catch (error) {
+      console.error('Error approving admin:', error)
+      alert('Failed to approve admin request. Please try again.')
+    }
+  }
+
+  const handleRejectAdmin = async (request: AdminRequest) => {
+    if (!confirm(`Are you sure you want to reject ${request.full_name}'s admin request?`)) return
+    
+    try {
+      const supabase = createClient()
+      
+      // Delete the pending admin request
+      const { error } = await supabase
+        .from('admin_profiles')
+        .delete()
+        .eq('id', request.id)
+      
+      if (error) throw error
+      
+      // Refresh data
+      const { data: allAdminsData, error: adminsError } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (adminsError) throw adminsError
+      
+      setAllAdmins(allAdminsData || [])
+      const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+      setAdminRequests(pendingRequests)
+      
+      alert('Admin request rejected successfully!')
+    } catch (error) {
+      console.error('Error rejecting admin:', error)
+      alert('Failed to reject admin request. Please try again.')
+    }
+  }
+
+  const sendApprovalEmail = async (email: string, fullName: string, message: string) => {
+    try {
+      const response = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Admin Access Approved - Marina By-The-Sea',
+          content: `Dear ${fullName},
+
+Your admin access request has been approved! You now have full administrative access to the Marina By-The-Sea management system.
+
+${message ? `\nMessage from approver: ${message}` : ''}
+
+You can now:
+- Manage dock slips and availability
+- Process waitlist applications
+- Edit blog posts and content
+- Approve other admin requests
+- Access all administrative functions
+
+Welcome to the team!
+
+Best regards,
+The Marina By-The-Sea Administration Team`,
+          fromName: currentAdmin?.full_name || 'Admin'
+        })
+      })
+
+      if (!response.ok) {
+        console.warn('Failed to send approval email, but admin was approved')
+      }
+    } catch (error) {
+      console.warn('Failed to send approval email:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading admin settings...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          {error.includes('Authentication') && (
+            <a 
+              href="/auth/login" 
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Login
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (!user || !currentAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-lg">Verifying access...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Admin Settings</h1>
+          <div className="text-sm text-gray-600">
+            Logged in as: {currentAdmin.full_name}
+          </div>
+        </div>
+
+        {/* Profile Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  value={currentAdmin.email}
+                  disabled
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+              </div>
+              <div>
+                <Label htmlFor="full-name">Full Name</Label>
+                {isEditing ? (
+                  <div className="flex space-x-2">
+                    <Input
+                      id="full-name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Enter your full name"
+                    />
+                    <Button onClick={handleUpdateName} size="sm">
+                      Save
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setIsEditing(false)
+                        setEditName(currentAdmin.full_name)
+                      }} 
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="full-name"
+                      value={currentAdmin.full_name}
+                      disabled
+                      className="bg-gray-50"
+                    />
+                    <Button onClick={() => setIsEditing(true)} size="sm">
+                      Edit
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Admin Requests */}
+        {adminRequests.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Admin Requests ({adminRequests.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {adminRequests.map((request) => (
+                  <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <div className="font-medium">{request.full_name}</div>
+                      <div className="text-sm text-gray-600">{request.email}</div>
+                      <div className="text-xs text-gray-500">
+                        Requested: {new Date(request.created_at).toLocaleDateString()}
+                      </div>
+                      {request.message && (
+                        <div className="text-sm text-gray-700 mt-1">
+                          <strong>Message:</strong> {request.message}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        onClick={() => setApprovalDialog({
+                          isOpen: true,
+                          request,
+                          message: ''
+                        })}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        ✅ Approve
+                      </Button>
+                      <Button
+                        onClick={() => handleRejectAdmin(request)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                      >
+                        ❌ Reject
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Current Admins */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Administrators ({allAdmins.filter(a => a.role === 'admin').length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {allAdmins
+                .filter(admin => admin.role === 'admin')
+                .map((admin) => (
+                  <div key={admin.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div>
+                        <div className="font-medium">{admin.full_name}</div>
+                        <div className="text-sm text-gray-600">{admin.email}</div>
+                      </div>
+                      {admin.id === currentAdmin.id && (
+                        <Badge className="bg-blue-100 text-blue-800">You</Badge>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">
+                        {admin.approved_at ? (
+                          `Approved: ${new Date(admin.approved_at).toLocaleDateString()}`
+                        ) : (
+                          'Original Admin'
+                        )}
+                      </div>
+                      {admin.approved_by && (
+                        <div className="text-xs text-gray-500">
+                          by: {allAdmins.find(a => a.id === admin.approved_by)?.full_name || 'Unknown'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Approval Dialog */}
+      <Dialog open={approvalDialog.isOpen} onOpenChange={(open) => 
+        setApprovalDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Approve Admin Request</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="approval-message">Approval Message (Optional)</Label>
+              <textarea
+                id="approval-message"
+                className="w-full p-2 border rounded"
+                rows={3}
+                placeholder="Add a personal message for the new admin..."
+                value={approvalDialog.message}
+                onChange={(e) => setApprovalDialog(prev => ({ ...prev, message: e.target.value }))}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setApprovalDialog({ isOpen: false, request: null, message: '' })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (approvalDialog.request) {
+                    handleApproveAdmin(approvalDialog.request, approvalDialog.message)
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Approve Admin
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
