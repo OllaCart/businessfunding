@@ -135,10 +135,6 @@ export default function RootLayout({
                 },
               ],
               hasMap: "https://maps.google.com/?q=25.26189223,-80.099866",
-              sameAs: [
-                "https://www.facebook.com/marinabts",
-                "https://www.instagram.com/marinabts"
-              ],
               areaServed: {
                 "@type": "City",
                 name: "Lauderdale-By-The-Sea"
