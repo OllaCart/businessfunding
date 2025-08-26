@@ -4,40 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { Anchor, Shield, Fuel, Wrench, Star, ArrowRight } from "lucide-react"
+import { Shield, Fuel, Wrench, Star, ArrowRight } from "lucide-react"
 import { Suspense } from "react"
-import { createPublicClient } from "@/lib/supabase/public"
+import { DynamicSlipsSection } from "@/components/dynamic-slips-section"
 
-interface DockSlip {
-  id: string
-  slip_number: string
-  length_capacity: number
-  beam_capacity: number
-  slip_type: string
-  monthly_rate: number
-  is_available: boolean
-  description: string
-  amenities: string[]
-  has_water: boolean
-  has_electric: boolean
-  electric_amp: number
-  has_cable: boolean
-  has_wifi: boolean
-  has_pump_out: boolean
-}
 
-const getSlipTypeLabel = (type: string) => {
-  switch (type) {
-    case "premium":
-      return "Premium"
-    case "covered":
-      return "Covered"
-    case "uncovered":
-      return "Open"
-    default:
-      return type
-  }
-}
 
 function HeroVideoSkeleton() {
   return (
@@ -71,26 +42,7 @@ function HeroVideo() {
   )
 }
 
-export default async function HomePage() {
-  let availableSlips: DockSlip[] = []
-  
-
-  
-  try {
-    const supabase = createPublicClient()
-    const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
-    
-    if (error) {
-      console.error("Error fetching slips:", error)
-    } else if (slips) {
-      availableSlips = slips.filter((slip) => slip.is_available) || []
-    }
-  } catch (error) {
-    console.error("Failed to fetch slips:", error)
-    // Fallback to empty array if database connection fails
-    availableSlips = []
-  }
-
+export default function HomePage() {
   return (
     <div className="min-h-screen">
       <MarinaHeader />
@@ -202,97 +154,7 @@ export default async function HomePage() {
       </section>
 
       {/* Available Slips Section */}
-      <section className="py-20 bg-muted">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground mb-4">
-              Premium Dock Slips Available
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Browse our currently available slips with real-time availability and pricing.
-            </p>
-          </div>
-
-          {/* Horizontally Scrollable Slips */}
-          <div className="mb-12">
-            {availableSlips.length > 0 ? (
-              <div className="flex overflow-x-auto gap-6 pb-4 scrollbar-hide">
-                {availableSlips.map((slip) => (
-                <Card key={slip.id} className="min-w-[320px] max-w-[320px] overflow-hidden hover:shadow-xl transition-shadow flex-shrink-0">
-                  <div className="h-48 bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center relative">
-                    <Anchor className="h-16 w-16 text-primary" />
-                    <Badge className="absolute top-3 right-3 bg-green-600 text-white">
-                      Available
-                    </Badge>
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-serif font-semibold text-lg">Slip {slip.slip_number}</h3>
-                      <Badge variant="outline" className="text-xs">
-                        {getSlipTypeLabel(slip.slip_type)}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Capacity:</span>
-                        <span className="font-medium">{slip.length_capacity}' × {slip.beam_capacity}'</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Monthly Rate:</span>
-                        <span className="font-bold text-primary">${slip.monthly_rate.toLocaleString()}</span>
-                      </div>
-                    </div>
-
-                    {slip.amenities && slip.amenities.length > 0 && (
-                      <div className="mb-4">
-                        <p className="text-xs text-muted-foreground mb-2">Amenities:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {slip.amenities.slice(0, 4).map((amenity: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {amenity}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <Button asChild size="sm" className="w-full bg-primary hover:bg-primary/90">
-                      <Link href="/slips">
-                        View Details
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                                      </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Anchor className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">No Slips Currently Available</h3>
-                <p className="text-muted-foreground mb-6">
-                  All our dock slips are currently occupied. Join our waitlist to be notified when slips become available.
-                </p>
-                <Button asChild className="bg-primary hover:bg-primary/90">
-                  <Link href="/waitlist">Join Waitlist</Link>
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="text-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-              <Link href="/slips">
-                View All Available Slips
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <DynamicSlipsSection />
 
 
       <MarinaFooter />

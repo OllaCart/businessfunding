@@ -21,10 +21,10 @@ interface DockSlip {
 }
 
 interface WaitlistFormProps {
-  availableSlips: DockSlip[]
+  allSlips: DockSlip[]
 }
 
-export function WaitlistForm({ availableSlips }: WaitlistFormProps) {
+export function WaitlistForm({ allSlips }: WaitlistFormProps) {
   const [formData, setFormData] = useState({
     email: "",
     full_name: "",
@@ -178,14 +178,14 @@ export function WaitlistForm({ availableSlips }: WaitlistFormProps) {
         </div>
       </div>
 
-      {availableSlips.length > 0 && (
+      {allSlips.length > 0 && (
         <div>
-          <Label>Available Slips You're Interested In</Label>
+          <Label>Slips You're Interested In</Label>
           <p className="text-sm text-muted-foreground mb-3">
-            Select all slips you'd be interested in. You can choose multiple options.
+            Select all slips you'd be interested in, including currently occupied ones. You can choose multiple options.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {availableSlips.map((slip) => (
+            {allSlips.map((slip) => (
               <div key={slip.id} className="flex items-center space-x-3 p-3 border rounded-lg">
                 <Checkbox
                   id={`slip-${slip.id}`}
@@ -198,6 +198,15 @@ export function WaitlistForm({ availableSlips }: WaitlistFormProps) {
                   </Label>
                   <div className="text-xs text-muted-foreground">
                     {slip.length_capacity}' × {slip.beam_capacity}' • ${slip.monthly_rate.toLocaleString()}/month
+                  </div>
+                  <div className="text-xs mt-1">
+                    <span className={`px-2 py-1 rounded ${
+                      slip.is_available 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {slip.is_available ? 'Available' : 'Currently Occupied'}
+                    </span>
                   </div>
                 </div>
               </div>

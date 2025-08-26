@@ -1,26 +1,14 @@
+"use client"
+
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { createPublicClient } from "@/lib/supabase/public"
 import { Clock, Users, Star } from "lucide-react"
 import { WaitlistForm } from "./waitlist-form"
+import { useDynamicSlips } from "@/components/dynamic-waitlist-section"
 
-export default async function WaitlistPage() {
-  let availableSlips: any[] = []
-  
-  try {
-    const supabase = createPublicClient()
-    const { data: slips, error } = await supabase.from("dock_slips").select("*").eq("is_available", true).order("slip_number")
-    
-    if (error) {
-      console.error("Error fetching slips:", error)
-    } else if (slips) {
-      availableSlips = slips
-    }
-  } catch (error) {
-    console.error("Failed to fetch slips:", error)
-    availableSlips = []
-  }
+export default function WaitlistPage() {
+  const { availableSlips, allSlips, loading } = useDynamicSlips()
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,7 +107,7 @@ export default async function WaitlistPage() {
                   <CardTitle className="font-serif text-2xl">Join the Waitlist</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <WaitlistForm availableSlips={availableSlips} />
+                  <WaitlistForm allSlips={allSlips} />
                 </CardContent>
               </Card>
             </div>
