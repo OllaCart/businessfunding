@@ -101,7 +101,7 @@ export default async function PostsPage() {
                       <div className="h-64 lg:h-auto bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
                         {posts[0].featured_image_url ? (
                           <img
-                            src={posts[0].featured_image_url || "/placeholder.svg"}
+                            src={posts[0].featured_image_url}
                             alt={posts[0].title}
                             className="w-full h-full object-cover"
                           />
@@ -130,7 +130,7 @@ export default async function PostsPage() {
                         <CardTitle className="font-serif text-2xl lg:text-3xl mb-4">{posts[0].title}</CardTitle>
                         {posts[0].tags && posts[0].tags.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-4">
-                            {posts[0].tags.map((tag, index) => (
+                            {posts[0].tags.map((tag: string, index: number) => (
                               <Badge key={index} variant="outline" className="text-xs">
                                 {tag}
                               </Badge>
@@ -160,7 +160,7 @@ export default async function PostsPage() {
                         <div className="h-48 bg-gradient-to-br from-primary/10 to-secondary/5 flex items-center justify-center">
                           {post.featured_image_url ? (
                             <img
-                              src={post.featured_image_url || "/placeholder.svg"}
+                              src={post.featured_image_url}
                               alt={post.title}
                               className="w-full h-full object-cover"
                             />
@@ -191,7 +191,7 @@ export default async function PostsPage() {
                         <CardContent className="pt-0">
                           {post.tags && post.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-3">
-                              {post.tags.slice(0, 3).map((tag, index) => (
+                              {post.tags.slice(0, 3).map((tag: string, index: number) => (
                                 <Badge key={index} variant="outline" className="text-xs">
                                   {tag}
                                 </Badge>
@@ -215,7 +215,10 @@ export default async function PostsPage() {
                 <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">No Updates Yet</h3>
                 <p className="text-muted-foreground mb-6">
-                  We haven't published any updates yet. Check back soon for the latest marina news and announcements.
+                  {posts === null 
+                    ? "Unable to load posts at this time. Please try again later."
+                    : "We haven't published any updates yet. Check back soon for the latest marina news and announcements."
+                  }
                 </p>
                 <Button asChild className="bg-primary hover:bg-primary/90">
                   <Link href="/contact">Contact Us for Information</Link>
