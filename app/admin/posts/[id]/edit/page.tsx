@@ -28,6 +28,8 @@ interface Post {
   is_published: boolean
   created_at: string
   updated_at: string
+  send_announcement: boolean
+  announcement_message: string | null
 }
 
 export default function EditPostPage() {
@@ -51,7 +53,9 @@ export default function EditPostPage() {
     canonical_url: "",
     is_published: false,
     created_at: "",
-    updated_at: ""
+    updated_at: "",
+    send_announcement: false,
+    announcement_message: null
   })
 
   const [tagInput, setTagInput] = useState("")
@@ -76,7 +80,9 @@ export default function EditPostPage() {
 
       setFormData({
         ...post,
-        tags: post.tags || []
+        tags: post.tags || [],
+        send_announcement: post.send_announcement || false,
+        announcement_message: post.announcement_message || null
       })
       setOriginalData(post)
     } catch (error) {
@@ -172,13 +178,54 @@ export default function EditPostPage() {
       if (formData.slug !== undefined) updateData.slug = formData.slug || null
       if (formData.tags !== undefined) updateData.tags = formData.tags?.length ? formData.tags : null
       if (formData.canonical_url !== undefined) updateData.canonical_url = formData.canonical_url || null
+      if (formData.send_announcement !== undefined) updateData.send_announcement = formData.send_announcement
+      if (formData.announcement_message !== undefined) updateData.announcement_message = formData.announcement_message || null
 
       const { error } = await supabase
         .from("posts")
         .update(updateData)
-        .eq("id", formData.id)
+        .eq("id", params.id)
 
       if (error) throw error
+
+      // If announcement is requested, send it
+      if (formData.send_announcement) {
+        try {
+          const announcementContent = formData.announcement_message || formData.content.substring(0, 500) + (formData.content.length > 500 ? '...' : '')
+          
+          const response = await fetch('/api/send-admin-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              to: 'system@marinabts.com', // This won't actually send to this address
+              subject: `Post Update: ${formData.title}`,
+              content: announcementContent,
+              isPostAnnouncement: true,
+              postId: params.id,
+              postTitle: formData.title,
+              postSlug: formData.slug || params.id,
+              entryId: null,
+              slipId: null,
+              action: 'post_announcement'
+            })
+          })
+
+          if (!response.ok) {
+            console.warn('Failed to send post announcement, but post was updated successfully')
+          } else {
+            console.log('Post announcement sent successfully')
+            toast({
+              title: "Announcement Sent!",
+              description: `Post announcement has been sent to all slipholders and waitlisted users.`,
+            })
+          }
+        } catch (announcementError) {
+          console.error('Error sending post announcement:', announcementError)
+          // Don't fail the post update if announcement fails
+        }
+      }
 
       toast({
         title: "Success!",
@@ -394,6 +441,54 @@ export default function EditPostPage() {
                 </div>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Announcement Option */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Announcement Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="send_announcement"
+                checked={formData.send_announcement}
+                onChange={(e) => handleInputChange("send_announcement", e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="send_announcement" className="text-base">
+                Send announcement to all slipholders and waitlisted users
+              </Label>
+            </div>
+            {formData.send_announcement && (
+              <div className="ml-6 space-y-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="text-blue-800 text-sm">
+                    <strong>Announcement will be sent to:</strong>
+                    <ul className="mt-2 list-disc list-inside space-y-1">
+                      <li>All current slipholders</li>
+                      <li>All waitlisted users</li>
+                      <li>Users will receive a personalized email with a link to this post</li>
+                    </ul>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="announcement_message">Custom Announcement Message (Optional)</Label>
+                  <Textarea
+                    id="announcement_message"
+                    value={formData.announcement_message || ""}
+                    onChange={(e) => handleInputChange("announcement_message", e.target.value)}
+                    placeholder="Write a custom message to include with the announcement email..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave empty to use the post content as the announcement
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
