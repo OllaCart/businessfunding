@@ -20,7 +20,6 @@ interface DockSlip {
   id: string
   slip_number: string
   capacity: number
-  slip_type: string
   monthly_rate: number
   is_available: boolean
   description: string
@@ -48,7 +47,6 @@ export default function AdminSlipsPage() {
   const [formData, setFormData] = useState({
     slip_number: "",
     capacity: "",
-    slip_type: "",
     monthly_rate: "",
     is_available: true,
     description: "",
@@ -112,7 +110,6 @@ export default function AdminSlipsPage() {
     setFormData({
       slip_number: slip.slip_number,
       capacity: slip.capacity.toString(),
-      slip_type: slip.slip_type,
       monthly_rate: slip.monthly_rate.toString(),
       is_available: slip.is_available,
       description: slip.description,
@@ -126,7 +123,6 @@ export default function AdminSlipsPage() {
     setFormData({
       slip_number: "",
       capacity: "",
-      slip_type: "",
       monthly_rate: "",
       is_available: true,
       description: "",
@@ -142,7 +138,6 @@ export default function AdminSlipsPage() {
       const slipData = {
         slip_number: formData.slip_number,
         capacity: Number.parseInt(formData.capacity),
-        slip_type: formData.slip_type,
         monthly_rate: Number.parseFloat(formData.monthly_rate),
         is_available: formData.is_available,
         description: formData.description,
@@ -199,18 +194,7 @@ export default function AdminSlipsPage() {
     }))
   }
 
-  const getSlipTypeColor = (type: string) => {
-    switch (type) {
-      case "premium":
-        return "bg-primary text-primary-foreground"
-      case "covered":
-        return "bg-secondary text-secondary-foreground"
-      case "uncovered":
-        return "bg-muted text-muted-foreground"
-      default:
-        return "bg-muted text-muted-foreground"
-    }
-  }
+
 
   if (loading) {
     return (
@@ -281,8 +265,8 @@ export default function AdminSlipsPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Slip {slip.slip_number}</CardTitle>
                 <div className="flex items-center space-x-2">
-                  <Badge className={getSlipTypeColor(slip.slip_type)}>
-                    {slip.slip_type.charAt(0).toUpperCase() + slip.slip_type.slice(1)}
+                  <Badge variant={slip.is_available ? "default" : "secondary"}>
+                    {slip.is_available ? "Available" : "Occupied"}
                   </Badge>
                   <Switch
                     checked={slip.is_available}
@@ -364,35 +348,17 @@ export default function AdminSlipsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="slip_type">Slip Type *</Label>
-                <Select
-                  value={formData.slip_type}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, slip_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select slip type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="uncovered">Open Slip</SelectItem>
-                    <SelectItem value="covered">Covered Slip</SelectItem>
-                    <SelectItem value="premium">Premium Slip</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="monthly_rate">Monthly Rate ($) *</Label>
-                <Input
-                  id="monthly_rate"
-                  type="number"
-                  step="0.01"
-                  value={formData.monthly_rate}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, monthly_rate: e.target.value }))}
-                  placeholder="e.g. 450.00"
-                  required
-                />
-              </div>
+            <div>
+              <Label htmlFor="monthly_rate">Monthly Rate ($) *</Label>
+              <Input
+                id="monthly_rate"
+                type="number"
+                step="0.01"
+                value={formData.monthly_rate}
+                onChange={(e) => setFormData((prev) => ({ ...prev, monthly_rate: e.target.value }))}
+                placeholder="e.g. 450.00"
+                required
+              />
             </div>
 
             <div>
