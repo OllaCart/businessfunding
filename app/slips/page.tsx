@@ -14,7 +14,6 @@ interface DockSlip {
   slip_number: string
   length_capacity: number
   beam_capacity: number
-  slip_type: string
   monthly_rate: number
   is_available: boolean
   description: string
@@ -52,31 +51,7 @@ export default async function SlipsPage() {
   const availableSlips = slips?.filter((slip) => slip.is_available) || []
   const unavailableSlips = slips?.filter((slip) => !slip.is_available) || []
 
-  const getSlipTypeColor = (type: string) => {
-    switch (type) {
-      case "premium":
-        return "bg-primary text-primary-foreground"
-      case "covered":
-        return "bg-secondary text-secondary-foreground"
-      case "uncovered":
-        return "bg-muted text-muted-foreground"
-      default:
-        return "bg-muted text-muted-foreground"
-    }
-  }
 
-  const getSlipTypeLabel = (type: string) => {
-    switch (type) {
-      case "premium":
-        return "Premium"
-      case "covered":
-        return "Covered"
-      case "uncovered":
-        return "Open"
-      default:
-        return type
-    }
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,7 +96,7 @@ export default async function SlipsPage() {
             </Card>
             <Card className="text-center bg-white/90 backdrop-blur-sm">
               <CardContent className="p-6">
-                <div className="text-3xl font-bold text-primary mb-2">18-45</div>
+                <div className="text-3xl font-bold text-primary mb-2">31-80</div>
                 <div className="text-muted-foreground">Boat Length (ft)</div>
               </CardContent>
             </Card>
@@ -155,7 +130,9 @@ export default async function SlipsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-center justify-between mb-2">
                       <CardTitle className="text-xl font-serif">Slip {slip.slip_number}</CardTitle>
-                      <Badge className={getSlipTypeColor(slip.slip_type)}>{getSlipTypeLabel(slip.slip_type)}</Badge>
+                      <Badge variant="default" className="bg-green-100 text-green-800">
+                        Available
+                      </Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-2xl font-bold text-primary">${slip.monthly_rate}/mo</span>
@@ -169,63 +146,54 @@ export default async function SlipsPage() {
                   <CardContent className="space-y-4">
                     <p className="text-muted-foreground text-sm">{slip.description}</p>
 
-                    {/* Utilities */}
+                                        {/* Utilities & Services */}
                     <div>
                       <h4 className="font-semibold text-sm mb-2">Utilities & Services</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex flex-wrap gap-2">
                         {slip.has_water && (
-                          <div className="flex items-center space-x-1 text-blue-600">
+                          <div className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs">
                             <Droplets className="h-3 w-3" />
                             <span>Fresh Water</span>
                           </div>
                         )}
                         {slip.has_electric && (
-                          <div className="flex items-center space-x-1 text-yellow-600">
+                          <div className="flex items-center space-x-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-md text-xs">
                             <Zap className="h-3 w-3" />
                             <span>{slip.electric_amp}A Electric</span>
                           </div>
                         )}
                         {slip.has_wifi && (
-                          <div className="flex items-center space-x-1 text-green-600">
+                          <div className="flex items-center space-x-1 bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs">
                             <Wifi className="h-3 w-3" />
                             <span>WiFi</span>
                           </div>
                         )}
                         {slip.has_cable && (
-                          <div className="flex items-center space-x-1 text-purple-600">
+                          <div className="flex items-center space-x-1 bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-xs">
                             <Cable className="h-3 w-3" />
                             <span>Cable TV</span>
                           </div>
                         )}
                         {slip.has_pump_out && (
-                          <div className="flex items-center space-x-1 text-gray-600">
+                          <div className="flex items-center space-x-1 bg-gray-50 text-gray-700 px-2 py-1 rounded-md text-xs">
                             <Waves className="h-3 w-3" />
                             <span>Pump Out</span>
                           </div>
                         )}
+                        {slip.amenities && slip.amenities.map((amenity: string) => {
+                          const IconComponent = amenityIcons[amenity] || Anchor
+                          return (
+                            <div
+                              key={amenity}
+                              className="flex items-center space-x-1 bg-muted px-2 py-1 rounded-md text-xs"
+                            >
+                              <IconComponent className="h-3 w-3" />
+                              <span className="capitalize">{amenity.replace("-", " ")}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
-
-                    {/* Legacy Amenities */}
-                    {slip.amenities && slip.amenities.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-sm mb-2">Additional Amenities</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {slip.amenities.map((amenity) => {
-                            const IconComponent = amenityIcons[amenity] || Anchor
-                            return (
-                              <div
-                                key={amenity}
-                                className="flex items-center space-x-1 bg-muted px-2 py-1 rounded-md text-xs"
-                              >
-                                <IconComponent className="h-3 w-3" />
-                                <span className="capitalize">{amenity.replace("-", " ")}</span>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
 
                     <div className="pt-2">
                       <Button asChild className="w-full bg-primary hover:bg-primary/90">
@@ -280,7 +248,6 @@ export default async function SlipsPage() {
                     <div className="flex items-center justify-between mb-2">
                       <CardTitle className="text-xl font-serif">Slip {slip.slip_number}</CardTitle>
                       <div className="flex gap-2">
-                        <Badge className={getSlipTypeColor(slip.slip_type)}>{getSlipTypeLabel(slip.slip_type)}</Badge>
                         <Badge variant="secondary" className="bg-red-100 text-red-800">
                           Occupied
                         </Badge>
@@ -298,40 +265,52 @@ export default async function SlipsPage() {
                   <CardContent className="space-y-4">
                     <p className="text-muted-foreground text-sm">{slip.description}</p>
 
-                    {/* Utilities */}
+                    {/* Utilities & Services */}
                     <div>
                       <h4 className="font-semibold text-sm mb-2">Utilities & Services</h4>
-                      <div className="grid grid-cols-2 gap-2 text-xs opacity-60">
+                      <div className="flex flex-wrap gap-2 opacity-60">
                         {slip.has_water && (
-                          <div className="flex items-center space-x-1 text-blue-600">
+                          <div className="flex items-center space-x-1 bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs">
                             <Droplets className="h-3 w-3" />
                             <span>Fresh Water</span>
                           </div>
                         )}
                         {slip.has_electric && (
-                          <div className="flex items-center space-x-1 text-yellow-600">
+                          <div className="flex items-center space-x-1 bg-yellow-50 text-yellow-700 px-2 py-1 rounded-md text-xs">
                             <Zap className="h-3 w-3" />
                             <span>{slip.electric_amp}A Electric</span>
                           </div>
                         )}
                         {slip.has_wifi && (
-                          <div className="flex items-center space-x-1 text-green-600">
+                          <div className="flex items-center space-x-1 bg-green-50 text-green-700 px-2 py-1 rounded-md text-xs">
                             <Wifi className="h-3 w-3" />
                             <span>WiFi</span>
                           </div>
                         )}
                         {slip.has_cable && (
-                          <div className="flex items-center space-x-1 text-purple-600">
+                          <div className="flex items-center space-x-1 bg-purple-50 text-purple-700 px-2 py-1 rounded-md text-xs">
                             <Cable className="h-3 w-3" />
                             <span>Cable TV</span>
                           </div>
                         )}
                         {slip.has_pump_out && (
-                          <div className="flex items-center space-x-1 text-gray-600">
+                          <div className="flex items-center space-x-1 bg-gray-50 text-gray-700 px-2 py-1 rounded-md text-xs">
                             <Waves className="h-3 w-3" />
                             <span>Pump Out</span>
                           </div>
                         )}
+                        {slip.amenities && slip.amenities.map((amenity: string) => {
+                          const IconComponent = amenityIcons[amenity] || Anchor
+                          return (
+                            <div
+                              key={amenity}
+                              className="flex items-center space-x-1 bg-muted px-2 py-1 rounded-md text-xs"
+                            >
+                              <IconComponent className="h-3 w-3" />
+                              <span className="capitalize">{amenity.replace("-", " ")}</span>
+                            </div>
+                          )
+                        })}
                       </div>
                     </div>
 
