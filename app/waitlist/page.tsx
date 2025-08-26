@@ -1,10 +1,11 @@
 "use client"
 
+import { Suspense } from "react"
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Clock, Users, Star } from "lucide-react"
-import { WaitlistForm } from "./waitlist-form"
+import { WaitlistFormWrapper } from "@/components/waitlist-form-wrapper"
 import { useDynamicSlips } from "@/components/dynamic-waitlist-section"
 
 export default function WaitlistPage() {
@@ -103,12 +104,14 @@ export default function WaitlistPage() {
             {/* Waitlist Form */}
             <div>
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-serif text-2xl">Join the Waitlist</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <WaitlistForm allSlips={allSlips} />
-                </CardContent>
+                                  <CardHeader>
+                    <CardTitle className="font-serif text-2xl">Join the Waitlist</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Suspense fallback={<div className="text-center py-8">Loading waitlist form...</div>}>
+                      <WaitlistFormWrapper allSlips={allSlips} />
+                    </Suspense>
+                  </CardContent>
               </Card>
             </div>
           </div>

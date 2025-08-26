@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,14 +17,16 @@ interface DockSlip {
   beam_capacity: number
   monthly_rate: number
   is_available: boolean
+  show_price: boolean
   amenities: string[]
 }
 
 interface WaitlistFormProps {
   allSlips: DockSlip[]
+  preSelectedSlips?: string[]
 }
 
-export function WaitlistForm({ allSlips }: WaitlistFormProps) {
+export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormProps) {
   const [formData, setFormData] = useState({
     email: "",
     full_name: "",
@@ -36,6 +38,16 @@ export function WaitlistForm({ allSlips }: WaitlistFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Pre-select slips based on props
+  useEffect(() => {
+    if (preSelectedSlips.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        selected_slips: preSelectedSlips
+      }))
+    }
+  }, [preSelectedSlips])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,13 +205,21 @@ export function WaitlistForm({ allSlips }: WaitlistFormProps) {
                   onCheckedChange={(checked) => handleSlipSelection(slip.id, checked as boolean)}
                 />
                 <div className="flex-1">
-                  <Label htmlFor={`slip-${slip.id}`} className="text-sm font-medium cursor-pointer">
-                    Slip {slip.slip_number}
-                  </Label>
-                  <div className="text-xs text-muted-foreground">
-                    {slip.length_capacity}' × {slip.beam_capacity}' • ${slip.monthly_rate.toLocaleString()}/month
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor={`slip-${slip.id}`} className="text-sm font-medium cursor-pointer">
+                      Slip {slip.slip_number}
+                    </Label>
+                    <span className="text-lg font-bold text-primary">
+                      {slip.length_capacity}'
+                    </span>
                   </div>
-                  <div className="text-xs mt-1">
+                  <div className="text-xs text-muted-foreground mb-2">
+                    {slip.length_capacity}' L × {slip.beam_capacity}' W
+                    {slip.show_price && (
+                      <span> • ${slip.monthly_rate.toLocaleString()}/month</span>
+                    )}
+                  </div>
+                  <div className="text-xs">
                     <span className={`px-2 py-1 rounded ${
                       slip.is_available 
                         ? 'bg-green-100 text-green-700' 

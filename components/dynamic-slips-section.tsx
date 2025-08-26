@@ -136,9 +136,14 @@ export function DynamicSlipsSection() {
                     <p className="text-sm text-muted-foreground mb-4">{slip.description}</p>
                   )}
 
-                  <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                    <Link href="/contact">Inquire About This Slip</Link>
-                  </Button>
+                  <div className="space-y-2">
+                    <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                      <Link href="/contact">Inquire About This Slip</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
