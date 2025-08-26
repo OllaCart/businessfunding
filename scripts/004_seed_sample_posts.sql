@@ -1,7 +1,7 @@
 -- Note: This will only work after an admin user is created
 -- Insert sample posts (you'll need to replace the author_id with actual admin user ID)
 INSERT INTO public.posts (title, content, excerpt, is_published) VALUES
-('Welcome to Bay Town Marina', 
+('Welcome to Marina By-The-Sea', 
 'We are excited to announce the opening of our state-of-the-art marina facility. With over 50 premium dock slips, full amenities, and 24/7 security, we provide the perfect home for your vessel.',
 'Announcing the opening of our premium marina facility with world-class amenities.',
 true),

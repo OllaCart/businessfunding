@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   }
 
   const title = post.meta_title || post.title
-  const description = post.meta_description || post.excerpt || "Marina update and news from Bay Town Marina."
+  const description = post.meta_description || post.excerpt || "Marina update and news from Marina By-The-Sea."
 
   return {
     title,

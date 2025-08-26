@@ -69,7 +69,7 @@ export default async function PostsPage() {
               Marina Updates
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Stay informed with the latest news, events, and updates from Bay Town Marina. From new amenities to
+              Stay informed with the latest news, events, and updates from Marina By-The-Sea. From new amenities to
               seasonal information, we keep you connected to everything happening at our marina.
             </p>
           </div>

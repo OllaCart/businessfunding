@@ -16,10 +16,10 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
-              About Bay Town Marina
+              About Marina By-The-Sea
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              For over three decades, Bay Town Marina has been the premier destination for discerning boat owners who
+              For over three decades, Marina By-The-Sea has been the premier destination for discerning boat owners who
               demand excellence in every aspect of their maritime experience.
             </p>
           </div>
@@ -34,7 +34,7 @@ export default function AboutPage() {
               <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  Founded in 1990 by Captain James Morrison, Bay Town Marina began as a small family-owned facility with
+                  Founded in 1990 by Captain James Morrison, Marina By-The-Sea began as a small family-owned facility with
                   just 12 dock slips. James's vision was simple: create a marina where boat owners could enjoy the
                   highest level of service and security for their vessels.
                 </p>
@@ -53,7 +53,7 @@ export default function AboutPage() {
             <div className="relative">
               <img
                 src="/placeholder.svg?height=400&width=600"
-                alt="Bay Town Marina founder"
+                alt="Marina By-The-Sea founder"
                 className="rounded-lg shadow-xl w-full"
               />
             </div>
@@ -67,7 +67,7 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Our Values</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              These core principles guide everything we do at Bay Town Marina.
+              These core principles guide everything we do at Marina By-The-Sea.
             </p>
           </div>
 
@@ -182,7 +182,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-6">Ready to Join Our Marina Family?</h2>
           <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Experience the Bay Town Marina difference. Contact us today to schedule a tour or learn more about our
+            Experience the Marina By-The-Sea difference. Contact us today to schedule a tour or learn more about our
             services.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

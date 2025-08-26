@@ -19,9 +19,9 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Bay Town Marina - Premium Dock Slips & Marine Services",
+  title: "Marina By-The-Sea - Premium Dock Slips in Lauderdale-By-The-Sea",
   description:
-    "Experience luxury on the water at Bay Town Marina. Premium dock slips, full-service marina with 24/7 security, fuel dock, and concierge services. Book your slip today.",
+    "Experience luxury on the water at Marina By-The-Sea. Premium floating dock slips with 24/7, fuel refuellings, and detailing services. Book your slip today.",
   keywords: [
     "marina",
     "dock slips",
@@ -33,29 +33,29 @@ export const metadata: Metadata = {
     "harbor",
     "yacht club",
   ],
-  authors: [{ name: "Bay Town Marina" }],
-  creator: "Bay Town Marina",
-  publisher: "Bay Town Marina",
+  authors: [{ name: "Marina By-The-Sea" }],
+  creator: "MarinaBTS",
+  publisher: "MarinaBTS",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://baytownmarina.com"),
+  metadataBase: new URL("https://marinabts.com"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Bay Town Marina - Premium Dock Slips & Marine Services",
-    description: "Experience luxury on the water with premium dock slips and world-class amenities.",
-    url: "https://baytownmarina.com",
-    siteName: "Bay Town Marina",
+    title: "Marina By-The-Sea - Premium Dock Slips in Lauderdale-By-The-Sea",
+    description: "Experience convenience and luxury on the water in Lauderdale-By-The-Sea with premium floating dock slips.",
+    url: "https://marinabts.com",
+    siteName: "MarinaBTS",
     images: [
       {
         url: "/placeholder.svg?height=630&width=1200",
         width: 1200,
         height: 630,
-        alt: "Bay Town Marina - Luxury dock slips and harbor view",
+        alt: "Marina By-The-Sea - Floating dock slips in Lauderdale-By-The-Sea",
       },
     ],
     locale: "en_US",
@@ -63,8 +63,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bay Town Marina - Premium Dock Slips & Marine Services",
-    description: "Experience luxury on the water with premium dock slips and world-class amenities.",
+    title: "Marina By-The-Sea - Premium Dock Slips & Marine Services",
+    description: "Experience luxury on the water with premium dock slips in Lauderdale-By-The-Sea.",
     images: ["/placeholder.svg?height=630&width=1200"],
   },
   robots: {
@@ -80,6 +80,7 @@ export const metadata: Metadata = {
   },
   generator: "v0.app",
 }
+// suggest changes to the schema.org
 
 export default function RootLayout({
   children,
@@ -95,26 +96,26 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Marina",
-              name: "Bay Town Marina",
+              name: "Marina By-The-Sea",
               description: "Premium dock slips and marine services with 24/7 security and concierge services",
-              url: "https://baytownmarina.com",
-              telephone: "(555) 123-4567",
-              email: "info@baytownmarina.com",
+              url: "https://marinabts.com",
+              telephone: "+1-954-790-1588",
+              email: "dylan@dreamsdev.co",
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "123 Harbor Drive",
-                addressLocality: "Bay Town",
+                streetAddress: "230 Basin Drive",
+                addressLocality: "Lauderdale-By-The-Sea",
                 addressRegion: "FL",
-                postalCode: "33101",
+                postalCode: "33308",
                 addressCountry: "US",
               },
               geo: {
                 "@type": "GeoCoordinates",
-                latitude: "25.7617",
-                longitude: "-80.1918",
+                latitude: 25.26189223,
+                longitude: -80.099866,
               },
               openingHours: "Mo-Su 00:00-23:59",
-              priceRange: "$225-$950",
+              priceRange: "$$$",
               amenityFeature: [
                 {
                   "@type": "LocationFeatureSpecification",
@@ -122,17 +123,26 @@ export default function RootLayout({
                 },
                 {
                   "@type": "LocationFeatureSpecification",
-                  name: "Fuel Dock",
+                  name: "Fuel Refuelling",
                 },
                 {
                   "@type": "LocationFeatureSpecification",
-                  name: "Concierge Services",
+                  name: "Detailing Service",
                 },
                 {
                   "@type": "LocationFeatureSpecification",
-                  name: "Maintenance Services",
+                  name: "Maintenance Referrals",
                 },
               ],
+              hasMap: "https://maps.google.com/?q=25.26189223,-80.099866",
+              sameAs: [
+                "https://www.facebook.com/marinabts",
+                "https://www.instagram.com/marinabts"
+              ],
+              areaServed: {
+                "@type": "City",
+                name: "Lauderdale-By-The-Sea"
+              },
             }),
           }}
         />
