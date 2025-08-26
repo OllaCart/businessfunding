@@ -38,7 +38,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   Recently, we've rennovated our marina to become the most state of the art marina in the area, featuring 14 premium floating dock
-                  slips, state-of-the-art security, and a new dock master.
+                  slips and state-of-the-art surveillance.
                 </p>
                 <p>
                   Our commitment to ease and convenience has earned us the respect of our customers, and more importantly, the trust

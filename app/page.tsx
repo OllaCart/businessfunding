@@ -119,9 +119,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                   <Fuel className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Fuel Dock</h3>
+                <h3 className="font-serif font-semibold text-xl mb-3">Fuel Truck</h3>
                 <p className="text-muted-foreground">
-                  Premium fuel services with competitive pricing and convenient dock-side delivery.
+                  Local fuel services with competitive pricing will facilitate convenient dock-side delivery.
                 </p>
               </CardContent>
             </Card>
@@ -131,9 +131,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                   <Wrench className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Full Service</h3>
+                <h3 className="font-serif font-semibold text-xl mb-3">Diesel Engines</h3>
                 <p className="text-muted-foreground">
-                  Professional maintenance, repairs, and detailing services by certified technicians.
+                  Our dockmaster specializes in diesel engine maintenance, service, and repairs.
                 </p>
               </CardContent>
             </Card>
@@ -143,9 +143,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                   <Star className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Concierge</h3>
+                <h3 className="font-serif font-semibold text-xl mb-3">Locals</h3>
                 <p className="text-muted-foreground">
-                  Personalized concierge services including provisioning, cleaning, and valet parking.
+                  We're run by locals, and we have local contacts for services including provisioning, cleaning, and maintenance.
                 </p>
               </CardContent>
             </Card>
