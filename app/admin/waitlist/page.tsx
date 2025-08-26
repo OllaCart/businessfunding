@@ -170,6 +170,10 @@ The Marina By-The-Sea Team`
   }
 
   const getOccupantForSlip = (slipId: string) => {
+    // If currentOccupants is empty (table doesn't exist yet), return null
+    if (!currentOccupants || currentOccupants.length === 0) {
+      return null
+    }
     return currentOccupants.find(occupant => occupant.slip_id === slipId)
   }
 
@@ -190,6 +194,29 @@ The Marina By-The-Sea Team`
           {waitlistEntries.length} entries • {slips.length} slips
         </div>
       </div>
+
+      {/* Database Setup Notice */}
+      {currentOccupants.length === 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="text-yellow-600 text-xl mr-3">⚠️</div>
+            <div>
+              <h3 className="font-medium text-yellow-800">Database Setup Required</h3>
+              <p className="text-yellow-700 text-sm mt-1">
+                To enable occupant management and editing, run the SQL script in your Supabase SQL Editor:
+              </p>
+              <div className="mt-2">
+                <code className="bg-yellow-100 px-2 py-1 rounded text-xs text-yellow-800">
+                  scripts/013_create_current_occupants_table.sql
+                </code>
+              </div>
+              <p className="text-yellow-600 text-xs mt-2">
+                The waitlist will still function, but occupant editing features will be disabled until the table is created.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pipeline Rows */}
       <div className="space-y-4">
@@ -286,27 +313,37 @@ The Marina By-The-Sea Team`
                 </div>
                 
                 {/* Show current occupant if slip is occupied */}
-                {!slip.is_available && occupant && (
+                {!slip.is_available && (
                   <div className="mt-2 p-2 bg-white rounded border">
-                    <div className="text-xs font-medium text-red-700">Current Occupant</div>
-                    <div className="text-xs">{occupant.full_name}</div>
-                    <div className="text-xs">{occupant.boat_name}</div>
-                    {occupant.contract_end_date && (
+                    {occupant ? (
+                      <>
+                        <div className="text-xs font-medium text-red-700">Current Occupant</div>
+                        <div className="text-xs">{occupant.full_name}</div>
+                        <div className="text-xs">{occupant.boat_name}</div>
+                        {occupant.contract_end_date && (
+                          <div className="text-xs text-red-600">
+                            Contract: {new Date(occupant.contract_end_date).toLocaleDateString()}
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs mt-2"
+                          onClick={() => setOccupantEditDialog({
+                            isOpen: true,
+                            occupant
+                          })}
+                        >
+                          ✏️ Edit Occupant
+                        </Button>
+                      </>
+                    ) : (
                       <div className="text-xs text-red-600">
-                        Contract: {new Date(occupant.contract_end_date).toLocaleDateString()}
+                        <div className="font-medium">Database Setup Required</div>
+                        <div>Run the SQL script to enable occupant management</div>
+                        <div className="text-xs mt-1">scripts/013_create_current_occupants_table.sql</div>
                       </div>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs mt-2"
-                      onClick={() => setOccupantEditDialog({
-                        isOpen: true,
-                        occupant
-                      })}
-                    >
-                      ✏️ Edit Occupant
-                    </Button>
                   </div>
                 )}
               </div>
@@ -733,7 +770,11 @@ export default function AdminWaitlistPage() {
           .from('current_occupants')
           .select('*')
         
-        if (occupantsError) throw occupantsError
+        if (occupantsError) {
+          console.error('Error fetching current occupants:', occupantsError)
+          // Don't throw error, just log it and continue with empty array
+          // This allows the page to load even if the table doesn't exist yet
+        }
         
         // Validate and clean waitlist data
         const validatedWaitlistData = (waitlistData || []).map(entry => ({
@@ -746,6 +787,7 @@ export default function AdminWaitlistPage() {
         console.log('Raw waitlist data:', waitlistData)
         console.log('Validated waitlist data:', validatedWaitlistData)
         console.log('Current occupants:', occupantsData)
+        console.log('Occupants error (if any):', occupantsError)
         
         setSlips(slipsData || [])
         setWaitlistEntries(validatedWaitlistData)
