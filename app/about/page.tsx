@@ -49,7 +49,7 @@ export default function AboutPage() {
             </div>
             <div className="relative">
               <img
-                src="/placeholder.svg?height=400&width=600"
+                src="/images/marina-logo.svg"
                 alt="Marina By-The-Sea founder"
                 className="rounded-lg shadow-xl w-full"
               />
