@@ -1,0 +1,221 @@
+import { createClient } from "@/lib/supabase/server"
+import { MarinaHeader } from "@/components/marina-header"
+import { MarinaFooter } from "@/components/marina-footer"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Calendar, User, ArrowRight } from "lucide-react"
+
+interface Post {
+  id: string
+  title: string
+  content: string
+  excerpt: string | null
+  featured_image_url: string | null
+  author_id: string | null
+  is_published: boolean
+  created_at: string
+  updated_at: string
+  admin_profiles: {
+    full_name: string | null
+    email: string
+  } | null
+}
+
+export default async function PostsPage() {
+  const supabase = await createClient()
+
+  const { data: posts, error } = await supabase
+    .from("posts")
+    .select(`
+      *,
+      admin_profiles (
+        full_name,
+        email
+      )
+    `)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching posts:", error)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  const getExcerpt = (post: Post) => {
+    if (post.excerpt) return post.excerpt
+    // Create excerpt from content if none exists
+    const plainText = post.content.replace(/<[^>]*>/g, "")
+    return plainText.length > 150 ? `${plainText.substring(0, 150)}...` : plainText
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <MarinaHeader />
+
+      {/* Hero Section */}
+      <section className="pt-24 pb-16 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
+              Marina Updates
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+              Stay informed with the latest news, events, and updates from Bay Town Marina. From new amenities to
+              seasonal information, we keep you connected to everything happening at our marina.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Posts Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {posts && posts.length > 0 ? (
+            <>
+              {/* Featured Post */}
+              {posts[0] && (
+                <div className="mb-16">
+                  <Badge className="mb-4 bg-secondary text-secondary-foreground">Featured</Badge>
+                  <Card className="overflow-hidden hover:shadow-xl transition-shadow border-2 border-primary/10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+                      <div className="h-64 lg:h-auto bg-gradient-to-br from-primary/20 to-secondary/10 flex items-center justify-center">
+                        {posts[0].featured_image_url ? (
+                          <img
+                            src={posts[0].featured_image_url || "/placeholder.svg"}
+                            alt={posts[0].title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-center p-8">
+                            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <Calendar className="h-8 w-8 text-primary" />
+                            </div>
+                            <p className="text-muted-foreground">Featured Update</p>
+                          </div>
+                        )}
+                      </div>
+                      <CardContent className="p-8 flex flex-col justify-center">
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-4">
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{formatDate(posts[0].created_at)}</span>
+                          </div>
+                          {posts[0].admin_profiles && (
+                            <div className="flex items-center space-x-1">
+                              <User className="h-4 w-4" />
+                              <span>{posts[0].admin_profiles.full_name || "Marina Staff"}</span>
+                            </div>
+                          )}
+                        </div>
+                        <CardTitle className="font-serif text-2xl lg:text-3xl mb-4">{posts[0].title}</CardTitle>
+                        <p className="text-muted-foreground mb-6 leading-relaxed">{getExcerpt(posts[0])}</p>
+                        <Button asChild className="w-fit bg-primary hover:bg-primary/90">
+                          <Link href={`/posts/${posts[0].id}`}>
+                            Read Full Update
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </div>
+                  </Card>
+                </div>
+              )}
+
+              {/* Recent Posts Grid */}
+              {posts.length > 1 && (
+                <div>
+                  <h2 className="font-serif font-bold text-3xl text-foreground mb-8">Recent Updates</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {posts.slice(1).map((post) => (
+                      <Card key={post.id} className="overflow-hidden hover:shadow-xl transition-shadow">
+                        <div className="h-48 bg-gradient-to-br from-primary/10 to-secondary/5 flex items-center justify-center">
+                          {post.featured_image_url ? (
+                            <img
+                              src={post.featured_image_url || "/placeholder.svg"}
+                              alt={post.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <Calendar className="h-6 w-6 text-primary" />
+                              </div>
+                              <p className="text-sm text-muted-foreground">Marina Update</p>
+                            </div>
+                          )}
+                        </div>
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center space-x-4 text-xs text-muted-foreground mb-2">
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(post.created_at)}</span>
+                            </div>
+                            {post.admin_profiles && (
+                              <div className="flex items-center space-x-1">
+                                <User className="h-3 w-3" />
+                                <span>{post.admin_profiles.full_name || "Staff"}</span>
+                              </div>
+                            )}
+                          </div>
+                          <CardTitle className="font-serif text-lg leading-tight">{post.title}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-muted-foreground text-sm mb-4 leading-relaxed">{getExcerpt(post)}</p>
+                          <Button asChild variant="outline" size="sm" className="w-full bg-transparent">
+                            <Link href={`/posts/${post.id}`}>Read More</Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <Card className="text-center py-16">
+              <CardContent>
+                <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Updates Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  We haven't published any updates yet. Check back soon for the latest marina news and announcements.
+                </p>
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Link href="/contact">Contact Us for Information</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </section>
+
+      {/* Newsletter CTA */}
+      <section className="py-16 bg-muted">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Stay Updated</h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Never miss important marina updates, events, or announcements. Join our community to stay informed.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+              <Link href="/waitlist">Join Our Community</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/contact">Contact Marina Office</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <MarinaFooter />
+    </div>
+  )
+}
