@@ -159,6 +159,41 @@ This is an automated notification from Marina By-The-Sea
   }
 }
 
+export async function sendAdminEmail({
+  to,
+  subject,
+  content,
+  fromName
+}: {
+  to: string
+  subject: string
+  content: string
+  fromName: string
+}) {
+  console.log('[v0] Starting admin email process...')
+  
+  const transporter = createTransporter()
+  if (!transporter) {
+    console.warn('[v0] Gmail not configured - skipping admin email')
+    return
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"${fromName}" <${process.env.GMAIL_USER}>`,
+      to,
+      subject,
+      text: content,
+      html: content.replace(/\n/g, '<br>')
+    })
+    
+    console.log(`[v0] Admin email sent to ${to}`)
+  } catch (error) {
+    console.error('[v0] Failed to send admin email:', error)
+    throw error
+  }
+}
+
 export async function sendWaitlistConfirmationToUser(submission: WaitlistSubmission, slipDetails: SlipInfo[]) {
   console.log('[v0] Starting user confirmation process...')
   

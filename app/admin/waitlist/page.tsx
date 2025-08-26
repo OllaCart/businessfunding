@@ -1,136 +1,343 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Users, Calendar, Mail, Phone, Anchor } from "lucide-react"
+"use client"
 
-export default async function AdminWaitlistPage() {
-  const supabase = await createClient()
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { createClient } from '@/lib/supabase/client'
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) {
-    redirect("/auth/login")
-  }
+interface DockSlip {
+  id: string
+  slip_number: string
+  length_capacity: number
+  beam_capacity: number
+  monthly_rate: number
+  is_available: boolean
+  show_price: boolean
+  amenities: string[]
+}
 
-  // Check if user is admin
-  const { data: adminProfile } = await supabase.from("admin_profiles").select("*").eq("id", user.id).single()
+interface WaitlistEntry {
+  id: string
+  full_name: string
+  email: string
+  phone: string
+  boat_length: number
+  selected_slips: string[]
+  message: string
+  status: 'pending' | 'contacted' | 'converted'
+  created_at: string
+}
 
-  if (!adminProfile) {
-    redirect("/auth/login")
-  }
+interface PipelineViewProps {
+  slips: DockSlip[]
+  waitlistEntries: WaitlistEntry[]
+}
 
-  // Fetch all waitlist entries
-  const { data: waitlist } = await supabase.from("waitlist").select("*").order("created_at", { ascending: false })
+function PipelineView({ slips, waitlistEntries }: PipelineViewProps) {
+  const [emailDialog, setEmailDialog] = useState<{
+    isOpen: boolean
+    entry: WaitlistEntry | null
+    slip: DockSlip | null
+    action: 'notify' | 'call' | null
+  }>({
+    isOpen: false,
+    entry: null,
+    slip: null,
+    action: null
+  })
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+  const [emailContent, setEmailContent] = useState('')
+  const [emailSubject, setEmailSubject] = useState('')
+
+  const openEmailDialog = (entry: WaitlistEntry, slip: DockSlip, action: 'notify' | 'call') => {
+    let subject = ''
+    let content = ''
+
+    if (action === 'notify') {
+      subject = `Slip ${slip.slip_number} Status Update - Marina By-The-Sea`
+      content = `Dear ${entry.full_name},
+
+We wanted to update you on the status of Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}').
+
+[Your status update message here]
+
+Best regards,
+The Marina By-The-Sea Team`
+    } else if (action === 'call') {
+      subject = `Slip ${slip.slip_number} Available - Marina By-The-Sea`
+      content = `Dear ${entry.full_name},
+
+Great news! Slip ${slip.slip_number} (${slip.length_capacity}' × ${slip.beam_capacity}') has become available.
+
+Please call us at (954) 790-1588 to discuss this opportunity and arrange a viewing.
+
+Best regards,
+The Marina By-The-Sea Team`
+    }
+
+    setEmailSubject(subject)
+    setEmailContent(content)
+    setEmailDialog({
+      isOpen: true,
+      entry,
+      slip,
+      action
     })
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-blue-100 text-blue-800"
-      case "contacted":
-        return "bg-yellow-100 text-yellow-800"
-      case "converted":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  const sendEmail = async () => {
+    if (!emailDialog.entry || !emailDialog.slip) return
+
+    try {
+      const response = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailDialog.entry.email,
+          subject: emailSubject,
+          content: emailContent,
+          entryId: emailDialog.entry.id,
+          slipId: emailDialog.slip.id,
+          action: emailDialog.action
+        })
+      })
+
+      if (response.ok) {
+        alert('Email sent successfully!')
+        setEmailDialog({ isOpen: false, entry: null, slip: null, action: null })
+      } else {
+        alert('Failed to send email')
+      }
+    } catch (error) {
+      console.error('Error sending email:', error)
+      alert('Error sending email')
     }
   }
 
-  const getSlipTypeLabel = (type: string) => {
-    switch (type) {
-      case "premium":
-        return "Premium"
-      case "covered":
-        return "Covered"
-      case "uncovered":
-        return "Open"
-      case "any":
-        return "Any Available"
-      default:
-        return type
+  const getWaitlistEntriesForSlip = (slipId: string) => {
+    return waitlistEntries.filter(entry => 
+      entry.selected_slips.includes(slipId)
+    )
+  }
+
+  const getSlipStatusColor = (slip: DockSlip) => {
+    return slip.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+  }
+
+  const getEntryStatusColor = (entry: WaitlistEntry) => {
+    switch (entry.status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'contacted': return 'bg-blue-100 text-blue-800'
+      case 'converted': return 'bg-green-100 text-green-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="font-serif font-bold text-3xl text-foreground">Waitlist Management</h1>
-        <p className="text-muted-foreground">Manage customers waiting for dock slip availability</p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Waitlist Pipeline</h1>
+        <div className="text-sm text-gray-600">
+          {waitlistEntries.length} entries • {slips.length} slips
+        </div>
       </div>
 
-      {waitlist && waitlist.length > 0 ? (
-        <div className="space-y-4">
-          {waitlist.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{entry.full_name}</CardTitle>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                      <div className="flex items-center space-x-1">
-                        <Mail className="h-4 w-4" />
-                        <span>{entry.email}</span>
+      {/* Pipeline Grid */}
+      <div className="grid gap-4" style={{ 
+        gridTemplateColumns: `200px repeat(${slips.length}, 1fr)` 
+      }}>
+        {/* Header Row */}
+        <div className="font-semibold text-gray-700 p-2">Waitlist Entries</div>
+        {slips.map(slip => (
+          <div key={slip.id} className="text-center font-semibold text-gray-700 p-2">
+            <div className="text-lg">Slip {slip.slip_number}</div>
+            <div className="text-sm text-gray-500">
+              {slip.length_capacity}' × {slip.beam_capacity}'
+            </div>
+            <Badge className={`mt-1 ${getSlipStatusColor(slip)}`}>
+              {slip.is_available ? 'Available' : 'Occupied'}
+            </Badge>
+          </div>
+        ))}
+
+        {/* Waitlist Entries Rows */}
+        {waitlistEntries.map(entry => (
+          <div key={entry.id} className="contents">
+            {/* Entry Name */}
+            <div className="p-3 border-r border-gray-200 bg-gray-50">
+              <div className="font-medium">{entry.full_name}</div>
+              <div className="text-sm text-gray-600">{entry.email}</div>
+              <div className="text-xs text-gray-500">
+                {entry.boat_length}' boat • {entry.status}
+              </div>
+              <Badge className={`mt-1 ${getEntryStatusColor(entry)}`}>
+                {entry.status}
+              </Badge>
+            </div>
+
+            {/* Slip Columns */}
+            {slips.map(slip => {
+              const isInterested = entry.selected_slips.includes(slip.id)
+              const isAvailable = slip.is_available
+              
+              return (
+                <div key={`${entry.id}-${slip.id}`} className="p-2 border-b border-gray-200">
+                  {isInterested ? (
+                    <div className="space-y-2">
+                      <div className="text-xs text-center p-1 bg-blue-50 text-blue-700 rounded">
+                        Interested
                       </div>
-                      {entry.phone && (
-                        <div className="flex items-center space-x-1">
-                          <Phone className="h-4 w-4" />
-                          <span>{entry.phone}</span>
-                        </div>
+                      
+                      {isAvailable ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => openEmailDialog(entry, slip, 'call')}
+                        >
+                          📞 Call to Discuss
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs"
+                          onClick={() => openEmailDialog(entry, slip, 'notify')}
+                        >
+                          📧 Status Update
+                        </Button>
                       )}
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-4 w-4" />
-                        <span>{formatDate(entry.created_at)}</span>
-                      </div>
                     </div>
-                  </div>
-                  <Badge className={getStatusColor(entry.status)}>{entry.status}</Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  {entry.boat_length && (
-                    <div className="flex items-center space-x-2">
-                      <Anchor className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Boat: {entry.boat_length} ft</span>
-                    </div>
-                  )}
-                  {entry.preferred_slip_type && (
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Prefers: {getSlipTypeLabel(entry.preferred_slip_type)}</span>
+                  ) : (
+                    <div className="text-xs text-gray-400 text-center p-2">
+                      -
                     </div>
                   )}
                 </div>
-                {entry.message && (
-                  <div className="bg-muted p-4 rounded-md">
-                    <p className="text-sm leading-relaxed">{entry.message}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+              )
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Email Dialog */}
+      <Dialog open={emailDialog.isOpen} onOpenChange={(open) => 
+        setEmailDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {emailDialog.action === 'notify' ? 'Send Status Update' : 'Notify of Availability'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email-to">To:</Label>
+              <Input
+                id="email-to"
+                value={emailDialog.entry?.email || ''}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-subject">Subject:</Label>
+              <Input
+                id="email-subject"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-content">Message:</Label>
+              <Textarea
+                id="email-content"
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+                rows={8}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setEmailDialog({ isOpen: false, entry: null, slip: null, action: null })}
+              >
+                Cancel
+              </Button>
+              <Button onClick={sendEmail}>
+                Send Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+export default function AdminWaitlistPage() {
+  const [slips, setSlips] = useState<DockSlip[]>([])
+  const [waitlistEntries, setWaitlistEntries] = useState<WaitlistEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const supabase = createClient()
+        
+        // Fetch slips
+        const { data: slipsData, error: slipsError } = await supabase
+          .from('dock_slips')
+          .select('*')
+          .order('slip_number')
+        
+        if (slipsError) throw slipsError
+        
+        // Fetch waitlist entries
+        const { data: waitlistData, error: waitlistError } = await supabase
+          .from('waitlist')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (waitlistError) throw waitlistError
+        
+        setSlips(slipsData || [])
+        setWaitlistEntries(waitlistData || [])
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading waitlist pipeline...</p>
         </div>
-      ) : (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">No Waitlist Entries</h3>
-            <p className="text-muted-foreground">
-              Customers who join the waitlist will appear here for you to manage and contact.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <PipelineView slips={slips} waitlistEntries={waitlistEntries} />
     </div>
   )
 }
