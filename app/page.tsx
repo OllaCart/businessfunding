@@ -119,9 +119,9 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                   <Fuel className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Fuel Truck</h3>
+                <h3 className="font-serif font-semibold text-xl mb-3">Fuel Delivery</h3>
                 <p className="text-muted-foreground">
-                  Local fuel services with competitive pricing will facilitate convenient dock-side delivery.
+                  Local fuel services with competitive pricing facilitate convenient dock-side delivery.
                 </p>
               </CardContent>
             </Card>

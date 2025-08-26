@@ -52,21 +52,81 @@ export async function POST(request: NextRequest) {
     // Send confirmation email to the user
     console.log('[Contact Submission] Sending confirmation email to user...')
     try {
-      const userEmailResult = await sendAdminEmail({
-        to: email,
-        subject: 'Thank you for contacting Marina By-The-Sea',
-        content: `Dear ${name},
+      // Create beautiful formatted content for user confirmation
+      const userTextContent = `Dear ${name},
 
 Thank you for reaching out to Marina By-The-Sea. We have received your message and will get back to you as soon as possible.
 
-Your Message Details:
+📋 YOUR MESSAGE DETAILS:
 Subject: ${subject || 'General Inquiry'}
 Message: ${message}
 
+⏰ RESPONSE TIME:
 We typically respond within 24-48 hours. If you have an urgent matter, please call us at (954) 790-1588.
 
+📅 SUBMITTED: ${new Date().toLocaleString()}
+
+We'll be in touch soon!
+
 Best regards,
-The Marina By-The-Sea Team`,
+The Marina By-The-Sea Team
+
+---
+Marina By-The-Sea
+230 Basin Drive
+Fort Lauderdale, FL 33315
+Phone: (954) 790-1588`.trim()
+
+      const userHtmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1f2937; margin-bottom: 10px;">📧 Thank You for Contacting Marina By-The-Sea</h1>
+            <p style="color: #6b7280; font-size: 18px;">We've received your message and will respond promptly!</p>
+          </div>
+          
+          <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22c55e;">
+            <p style="margin: 0; color: #166534; font-weight: 500;">
+              Thank you for reaching out to Marina By-The-Sea. We have received your message and will get back to you as soon as possible.
+            </p>
+          </div>
+          
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #374151; margin-top: 0;">📋 YOUR MESSAGE DETAILS</h3>
+            <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
+            <p><strong>Message:</strong> ${message}</p>
+          </div>
+          
+          <div style="background: #e0e7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #374151; margin-top: 0;">⏰ RESPONSE TIME</h3>
+            <p style="margin-bottom: 0;">We typically respond within 24-48 hours. If you have an urgent matter, please call us at <strong>(954) 790-1588</strong>.</p>
+          </div>
+          
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>📅 Submitted:</strong> ${new Date().toLocaleString()}</p>
+            <p style="margin-bottom: 0;">We'll be in touch soon!</p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #374151; font-weight: 500;">Best regards,</p>
+            <p style="color: #374151; font-weight: 500;">The Marina By-The-Sea Team</p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+          
+          <div style="text-align: center; color: #6b7280; font-size: 14px;">
+            <p style="margin: 5px 0;"><strong>Marina By-The-Sea</strong></p>
+            <p style="margin: 5px 0;">230 Basin Drive</p>
+            <p style="margin: 5px 0;">Fort Lauderdale, FL 33315</p>
+            <p style="margin: 5px 0;">Phone: (954) 790-1588</p>
+          </div>
+        </div>
+      `
+
+      const userEmailResult = await sendAdminEmail({
+        to: email,
+        subject: '📧 Thank You for Contacting Marina By-The-Sea',
+        content: userTextContent,
+        htmlContent: userHtmlContent,
         fromName: 'Marina By-The-Sea'
       })
       
@@ -104,20 +164,83 @@ The Marina By-The-Sea Team`,
           for (const adminEmail of fallbackAdminEmails) {
             try {
               console.log(`[Contact Submission] Sending fallback notification to admin: ${adminEmail}`)
-              const adminEmailResult = await sendAdminEmail({
-                to: adminEmail,
-                subject: `New Contact Form Submission: ${subject || 'General Inquiry'}`,
-                content: `A new contact form submission has been received:
+              
+              // Create beautiful formatted content for admin notification
+              const adminTextContent = `🚨 NEW CONTACT FORM SUBMISSION - Marina By-The-Sea
 
+A new contact form submission has been received and requires your attention.
+
+📋 SUBMISSION DETAILS:
 Name: ${name}
 Email: ${email}
 Phone: ${phone || 'Not provided'}
 Subject: ${subject || 'General Inquiry'}
-Message: ${message}
 
-Submitted: ${new Date().toLocaleString()}
+💬 MESSAGE:
+${message}
 
-Please respond to this inquiry promptly.`,
+📅 SUBMITTED: ${new Date().toLocaleString()}
+
+⏰ ACTION REQUIRED:
+Please respond to this inquiry promptly to maintain excellent customer service.
+
+🔗 VIEW IN ADMIN: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts
+
+---
+This is an automated notification from Marina By-The-Sea Contact Form System`.trim()
+
+              const adminHtmlContent = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #dc2626; margin-bottom: 10px;">🚨 New Contact Form Submission</h1>
+                    <p style="color: #6b7280; font-size: 18px;">Marina By-The-Sea - Action Required</p>
+                  </div>
+                  
+                  <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+                    <p style="margin: 0; color: #991b1b; font-weight: 500;">
+                      A new contact form submission has been received and requires your attention.
+                    </p>
+                  </div>
+                  
+                  <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+                    <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
+                  </div>
+                  
+                  <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="color: #374151; margin-top: 0;">💬 MESSAGE</h3>
+                    <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                  </div>
+                  
+                  <div style="background: #e0e7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>📅 Submitted:</strong> ${new Date().toLocaleString()}</p>
+                    <p style="margin-bottom: 0;"><strong>⏰ Action Required:</strong> Please respond to this inquiry promptly to maintain excellent customer service.</p>
+                  </div>
+                  
+                  <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                    <p style="margin-bottom: 10px;"><strong>🔗 View in Admin Dashboard:</strong></p>
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts" 
+                       style="background: #22c55e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+                      Open Admin Dashboard
+                    </a>
+                  </div>
+                  
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                  
+                  <div style="text-align: center; color: #6b7280; font-size: 12px;">
+                    <p style="margin: 5px 0;">This is an automated notification from Marina By-The-Sea Contact Form System</p>
+                  </div>
+                </div>
+              `
+
+              const adminEmailResult = await sendAdminEmail({
+                to: adminEmail,
+                subject: `🚨 New Contact Form Submission: ${subject || 'General Inquiry'}`,
+                content: adminTextContent,
+                htmlContent: adminHtmlContent,
                 fromName: 'Contact Form System'
               })
               
@@ -148,20 +271,83 @@ Please respond to this inquiry promptly.`,
         for (const admin of admins) {
           try {
             console.log(`[Contact Submission] Sending notification to admin: ${admin.email}`)
-            const adminEmailResult = await sendAdminEmail({
-              to: admin.email,
-              subject: `New Contact Form Submission: ${subject || 'General Inquiry'}`,
-              content: `A new contact form submission has been received:
+            
+            // Create beautiful formatted content for admin notification
+            const adminTextContent = `🚨 NEW CONTACT FORM SUBMISSION - Marina By-The-Sea
 
+A new contact form submission has been received and requires your attention.
+
+📋 SUBMISSION DETAILS:
 Name: ${name}
 Email: ${email}
 Phone: ${phone || 'Not provided'}
 Subject: ${subject || 'General Inquiry'}
-Message: ${message}
 
-Submitted: ${new Date().toLocaleString()}
+💬 MESSAGE:
+${message}
 
-Please respond to this inquiry promptly.`,
+📅 SUBMITTED: ${new Date().toLocaleString()}
+
+⏰ ACTION REQUIRED:
+Please respond to this inquiry promptly to maintain excellent customer service.
+
+🔗 VIEW IN ADMIN: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts
+
+---
+This is an automated notification from Marina By-The-Sea Contact Form System`.trim()
+
+            const adminHtmlContent = `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                  <h1 style="color: #dc2626; margin-bottom: 10px;">🚨 New Contact Form Submission</h1>
+                  <p style="color: #6b7280; font-size: 18px;">Marina By-The-Sea - Action Required</p>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+                  <p style="margin: 0; color: #991b1b; font-weight: 500;">
+                    A new contact form submission has been received and requires your attention.
+                  </p>
+                </div>
+                
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
+                  <p><strong>Name:</strong> ${name}</p>
+                  <p><strong>Email:</strong> ${email}</p>
+                  <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+                  <p><strong>Subject:</strong> ${subject || 'General Inquiry'}</p>
+                </div>
+                
+                <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h3 style="color: #374151; margin-top: 0;">💬 MESSAGE</h3>
+                  <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                </div>
+                
+                <div style="background: #e0e7ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <p><strong>📅 Submitted:</strong> ${new Date().toLocaleString()}</p>
+                  <p style="margin-bottom: 0;"><strong>⏰ Action Required:</strong> Please respond to this inquiry promptly to maintain excellent customer service.</p>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                  <p style="margin-bottom: 10px;"><strong>🔗 View in Admin Dashboard:</strong></p>
+                  <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts" 
+                     style="background: #22c55e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+                    Open Admin Dashboard
+                  </a>
+                </div>
+                
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                
+                <div style="text-align: center; color: #6b7280; font-size: 12px;">
+                  <p style="margin: 5px 0;">This is an automated notification from Marina By-The-Sea Contact Form System</p>
+                </div>
+              </div>
+            `
+
+            const adminEmailResult = await sendAdminEmail({
+              to: admin.email,
+              subject: `🚨 New Contact Form Submission: ${subject || 'General Inquiry'}`,
+              content: adminTextContent,
+              htmlContent: adminHtmlContent,
               fromName: 'Contact Form System'
             })
             

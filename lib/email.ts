@@ -163,11 +163,13 @@ export async function sendAdminEmail({
   to,
   subject,
   content,
+  htmlContent,
   fromName
 }: {
   to: string
   subject: string
   content: string
+  htmlContent?: string
   fromName: string
 }) {
   console.log('[v0] Starting admin email process...')
@@ -187,7 +189,7 @@ export async function sendAdminEmail({
       to,
       subject,
       text: content,
-      html: content.replace(/\n/g, '<br>')
+      html: htmlContent || content.replace(/\n/g, '<br>')
     })
     
     console.log(`[v0] Admin email sent to ${to}`)
