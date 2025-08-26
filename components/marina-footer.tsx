@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from "lucide-react"
+import { Phone, Mail, MapPin } from "lucide-react"
 
 export function MarinaFooter() {
   return (
@@ -9,24 +9,13 @@ export function MarinaFooter() {
           {/* Logo and Description */}
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
-              <img src="/images/marina-logo.svg" alt="MarinaBy-The-Sea" className="h-8 w-auto" />
-              <span className="font-serif font-bold text-xl">MarinaBy-The-Sea</span>
+              <img src="/images/marina-logo.svg" alt="Marina By-The-Sea" className="h-8 w-auto" />
+              <span className="font-serif font-bold text-xl">Marina By-The-Sea</span>
             </Link>
             <p className="text-sidebar-foreground/80 mb-4 max-w-md">
               Experience luxury on the water with our premium floating dock slips in Lauderdale By-The-Sea, protected harbor, and exceptional
               location. Your vessel deserves the finest waterfront experience.
             </p>
-            <div className="flex space-x-4">
-              <Link href="#" className="text-sidebar-foreground/60 hover:text-sidebar-primary transition-colors">
-                <Facebook className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-sidebar-foreground/60 hover:text-sidebar-primary transition-colors">
-                <Instagram className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-sidebar-foreground/60 hover:text-sidebar-primary transition-colors">
-                <Twitter className="h-5 w-5" />
-              </Link>
-            </div>
           </div>
 
           {/* Quick Links */}
@@ -35,7 +24,7 @@ export function MarinaFooter() {
             <ul className="space-y-2">
               <li>
                 <Link href="/slips" className="text-sidebar-foreground/80 hover:text-sidebar-primary transition-colors">
-                  Dock Slips
+                 Slips
                 </Link>
               </li>
               <li>
@@ -82,25 +71,25 @@ export function MarinaFooter() {
               <li className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-sidebar-primary" />
                 <span className="text-sidebar-foreground/80 text-sm">
-                  123 Harbor Drive
+                  230 Basin Drive
                   <br />
                   Lauderdale By-The-Sea, FL 33308
                 </span>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-sidebar-primary" />
-                <span className="text-sidebar-foreground/80 text-sm">(555) 123-4567</span>
+                <span className="text-sidebar-foreground/80 text-sm">(954) 790-1588</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-sidebar-primary" />
-                <span className="text-sidebar-foreground/80 text-sm">info@marinabythesea.com</span>
+                <span className="text-sidebar-foreground/80 text-sm">dylan@dreamsdev.co</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-sidebar-border mt-8 pt-8 text-center">
-          <p className="text-sidebar-foreground/60 text-sm">© 2024 MarinaBy-The-Sea. All rights reserved.</p>
+          <p className="text-sidebar-foreground/60 text-sm">© 2024 Marina By-The-Sea. All rights reserved.</p>
         </div>
       </div>
     </footer>

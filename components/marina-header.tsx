@@ -16,12 +16,12 @@ export function MarinaHeader() {
           <Link href="/" className="flex items-center space-x-3">
             <Image
               src="/images/marina-logo.svg"
-              alt="MarinaBy-The-Sea Logo"
+              alt="Marina By-The-Sea Logo"
               width={80}
               height={80}
               className="h-10 w-auto"
             />
-            <span className="font-serif font-bold text-xl text-foreground">MarinaBy-The-Sea</span>
+            <span className="font-serif font-bold text-xl text-foreground">Marina By-The-Sea</span>
           </Link>
 
           {/* Desktop Navigation */}

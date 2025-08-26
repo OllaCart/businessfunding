@@ -162,26 +162,11 @@ export default function HomePage() {
               Premium Dock Slips Available
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose from our selection of covered, uncovered, and luxury premium slips.
+              Choose from our selection of slips.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <Card className="overflow-hidden hover:shadow-xl transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                <Anchor className="h-16 w-16 text-primary" />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="font-serif font-semibold text-xl mb-2">Covered Slips</h3>
-                <p className="text-muted-foreground mb-4">
-                  Protected slips with full amenities including power, water, WiFi, and security.
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-primary">$450-$650/mo</span>
-                  <span className="text-sm text-muted-foreground">25-35 ft capacity</span>
-                </div>
-              </CardContent>
-            </Card>
 
             <Card className="overflow-hidden hover:shadow-xl transition-shadow">
               <div className="h-48 bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
@@ -190,35 +175,14 @@ export default function HomePage() {
               <CardContent className="p-6">
                 <h3 className="font-serif font-semibold text-xl mb-2">Open Slips</h3>
                 <p className="text-muted-foreground mb-4">
-                  Affordable open-air slips with essential amenities and easy access.
+                  Floating dock wet slips with essential amenities and easy access.
                 </p>
                 <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-secondary">$225-$350/mo</span>
-                  <span className="text-sm text-muted-foreground">18-25 ft capacity</span>
+                  <span className="text-sm text-muted-foreground">31-80 ft capacity</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-xl transition-shadow border-2 border-primary/20">
-              <div className="h-48 bg-gradient-to-br from-primary/30 to-secondary/20 flex items-center justify-center">
-                <Anchor className="h-16 w-16 text-primary" />
-              </div>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-serif font-semibold text-xl">Premium Slips</h3>
-                  <span className="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded-full font-medium">
-                    LUXURY
-                  </span>
-                </div>
-                <p className="text-muted-foreground mb-4">
-                  Ultra-luxury slips with concierge services, valet parking, and premium amenities.
-                </p>
-                <div className="flex justify-between items-center">
-                  <span className="text-2xl font-bold text-primary">$850-$950/mo</span>
-                  <span className="text-sm text-muted-foreground">40-45 ft capacity</span>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           <div className="text-center">
@@ -232,40 +196,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-32 h-32 border border-white/20 rounded-full" />
-          <div className="absolute bottom-10 right-10 w-48 h-48 border border-white/20 rounded-full" />
-          <div className="absolute top-1/2 left-1/4 w-24 h-24 border border-white/20 rounded-full" />
-        </div>
-
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl mb-6">
-            Ready to Experience MarinaBy-The-Sea?
-          </h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Join our exclusive community of boat owners who demand the finest in marina services and amenities.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="bg-secondary hover:bg-secondary/90 text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <Link href="/contact">Schedule a Tour</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 text-lg px-8 py-4 bg-transparent backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <Link href="/waitlist">Join Our Waitlist</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
 
       <MarinaFooter />
     </div>

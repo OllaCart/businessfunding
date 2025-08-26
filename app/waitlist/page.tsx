@@ -104,7 +104,7 @@ export default function WaitlistPage() {
               Join Our Waitlist
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Be the first to know when premium dock slips become available at MarinaBy-The-Sea. Join our exclusive
+              Be the first to know when premium dock slips become available at Marina By-The-Sea. Join our exclusive
               waitlist today.
             </p>
           </div>

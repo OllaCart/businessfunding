@@ -87,7 +87,7 @@ export default async function SlipsPage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/marina-overview.jpg"
-            alt="MarinaBy-The-Sea Overview"
+            alt="Marina By-The-Sea Overview"
             fill
             className="object-cover"
             priority
@@ -353,7 +353,7 @@ export default async function SlipsPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-6">Ready to Secure Your Slip?</h2>
           <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Don't wait - premium dock slips at MarinaBy-The-Sea are in high demand. Contact us today to reserve your
+            Don't wait - premium dock slips at Marina By-The-Sea are in high demand. Contact us today to reserve your
             spot.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

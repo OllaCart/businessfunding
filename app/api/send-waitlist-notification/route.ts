@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // For now, we'll log the notification and could extend this to use an actual email service
 
     const emailContent = `
-New Waitlist Entry - MarinaBy-The-Sea
+New Waitlist Entry - Marina By-The-Sea
 
 Name: ${full_name}
 Email: ${email}
@@ -38,7 +38,7 @@ Please review this entry in the admin dashboard: ${process.env.NEXT_PUBLIC_SITE_
     /*
     await emailService.send({
       to: process.env.ADMIN_EMAIL || 'admin@marinabythesea.com',
-      subject: 'New Waitlist Entry - MarinaBy-The-Sea',
+      subject: 'New Waitlist Entry - Marina By-The-Sea',
       text: emailContent,
       from: process.env.FROM_EMAIL || 'notifications@marinabythesea.com'
     })
