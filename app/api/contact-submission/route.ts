@@ -83,15 +83,65 @@ The Marina By-The-Sea Team`,
     // Send notification to all admins
     console.log('[Contact Submission] Sending admin notifications...')
     try {
+      console.log('[Contact Submission] Querying admin profiles...')
       const { data: admins, error: adminError } = await supabase
         .from('admin_profiles')
         .select('email, full_name')
         .eq('role', 'admin')
 
+      console.log('[Contact Submission] Admin query result:', { admins, adminError })
+      
       if (adminError) {
         console.error('[Contact Submission] Error fetching admin profiles:', adminError)
+        
+        // Fallback: try to get admin emails from environment variables if database query fails
+        console.log('[Contact Submission] Attempting fallback admin notification...')
+        const fallbackAdminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || []
+        
+        if (fallbackAdminEmails.length > 0) {
+          console.log('[Contact Submission] Using fallback admin emails:', fallbackAdminEmails)
+          
+          for (const adminEmail of fallbackAdminEmails) {
+            try {
+              console.log(`[Contact Submission] Sending fallback notification to admin: ${adminEmail}`)
+              const adminEmailResult = await sendAdminEmail({
+                to: adminEmail,
+                subject: `New Contact Form Submission: ${subject || 'General Inquiry'}`,
+                content: `A new contact form submission has been received:
+
+Name: ${name}
+Email: ${email}
+Phone: ${phone || 'Not provided'}
+Subject: ${subject || 'General Inquiry'}
+Message: ${message}
+
+Submitted: ${new Date().toLocaleString()}
+
+Please respond to this inquiry promptly.`,
+                fromName: 'Contact Form System'
+              })
+              
+              if (!adminEmailResult.success) {
+                console.error(`[Contact Submission] Failed to send fallback admin notification to ${adminEmail}:`, adminEmailResult.reason || adminEmailResult.error)
+              } else {
+                console.log(`[Contact Submission] Fallback admin notification sent successfully to ${adminEmail}`)
+              }
+            } catch (fallbackEmailError) {
+              console.error(`[Contact Submission] Failed to send fallback admin notification to ${adminEmail}:`, fallbackEmailError)
+            }
+          }
+        } else {
+          console.warn('[Contact Submission] No fallback admin emails configured')
+        }
       } else if (!admins || admins.length === 0) {
-        console.warn('[Contact Submission] No admin profiles found')
+        console.warn('[Contact Submission] No admin profiles found in database')
+        
+        // Try fallback method
+        const fallbackAdminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || []
+        if (fallbackAdminEmails.length > 0) {
+          console.log('[Contact Submission] Using fallback admin emails:', fallbackAdminEmails)
+          // ... same fallback logic as above
+        }
       } else {
         console.log(`[Contact Submission] Found ${admins.length} admin(s) to notify`)
         
