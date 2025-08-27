@@ -23,9 +23,13 @@ interface AdminRequest {
   id: string
   email: string
   full_name: string
-  role: 'pending_admin'
+  role: 'pending_admin' | 'pending_approval'
   created_at: string
   message?: string
+  approved_by?: string
+  approved_at?: string
+  status: 'pending' | 'approved' | 'rejected'
+  rejection_reason?: string
 }
 
 export default function AdminSettingsPage() {
@@ -53,6 +57,16 @@ export default function AdminSettingsPage() {
     isOpen: false,
     request: null,
     message: ''
+  })
+
+  const [rejectionDialog, setRejectionDialog] = useState<{
+    isOpen: boolean
+    request: AdminRequest | null
+    reason: string
+  }>({
+    isOpen: false,
+    request: null,
+    reason: ''
   })
 
   useEffect(() => {
@@ -166,13 +180,14 @@ export default function AdminSettingsPage() {
     try {
       const supabase = createClient()
       
-      // Update the pending admin to approved admin
+      // First step: Approve the admin creation request
       const { error: updateError } = await supabase
         .from('admin_profiles')
         .update({ 
-          role: 'admin',
+          role: 'pending_approval',
           approved_by: currentAdmin?.id,
-          approved_at: new Date().toISOString()
+          approved_at: new Date().toISOString(),
+          status: 'approved'
         })
         .eq('id', request.id)
       
@@ -190,30 +205,36 @@ export default function AdminSettingsPage() {
       if (adminsError) throw adminsError
       
       setAllAdmins(allAdminsData || [])
-      const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+      const pendingRequests = (allAdminsData || []).filter(admin => 
+        admin.role === 'pending_admin' || admin.role === 'pending_approval'
+      )
       setAdminRequests(pendingRequests)
       
       setApprovalDialog({ isOpen: false, request: null, message: '' })
-      alert('Admin request approved successfully!')
+      alert('Admin creation request approved! The user can now create their account.')
     } catch (error) {
-      console.error('Error approving admin:', error)
+      console.error('Error approving admin request:', error)
       alert('Failed to approve admin request. Please try again.')
     }
   }
 
-  const handleRejectAdmin = async (request: AdminRequest) => {
-    if (!confirm(`Are you sure you want to reject ${request.full_name}'s admin request?`)) return
-    
+  const handleRejectAdmin = async (request: AdminRequest, reason: string) => {
     try {
       const supabase = createClient()
       
-      // Delete the pending admin request
-      const { error } = await supabase
+      // Reject the admin creation request
+      const { error: updateError } = await supabase
         .from('admin_profiles')
-        .delete()
+        .update({ 
+          status: 'rejected',
+          rejection_reason: reason
+        })
         .eq('id', request.id)
       
-      if (error) throw error
+      if (updateError) throw updateError
+      
+      // Send rejection email
+      await sendRejectionEmail(request.email, request.full_name, reason)
       
       // Refresh data
       const { data: allAdminsData, error: adminsError } = await supabase
@@ -224,13 +245,54 @@ export default function AdminSettingsPage() {
       if (adminsError) throw adminsError
       
       setAllAdmins(allAdminsData || [])
-      const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+      const pendingRequests = (allAdminsData || []).filter(admin => 
+        admin.role === 'pending_admin' || admin.role === 'pending_approval'
+      )
       setAdminRequests(pendingRequests)
       
-      alert('Admin request rejected successfully!')
+      alert('Admin creation request rejected successfully.')
     } catch (error) {
-      console.error('Error rejecting admin:', error)
+      console.error('Error rejecting admin request:', error)
       alert('Failed to reject admin request. Please try again.')
+    }
+  }
+
+  const handleGrantAccess = async (request: AdminRequest) => {
+    try {
+      const supabase = createClient()
+      
+      // Grant full admin access
+      const { error: updateError } = await supabase
+        .from('admin_profiles')
+        .update({ 
+          role: 'admin',
+          status: 'active'
+        })
+        .eq('id', request.id)
+      
+      if (updateError) throw updateError
+      
+      // Send access granted email
+      await sendAccessGrantedEmail(request.email, request.full_name)
+      
+      // Refresh data
+      const { data: allAdminsData, error: adminsError } = await supabase
+        .from('admin_profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (adminsError) throw adminsError
+      
+      setAllAdmins(allAdminsData || [])
+      const pendingRequests = (allAdminsData || []).filter(admin => 
+        admin.role === 'pending_admin' || admin.role === 'pending_approval'
+      )
+      setAdminRequests(pendingRequests)
+      
+      alert('Admin access granted successfully!')
+    } catch (error) {
+      console.error('Error granting admin access:', error)
+      alert('Failed to grant admin access. Please try again.')
     }
   }
 
@@ -270,6 +332,75 @@ The Marina By-The-Sea Administration Team`,
       }
     } catch (error) {
       console.warn('Failed to send approval email:', error)
+    }
+  }
+
+  const sendRejectionEmail = async (email: string, fullName: string, reason: string) => {
+    try {
+      const response = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Admin Access Rejected - Marina By-The-Sea',
+          content: `Dear ${fullName},
+
+Your admin access request has been rejected.
+
+Reason: ${reason}
+
+If you believe this is an error, please contact the administrator.
+
+Best regards,
+The Marina By-The-Sea Administration Team`,
+          fromName: currentAdmin?.full_name || 'Admin'
+        })
+      })
+
+      if (!response.ok) {
+        console.warn('Failed to send rejection email, but admin was rejected')
+      }
+    } catch (error) {
+      console.warn('Failed to send rejection email:', error)
+    }
+  }
+
+  const sendAccessGrantedEmail = async (email: string, fullName: string) => {
+    try {
+      const response = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Admin Access Granted - Marina By-The-Sea',
+          content: `Dear ${fullName},
+
+Your admin access request has been granted! You now have full administrative access to the Marina By-The-Sea management system.
+
+You can now:
+- Manage dock slips and availability
+- Process waitlist applications
+- Edit blog posts and content
+- Approve other admin requests
+- Access all administrative functions
+
+Welcome to the team!
+
+Best regards,
+The Marina By-The-Sea Administration Team`,
+          fromName: currentAdmin?.full_name || 'Admin'
+        })
+      })
+
+      if (!response.ok) {
+        console.warn('Failed to send access granted email, but admin was granted')
+      }
+    } catch (error) {
+      console.warn('Failed to send access granted email:', error)
     }
   }
 
@@ -389,6 +520,9 @@ The Marina By-The-Sea Administration Team`,
           <Card>
             <CardHeader>
               <CardTitle>Pending Admin Requests ({adminRequests.length})</CardTitle>
+              <p className="text-sm text-gray-600">
+                Step 1: Approve creation request • Step 2: Grant access after account creation
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -405,27 +539,73 @@ The Marina By-The-Sea Administration Team`,
                           <strong>Message:</strong> {request.message}
                         </div>
                       )}
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge className={
+                          request.role === 'pending_admin' 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }>
+                          {request.role === 'pending_admin' ? 'Pending Approval' : 'Approved - Grant Access'}
+                        </Badge>
+                        {request.approved_by && (
+                          <span className="text-xs text-gray-500">
+                            Approved by: {allAdmins.find(a => a.id === request.approved_by)?.full_name || 'Unknown'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button
-                        onClick={() => setApprovalDialog({
-                          isOpen: true,
-                          request,
-                          message: ''
-                        })}
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        ✅ Approve
-                      </Button>
-                      <Button
-                        onClick={() => handleRejectAdmin(request)}
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 border-red-600 hover:bg-red-50"
-                      >
-                        ❌ Reject
-                      </Button>
+                      {request.role === 'pending_admin' ? (
+                        // Step 1: Approve the creation request
+                        <>
+                          <Button
+                            onClick={() => setApprovalDialog({
+                              isOpen: true,
+                              request,
+                              message: ''
+                            })}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            ✅ Approve Creation
+                          </Button>
+                          <Button
+                            onClick={() => setRejectionDialog({
+                              isOpen: true,
+                              request,
+                              reason: ''
+                            })}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            ❌ Reject
+                          </Button>
+                        </>
+                      ) : request.role === 'pending_approval' ? (
+                        // Step 2: Grant full access
+                        <>
+                          <Button
+                            onClick={() => handleGrantAccess(request)}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            🔓 Grant Access
+                          </Button>
+                          <Button
+                            onClick={() => setRejectionDialog({
+                              isOpen: true,
+                              request,
+                              reason: ''
+                            })}
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-600 hover:bg-red-50"
+                          >
+                            ❌ Revoke Approval
+                          </Button>
+                        </>
+                      ) : null}
                     </div>
                   </div>
                 ))}
@@ -548,10 +728,18 @@ The Marina By-The-Sea Administration Team`,
       }>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Approve Admin Request</DialogTitle>
+            <DialogTitle>Approve Admin Creation Request</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Two-Step Process:</strong><br/>
+                1. This approval allows the user to create their admin account<br/>
+                2. After account creation, you'll need to grant full access
+              </p>
+            </div>
+            
             <div>
               <Label htmlFor="approval-message">Approval Message (Optional)</Label>
               <textarea
@@ -579,7 +767,51 @@ The Marina By-The-Sea Administration Team`,
                 }}
                 className="bg-green-600 hover:bg-green-700"
               >
-                Approve Admin
+                Approve Creation Request
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rejection Dialog */}
+      <Dialog open={rejectionDialog.isOpen} onOpenChange={(open) => 
+        setRejectionDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Admin Request</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="rejection-reason">Reason for Rejection</Label>
+              <textarea
+                id="rejection-reason"
+                className="w-full p-2 border rounded"
+                rows={3}
+                placeholder="Enter the reason for rejecting this admin request..."
+                value={rejectionDialog.reason}
+                onChange={(e) => setRejectionDialog(prev => ({ ...prev, reason: e.target.value }))}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setRejectionDialog({ isOpen: false, request: null, reason: '' })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (rejectionDialog.request) {
+                    handleRejectAdmin(rejectionDialog.request, rejectionDialog.reason)
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Reject Admin
               </Button>
             </div>
           </div>
