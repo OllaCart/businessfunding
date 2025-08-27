@@ -24,6 +24,7 @@ interface DockSlip {
   has_cable: boolean
   has_wifi: boolean
   has_pump_out: boolean
+  show_price: boolean
 }
 
 const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -199,16 +200,16 @@ export default async function SlipsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-2 space-y-2">
-                      <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}&rate=${slip.monthly_rate}`}>
-                          Inquire About This Slip
-                        </Link>
-                      </Button>
-                      <Button asChild variant="outline" className="w-full">
-                        <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
-                      </Button>
-                    </div>
+                                          <div className="pt-2 space-y-2">
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90">
+                          <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}${slip.show_price ? `&rate=${slip.monthly_rate}` : ''}`}>
+                            Inquire About This Slip
+                          </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                        </Button>
+                      </div>
                   </CardContent>
                 </Card>
               ))}
@@ -329,7 +330,7 @@ export default async function SlipsPage() {
 
                     <div className="pt-2 space-y-2">
                       <Button asChild variant="outline" className="w-full bg-transparent">
-                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}&rate=${slip.monthly_rate}&status=occupied`}>
+                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}${slip.show_price ? `&rate=${slip.monthly_rate}` : ''}&status=occupied`}>
                           Inquire About This Slip
                         </Link>
                       </Button>

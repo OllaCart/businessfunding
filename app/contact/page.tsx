@@ -38,7 +38,13 @@ export default function ContactPage() {
     const status = searchParams.get('status')
 
     if (slipId && slipNumber) {
-      let slipMessage = `I'm interested in Slip ${slipNumber} (${length}' × ${beam}'${rate ? `, $${rate}/month` : ''}).`
+      let slipMessage = `I'm interested in Slip ${slipNumber} (${length}' × ${beam}'`
+      
+      if (rate) {
+        slipMessage += `, $${rate}/month`
+      }
+      
+      slipMessage += `).`
       
       if (status === 'occupied') {
         slipMessage += ` I understand this slip is currently occupied, but I'd like to be notified when it becomes available or if there are similar slips available. Please provide information about the waitlist process and any upcoming availability.`
