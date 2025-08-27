@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Calendar, User, ArrowLeft, Tag, Clock, Share2 } from "lucide-react"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
+import Image from "next/image"
 
 interface Post {
   id: string
@@ -141,7 +142,9 @@ export default async function PostPage({ params }: PostPageProps) {
     if (post.tags && post.tags.length > 0) {
       try {
         console.log("PostPage: Fetching related posts for tags:", post.tags)
-        const { data: relatedData } = await supabase
+        
+        // Add timeout to prevent hanging queries
+        const relatedPostsPromise = supabase
           .from("posts")
           .select("id, title, slug, excerpt, featured_image_url, created_at, tags")
           .neq("id", post.id)
@@ -149,6 +152,16 @@ export default async function PostPage({ params }: PostPageProps) {
           .overlaps("tags", post.tags)
           .order("created_at", { ascending: false })
           .limit(3)
+
+        // Add 5 second timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Related posts query timeout')), 5000)
+        )
+
+        const { data: relatedData } = await Promise.race([
+          relatedPostsPromise,
+          timeoutPromise
+        ]) as any
 
         relatedPosts = relatedData
         console.log("PostPage: Related posts fetched:", relatedPosts?.length || 0)
@@ -209,10 +222,21 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* Featured Image */}
             {post.featured_image_url && (
               <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
-                <img
+                <Image
                   src={post.featured_image_url}
                   alt={post.title}
+                  width={800}
+                  height={400}
                   className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+                  priority
+                  onError={(e) => {
+                    console.error("Failed to load featured image:", post.featured_image_url)
+                    // Hide the image container if it fails to load
+                    const parent = e.currentTarget.parentElement
+                    if (parent) {
+                      parent.style.display = 'none'
+                    }
+                  }}
                 />
               </div>
             )}
@@ -308,7 +332,7 @@ export default async function PostPage({ params }: PostPageProps) {
             <div className="max-w-4xl mx-auto">
               <h2 className="font-serif font-bold text-2xl sm:text-3xl text-foreground mb-8">Related Updates</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {relatedPosts.map((relatedPost) => (
+                {relatedPosts.map((relatedPost: any) => (
                   <Card key={relatedPost.id} className="hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="text-xs text-muted-foreground mb-2">{formatDate(relatedPost.created_at)}</div>
