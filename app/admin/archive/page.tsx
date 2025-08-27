@@ -7,9 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Filter, Download, Mail, Eye, Edit } from 'lucide-react'
+import { Search, Download, Mail, Eye, Edit, RotateCcw, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useToast } from '@/hooks/use-toast'
 
 interface ArchivedUser {
   id: string
@@ -36,6 +39,30 @@ export default function ArchivePage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sourceTypeFilter, setSourceTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [emailDialog, setEmailDialog] = useState<{
+    isOpen: boolean
+    type: 'single' | 'bulk' | null
+    user: ArchivedUser | null
+    subject: string
+    content: string
+    htmlContent: string
+  }>({
+    isOpen: false,
+    type: null,
+    user: null,
+    subject: '',
+    content: '',
+    htmlContent: ''
+  })
+  const [reviveDialog, setReviveDialog] = useState<{
+    isOpen: boolean
+    user: ArchivedUser | null
+  }>({
+    isOpen: false,
+    user: null
+  })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchArchivedUsers()
@@ -122,6 +149,124 @@ export default function ArchivePage() {
     a.download = `marina-archive-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
+  }
+
+  const handleReviveUser = async (user: ArchivedUser) => {
+    try {
+      const supabase = createClient()
+      
+      // Update status to active
+      const { error } = await supabase
+        .from('user_archive')
+        .update({ 
+          status: 'active',
+          last_contact_date: new Date().toISOString()
+        })
+        .eq('id', user.id)
+      
+      if (error) throw error
+      
+      toast({
+        title: "Contact Revived!",
+        description: `${user.full_name} has been marked as active and can now receive communications.`,
+      })
+      
+      // Refresh the data
+      fetchArchivedUsers()
+      setReviveDialog({ isOpen: false, user: null })
+      
+    } catch (error) {
+      console.error('Error reviving user:', error)
+      toast({
+        title: "Error",
+        description: "Failed to revive contact. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSendEmail = async () => {
+    try {
+      const { type, user, subject, content, htmlContent } = emailDialog
+      
+      if (type === 'single' && user) {
+        // Send to single user
+        const response = await fetch('/api/send-admin-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: user.email,
+            subject,
+            content,
+            htmlContent,
+            fromName: 'Marina By-The-Sea'
+          })
+        })
+        
+        if (!response.ok) throw new Error('Failed to send email')
+        
+        toast({
+          title: "Email Sent!",
+          description: `Email sent successfully to ${user.full_name}.`,
+        })
+        
+      } else if (type === 'bulk') {
+        // Send to all selected users or all users if none selected
+        const recipients = selectedUsers.length > 0 
+          ? users.filter(u => selectedUsers.includes(u.id))
+          : users.filter(u => u.status === 'active')
+        
+        // Send bulk email (you might want to implement a queue system for large lists)
+        for (const recipient of recipients) {
+          try {
+            await fetch('/api/send-admin-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: recipient.email,
+                subject,
+                content,
+                htmlContent,
+                fromName: 'Marina By-The-Sea'
+              })
+            })
+          } catch (error) {
+            console.error(`Failed to send email to ${recipient.email}:`, error)
+          }
+        }
+        
+        toast({
+          title: "Bulk Email Sent!",
+          description: `Emails sent to ${recipients.length} recipients.`,
+        })
+      }
+      
+      setEmailDialog({ isOpen: false, type: null, user: null, subject: '', content: '', htmlContent: '' })
+      
+    } catch (error) {
+      console.error('Error sending email:', error)
+      toast({
+        title: "Error",
+        description: "Failed to send email. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    )
+  }
+
+  const selectAllUsers = () => {
+    setSelectedUsers(filteredUsers.map(u => u.id))
+  }
+
+  const clearSelection = () => {
+    setSelectedUsers([])
   }
 
   if (loading) {
@@ -250,10 +395,61 @@ export default function ArchivePage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button onClick={exportToCSV} variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export CSV
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bulk Actions */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">
+                {selectedUsers.length > 0 ? `${selectedUsers.length} users selected` : 'No users selected'}
+              </span>
+              {selectedUsers.length > 0 && (
+                <Button onClick={clearSelection} variant="outline" size="sm">
+                  Clear Selection
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setEmailDialog({ 
+                  isOpen: true, 
+                  type: 'bulk', 
+                  user: null, 
+                  subject: '', 
+                  content: '', 
+                  htmlContent: '' 
+                })}
+                disabled={users.filter(u => u.status === 'active').length === 0}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Email All Active Users
+              </Button>
+              <Button 
+                onClick={() => setEmailDialog({ 
+                  isOpen: true, 
+                  type: 'bulk', 
+                  user: null, 
+                  subject: '', 
+                  content: '', 
+                  htmlContent: '' 
+                })}
+                disabled={selectedUsers.length === 0}
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email Selected Users
               </Button>
             </div>
           </div>
@@ -277,6 +473,12 @@ export default function ArchivePage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={() => toggleUserSelection(user.id)}
+                          className="rounded border-gray-300"
+                        />
                         <h3 className="font-semibold text-lg">{user.full_name}</h3>
                         <Badge className={getSourceTypeColor(user.source_type)}>
                           {user.source_type.replace('_', ' ')}
@@ -326,17 +528,30 @@ export default function ArchivePage() {
                       </div>
                     </div>
                     <div className="flex gap-2 ml-4">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setEmailDialog({ 
+                          isOpen: true, 
+                          type: 'single', 
+                          user, 
+                          subject: '', 
+                          content: '', 
+                          htmlContent: '' 
+                        })}
+                        disabled={user.status !== 'active'}
+                      >
                         <Mail className="h-4 w-4 mr-1" />
                         Email
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setReviveDialog({ isOpen: true, user })}
+                        disabled={user.status === 'active'}
+                      >
+                        <RotateCcw className="h-4 w-4 mr-1" />
+                        Revive
                       </Button>
                     </div>
                   </div>
@@ -346,6 +561,100 @@ export default function ArchivePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Email Dialog */}
+      <Dialog open={emailDialog.isOpen} onOpenChange={(open) => 
+        setEmailDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {emailDialog.type === 'single' 
+                ? `Send Email to ${emailDialog.user?.full_name}` 
+                : emailDialog.type === 'bulk' && selectedUsers.length > 0
+                  ? `Send Email to ${selectedUsers.length} Selected Users`
+                  : 'Send Email to All Active Users'
+              }
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email-subject">Subject</Label>
+              <Input
+                id="email-subject"
+                placeholder="Enter email subject..."
+                value={emailDialog.subject}
+                onChange={(e) => setEmailDialog(prev => ({ ...prev, subject: e.target.value }))}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-content">Message</Label>
+              <Textarea
+                id="email-content"
+                placeholder="Enter your message..."
+                rows={8}
+                value={emailDialog.content}
+                onChange={(e) => setEmailDialog(prev => ({ 
+                  ...prev, 
+                  content: e.target.value,
+                  htmlContent: e.target.value.replace(/\n/g, '<br>')
+                }))}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setEmailDialog({ isOpen: false, type: null, user: null, subject: '', content: '', htmlContent: '' })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSendEmail}
+                disabled={!emailDialog.subject || !emailDialog.content}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Send Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revive Dialog */}
+      <Dialog open={reviveDialog.isOpen} onOpenChange={(open) => 
+        setReviveDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Revive Contact</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Are you sure you want to revive <strong>{reviveDialog.user?.full_name}</strong>? 
+              This will mark them as active and allow them to receive communications.
+            </p>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setReviveDialog({ isOpen: false, user: null })}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => reviveDialog.user && handleReviveUser(reviveDialog.user)}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Revive Contact
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
