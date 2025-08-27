@@ -119,8 +119,15 @@ export default function AdminSettingsPage() {
         setAllAdmins(allAdminsData || [])
         
         // Filter pending admin requests
-        const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
+        const pendingRequests = (allAdminsData || []).filter(admin => 
+          admin.role === 'pending_admin' || admin.role === 'pending_approval'
+        )
         setAdminRequests(pendingRequests)
+        
+        // Debug logging
+        console.log('All admins:', allAdminsData)
+        console.log('Pending requests:', pendingRequests)
+        console.log('Admin requests state:', pendingRequests)
         
         // Fetch archive statistics
         await fetchArchiveStats()
@@ -516,15 +523,15 @@ The Marina By-The-Sea Administration Team`,
         </Card>
 
         {/* Admin Requests */}
-        {adminRequests.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Admin Requests ({adminRequests.length})</CardTitle>
-              <p className="text-sm text-gray-600">
-                Step 1: Approve creation request • Step 2: Grant access after account creation
-              </p>
-            </CardHeader>
-            <CardContent>
+        <Card>
+          <CardHeader>
+            <CardTitle>Admin Requests Management</CardTitle>
+            <p className="text-sm text-gray-600">
+              Step 1: Approve creation request • Step 2: Grant access after account creation
+            </p>
+          </CardHeader>
+          <CardContent>
+            {adminRequests.length > 0 ? (
               <div className="space-y-4">
                 {adminRequests.map((request) => (
                   <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
@@ -610,9 +617,23 @@ The Marina By-The-Sea Administration Team`,
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-gray-500 mb-4">
+                  <div className="text-4xl mb-2">📋</div>
+                  <h3 className="text-lg font-medium">No Pending Admin Requests</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    All admin requests have been processed or there are no pending requests.
+                  </p>
+                </div>
+                <div className="text-xs text-gray-400">
+                  <p>When someone requests admin access, they will appear here for approval.</p>
+                  <p>The system uses a two-step process: creation approval, then access granting.</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Current Admins */}
         <Card>
