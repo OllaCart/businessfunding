@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
+import { checkRateLimit, validateAdminEmail, sanitizeInput } from '@/lib/security'
 
 interface AdminProfile {
   id: string
@@ -68,6 +70,13 @@ export default function AdminSettingsPage() {
     request: null,
     reason: ''
   })
+
+  const [newAdminForm, setNewAdminForm] = useState({
+    fullName: '',
+    email: '',
+    message: ''
+  })
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false)
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -303,6 +312,84 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentAdmin) {
+      alert('You must be logged in as an admin to create new admin accounts.')
+      return
+    }
+
+    // Rate limiting check
+    const rateLimitKey = `create_admin_${currentAdmin.id}`
+    if (!checkRateLimit(rateLimitKey, 3, 60 * 60 * 1000)) { // 3 attempts per hour
+      alert('Too many admin creation attempts. Please wait before trying again.')
+      return
+    }
+
+    // Input validation
+    if (!newAdminForm.fullName || !newAdminForm.email) {
+      alert('Full name and email are required.')
+      return
+    }
+
+    // Email validation
+    if (!validateAdminEmail(newAdminForm.email)) {
+      alert('Please enter a valid email address from an allowed domain.')
+      return
+    }
+
+    // Sanitize inputs
+    const sanitizedFullName = sanitizeInput(newAdminForm.fullName)
+    const sanitizedEmail = sanitizeInput(newAdminForm.email)
+    const sanitizedMessage = sanitizeInput(newAdminForm.message)
+
+    setIsCreatingAdmin(true)
+    try {
+      const supabase = createClient()
+
+      // Check if admin already exists
+      const { data: existingAdmin, error: checkError } = await supabase
+        .from('admin_profiles')
+        .select('id')
+        .eq('email', sanitizedEmail)
+        .single()
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
+        throw checkError
+      }
+
+      if (existingAdmin) {
+        alert('An admin with this email address already exists.')
+        return
+      }
+
+      // Create new admin profile
+      const { error: createError } = await supabase
+        .from('admin_profiles')
+        .insert({
+          email: sanitizedEmail,
+          full_name: sanitizedFullName,
+          role: 'pending_admin',
+          status: 'pending',
+          created_by: currentAdmin.id,
+          created_at: new Date().toISOString()
+        })
+
+      if (createError) throw createError
+
+      // Send creation request email
+      await sendCreationRequestEmail(sanitizedEmail, sanitizedFullName, sanitizedMessage)
+
+      alert('New admin account creation request sent! The user will receive an email to complete their setup.')
+      setNewAdminForm({ fullName: '', email: '', message: '' })
+    } catch (error) {
+      console.error('Error creating new admin account:', error)
+      alert('Failed to create new admin account. Please try again.')
+    } finally {
+      setIsCreatingAdmin(false)
+    }
+  }
+
   const sendApprovalEmail = async (email: string, fullName: string, message: string) => {
     try {
       const response = await fetch('/api/send-admin-email', {
@@ -408,6 +495,41 @@ The Marina By-The-Sea Administration Team`,
       }
     } catch (error) {
       console.warn('Failed to send access granted email:', error)
+    }
+  }
+
+  const sendCreationRequestEmail = async (email: string, fullName: string, message: string) => {
+    try {
+      const response = await fetch('/api/send-admin-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: email,
+          subject: 'New Admin Account Request - Marina By-The-Sea',
+          content: `Dear ${fullName},
+
+You have been invited to create a new admin account for Marina By-The-Sea.
+
+${message ? `\nMessage from inviter: ${message}` : ''}
+
+Please click the link below to complete your setup:
+[Your Admin Setup Link]
+
+This link will expire in 24 hours.
+
+Best regards,
+The Marina By-The-Sea Administration Team`,
+          fromName: currentAdmin?.full_name || 'Admin'
+        })
+      })
+
+      if (!response.ok) {
+        console.warn('Failed to send creation request email:', response.statusText)
+      }
+    } catch (error) {
+      console.warn('Failed to send creation request email:', error)
     }
   }
 
@@ -685,7 +807,7 @@ The Marina By-The-Sea Administration Team`,
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="text-2xl font-bold text-blue-600">{archiveStats.totalUsers}</div>
                 <div className="text-sm text-blue-800">Total Archived Users</div>
@@ -697,10 +819,6 @@ The Marina By-The-Sea Administration Team`,
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">{archiveStats.contactCount}</div>
                 <div className="text-sm text-purple-800">Contact Archive</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">{archiveStats.emailCampaigns}</div>
-                <div className="text-sm text-orange-800">Email Campaigns</div>
               </div>
             </div>
 
@@ -739,6 +857,64 @@ The Marina By-The-Sea Administration Team`,
                 automatic archiving triggers for waitlist and contact submissions.
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Create New Admin Account */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Admin Account</CardTitle>
+            <p className="text-sm text-gray-600">
+              Securely create new administrator accounts. Only existing admins can access this feature.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateAdmin} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="new-admin-name">Full Name *</Label>
+                  <Input
+                    id="new-admin-name"
+                    value={newAdminForm.fullName}
+                    onChange={(e) => setNewAdminForm(prev => ({ ...prev, fullName: e.target.value }))}
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="new-admin-email">Email Address *</Label>
+                  <Input
+                    id="new-admin-email"
+                    type="email"
+                    value={newAdminForm.email}
+                    onChange={(e) => setNewAdminForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="admin@example.com"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="new-admin-message">Welcome Message (Optional)</Label>
+                <Textarea
+                  id="new-admin-message"
+                  value={newAdminForm.message}
+                  onChange={(e) => setNewAdminForm(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Add a personal welcome message..."
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-end">
+                <Button 
+                  type="submit" 
+                  disabled={!newAdminForm.fullName || !newAdminForm.email || isCreatingAdmin}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isCreatingAdmin ? "Creating..." : "Create Admin Account"}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       </div>

@@ -1,126 +1,60 @@
 "use client"
 
 import type React from "react"
-
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
 
 export default function SignUpPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const supabase = createClient()
-    setIsLoading(true)
-    setError(null)
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_SITE_URL 
-            ? `${process.env.NEXT_PUBLIC_SITE_URL}/admin`
-            : `${window.location.origin}/admin`,
-          data: {
-            full_name: fullName,
-            role: "admin",
-          },
-        },
-      })
-      if (error) throw error
-      router.push("/auth/signup-success")
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-blue-900">Create Admin Account</CardTitle>
-            <CardDescription>Set up your marina admin account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@marina.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create Account"}
-              </Button>
-            </form>
-            <div className="mt-4 text-center text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:underline">
-                Sign in
-              </Link>
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Admin Access Required
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            New admin accounts can only be created by existing administrators
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center space-y-4">
+            <div className="text-6xl">🔒</div>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Admin Account Creation Disabled
+            </h3>
+            <p className="text-sm text-gray-600">
+              For security reasons, new admin accounts cannot be created through this form. 
+              Only existing administrators can create new admin accounts.
+            </p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-800 mb-2">How to Get Admin Access:</h4>
+              <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                <li>Contact an existing administrator</li>
+                <li>Request admin access through proper channels</li>
+                <li>Administrator will create your account</li>
+                <li>You'll receive login credentials via email</li>
+              </ol>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            
+            <div className="flex flex-col gap-3">
+              <Button asChild className="w-full">
+                <Link href="/auth/login">
+                  Go to Login
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full">
+                <Link href="/contact">
+                  Contact Marina Office
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
