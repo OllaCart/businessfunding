@@ -120,6 +120,22 @@ export default async function PostPage({ params }: PostPageProps) {
     // At this point, postData is guaranteed to exist
     const post = postData
 
+    // Validate post data to prevent rendering issues
+    if (!post.title || !post.content) {
+      console.error("Post missing required fields:", { title: !!post.title, content: !!post.content })
+      notFound()
+    }
+
+    // Sanitize image URL to prevent rendering issues
+    if (post.featured_image_url) {
+      try {
+        new URL(post.featured_image_url)
+      } catch {
+        console.warn("Invalid image URL, removing:", post.featured_image_url)
+        post.featured_image_url = null
+      }
+    }
+
     // Get related posts based on tags only if post exists and has tags
     let relatedPosts = null
     if (post.tags && post.tags.length > 0) {
@@ -210,22 +226,26 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* Featured Image */}
             {post.featured_image_url && (
               <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
-                <Image
-                  src={post.featured_image_url}
-                  alt={post.title}
-                  width={800}
-                  height={400}
-                  className="w-full h-64 sm:h-80 lg:h-96 object-cover"
-                  priority
-                  onError={(e) => {
-                    console.error("Failed to load featured image:", post.featured_image_url)
-                    // Hide the image container if it fails to load
-                    const parent = e.currentTarget.parentElement
-                    if (parent) {
-                      parent.style.display = 'none'
-                    }
-                  }}
-                />
+                <div className="relative w-full h-64 sm:h-80 lg:h-96">
+                  <Image
+                    src={post.featured_image_url}
+                    alt={post.title || "Featured image"}
+                    fill
+                    className="object-cover"
+                    priority
+                    onError={(e) => {
+                      console.error("Failed to load featured image:", post.featured_image_url)
+                      // Hide the image container if it fails to load
+                      const target = e.currentTarget as HTMLImageElement
+                      if (target.parentElement) {
+                        target.parentElement.style.display = 'none'
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log("Featured image loaded successfully:", post.featured_image_url)
+                    }}
+                  />
+                </div>
               </div>
             )}
 
