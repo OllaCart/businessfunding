@@ -8,7 +8,7 @@ import Link from "next/link"
 import { Calendar, User, ArrowLeft, Tag, Clock, Share2 } from "lucide-react"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
-import Image from "next/image"
+import { SafeImage } from "@/components/ui/safe-image"
 import { ShareButton } from "@/components/share-button"
 
 interface Post {
@@ -226,26 +226,13 @@ export default async function PostPage({ params }: PostPageProps) {
             {/* Featured Image */}
             {post.featured_image_url && (
               <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
-                <div className="relative w-full h-64 sm:h-80 lg:h-96">
-                  <Image
-                    src={post.featured_image_url}
-                    alt={post.title || "Featured image"}
-                    fill
-                    className="object-cover"
-                    priority
-                    onError={(e) => {
-                      console.error("Failed to load featured image:", post.featured_image_url)
-                      // Hide the image container if it fails to load
-                      const target = e.currentTarget as HTMLImageElement
-                      if (target.parentElement) {
-                        target.parentElement.style.display = 'none'
-                      }
-                    }}
-                    onLoad={() => {
-                      console.log("Featured image loaded successfully:", post.featured_image_url)
-                    }}
-                  />
-                </div>
+                <SafeImage
+                  src={post.featured_image_url}
+                  alt={post.title || "Featured image"}
+                  fill
+                  className="w-full h-64 sm:h-80 lg:h-96"
+                  priority
+                />
               </div>
             )}
 
