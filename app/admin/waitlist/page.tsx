@@ -938,6 +938,21 @@ export default function AdminWaitlistPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [slipOfferDialog, setSlipOfferDialog] = useState<{
+    isOpen: boolean
+    entry: WaitlistEntry | null
+    selectedSlip: DockSlip | null
+  }>({
+    isOpen: false,
+    entry: null,
+    selectedSlip: null
+  })
+  const [slipOfferForm, setSlipOfferForm] = useState({
+    pricePerFoot: 0,
+    totalMonthlyCost: 0,
+    offerExpiresAt: '',
+    termsAndConditions: ''
+  })
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
