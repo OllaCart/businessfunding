@@ -287,6 +287,47 @@ The Marina By-The-Sea Team`
     }
   }
 
+  const createSlipOffer = async (entry: WaitlistEntry, slip: DockSlip, pricePerFoot: number, totalMonthlyCost: number, offerExpiresAt: string, termsAndConditions: string) => {
+    try {
+      console.log('Creating slip offer:', { entry: entry.full_name, slip: slip.slip_number, pricePerFoot, totalMonthlyCost })
+      
+      const response = await fetch('/api/slip-offers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          waitlistEntryId: entry.id,
+          slipId: slip.id,
+          offeredPricePerFoot: pricePerFoot,
+          totalMonthlyCost: totalMonthlyCost,
+          offerExpiresAt: offerExpiresAt,
+          termsAndConditions: termsAndConditions
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create slip offer')
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        alert(`Slip offer created successfully! Password: ${result.offerPassword}`)
+        // setSlipOfferDialog({ isOpen: false, entry: null, selectedSlip: null }) // This state doesn't exist in the original file
+        // Refresh data to show updated status
+        await refreshWaitlistData()
+      } else {
+        throw new Error(result.error || 'Failed to create slip offer')
+      }
+    } catch (error) {
+      console.error('Error creating slip offer:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to create slip offer: ${errorMessage}`)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
