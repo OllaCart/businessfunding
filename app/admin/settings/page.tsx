@@ -377,10 +377,22 @@ export default function AdminSettingsPage() {
 
       if (createError) throw createError
 
-      // Send creation request email
-      await sendCreationRequestEmail(sanitizedEmail, sanitizedFullName, sanitizedMessage)
+      // Try to send creation request email, but don't fail if it doesn't work
+      let emailSent = false
+      try {
+        await sendCreationRequestEmail(sanitizedEmail, sanitizedFullName, sanitizedMessage)
+        emailSent = true
+      } catch (emailError) {
+        console.warn('Failed to send creation request email:', emailError)
+        // Continue with admin creation even if email fails
+      }
 
-      alert('New admin account creation request sent! The user will receive an email to complete their setup.')
+      if (emailSent) {
+        alert('New admin account creation request sent! The user will receive an email to complete their setup.')
+      } else {
+        alert('New admin account created successfully! However, the notification email could not be sent due to email configuration issues. The user can still access the system with their email address.')
+      }
+      
       setNewAdminForm({ fullName: '', email: '', message: '' })
     } catch (error) {
       console.error('Error creating new admin account:', error)
@@ -869,6 +881,21 @@ The Marina By-The-Sea Administration Team`,
             </p>
           </CardHeader>
           <CardContent>
+            {/* Email Configuration Notice */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <h4 className="font-semibold text-blue-800 mb-2">📧 Email Configuration</h4>
+              <p className="text-sm text-blue-700 mb-2">
+                To send notification emails to new admin users, ensure your Gmail environment variables are configured:
+              </p>
+              <div className="text-xs text-blue-600 font-mono bg-blue-100 p-2 rounded">
+                GMAIL_USER=your_email@gmail.com<br/>
+                GMAIL_APP_PASSWORD=your_app_password
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                <strong>Note:</strong> Admin accounts can still be created without email configuration, but users won't receive setup notifications.
+              </p>
+            </div>
+            
             <form onSubmit={handleCreateAdmin} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
