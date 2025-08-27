@@ -96,11 +96,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-  console.log("PostPage: Starting to fetch post with slug:", params.slug)
-
   try {
     const supabase = await createClient()
-    console.log("PostPage: Supabase client created successfully")
 
     const { data: postData, error: postError } = await supabase
       .from("posts")
@@ -115,34 +112,17 @@ export default async function PostPage({ params }: PostPageProps) {
       .eq("is_published", true)
       .single()
 
-    console.log("PostPage: Query result:", { 
-      hasData: !!postData, 
-      hasError: !!postError, 
-      errorMessage: postError?.message,
-      postId: postData?.id,
-      postTitle: postData?.title
-    })
-
-    if (postError) {
-      console.error("PostPage: Post query error:", postError)
-      notFound()
-    }
-
-    if (!postData) {
-      console.log("PostPage: No post data returned for slug:", params.slug)
+    if (postError || !postData) {
       notFound()
     }
 
     // At this point, postData is guaranteed to exist
     const post = postData
-    console.log("PostPage: Post found successfully:", post.id)
 
     // Get related posts based on tags only if post exists and has tags
     let relatedPosts = null
     if (post.tags && post.tags.length > 0) {
       try {
-        console.log("PostPage: Fetching related posts for tags:", post.tags)
-        
         // Add timeout to prevent hanging queries
         const relatedPostsPromise = supabase
           .from("posts")
@@ -164,39 +144,46 @@ export default async function PostPage({ params }: PostPageProps) {
         ]) as any
 
         relatedPosts = relatedData
-        console.log("PostPage: Related posts fetched:", relatedPosts?.length || 0)
       } catch (relatedError) {
-        console.error("Error fetching related posts:", relatedError)
         // Don't fail the main post if related posts fail
+        relatedPosts = null
       }
-    } else {
-      console.log("PostPage: No tags found for post, skipping related posts")
     }
-
-    console.log("PostPage: Rendering post successfully:", post.title)
 
     // At this point, post is guaranteed to exist
     const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      try {
+        return new Date(dateString).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      } catch {
+        return "Unknown Date"
+      }
     }
 
     const formatContent = (content: string) => {
-      // Simple content formatting - in a real app you might use a markdown parser
-      return content.split("\n").map((paragraph, index) => (
-        <p key={index} className="mb-4 leading-relaxed">
-          {paragraph}
-        </p>
-      ))
+      try {
+        // Simple content formatting - in a real app you might use a markdown parser
+        return content.split("\n").map((paragraph, index) => (
+          <p key={index} className="mb-4 leading-relaxed">
+            {paragraph}
+          </p>
+        ))
+      } catch {
+        return <p className="mb-4 leading-relaxed">{content}</p>
+      }
     }
 
     const calculateReadingTime = (content: string) => {
-      const wordsPerMinute = 200
-      const words = content.trim().split(/\s+/).length
-      return Math.ceil(words / wordsPerMinute)
+      try {
+        const wordsPerMinute = 200
+        const words = content.trim().split(/\s+/).length
+        return Math.ceil(words / wordsPerMinute)
+      } catch {
+        return 1
+      }
     }
 
     const readingTime = post.reading_time || calculateReadingTime(post.content)
@@ -245,7 +232,7 @@ export default async function PostPage({ params }: PostPageProps) {
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
               <div className="flex items-center space-x-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(post.created_at)}</span>
+                <span>{post.created_at ? formatDate(post.created_at) : "Unknown Date"}</span>
               </div>
               {post.admin_profiles && (
                 <div className="flex items-center space-x-1">
@@ -257,14 +244,14 @@ export default async function PostPage({ params }: PostPageProps) {
                 <Clock className="h-4 w-4" />
                 <span>{readingTime} min read</span>
               </div>
-              {post.updated_at !== post.created_at && (
+              {post.updated_at && post.created_at && post.updated_at !== post.created_at && (
                 <div className="text-xs">Updated {formatDate(post.updated_at)}</div>
               )}
             </div>
 
             {/* Post Title */}
             <h1 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground mb-6 leading-tight">
-              {post.title}
+              {post.title || "Untitled Post"}
             </h1>
 
             {/* Tags */}
@@ -290,7 +277,9 @@ export default async function PostPage({ params }: PostPageProps) {
 
             {/* Post Content */}
             <div className="prose prose-lg max-w-none">
-              <div className="text-foreground leading-relaxed">{formatContent(post.content)}</div>
+              <div className="text-foreground leading-relaxed">
+                {post.content ? formatContent(post.content) : "No content available"}
+              </div>
             </div>
 
             {/* Share Section */}

@@ -61,8 +61,8 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="text-xl sm:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-            Premium dock slips with world-class amenities, 24/7 security, and exceptional service at Florida's most
-            prestigious waterfront marina destination.
+            Premium floating dock with 24/7 security, and exceptional service at Lauderdale-By-The-Sea's most
+            convenient waterfront marina destination.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
             <Button
@@ -94,10 +94,10 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground mb-4">
-              World-Class Marina Services
+              Marina By-The-Sea Services
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need for the ultimate boating experience, all in one premium location.
+              Everything you need for the ultimate South Florida boating experience, all in one premium location.
             </p>
           </div>
 
@@ -145,7 +145,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="font-serif font-semibold text-xl mb-3">Locals</h3>
                 <p className="text-muted-foreground">
-                  We're run by locals, and we have local contacts for services including provisioning, cleaning, and maintenance.
+                  We have extensive contacts for marine services including provisioning, cleaning, and maintenance.
                 </p>
               </CardContent>
             </Card>
