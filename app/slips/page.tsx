@@ -201,7 +201,9 @@ export default async function SlipsPage() {
 
                     <div className="pt-2 space-y-2">
                       <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                        <Link href="/contact">Inquire About This Slip</Link>
+                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}&rate=${slip.monthly_rate}`}>
+                          Inquire About This Slip
+                        </Link>
                       </Button>
                       <Button asChild variant="outline" className="w-full">
                         <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
@@ -327,6 +329,11 @@ export default async function SlipsPage() {
 
                     <div className="pt-2 space-y-2">
                       <Button asChild variant="outline" className="w-full bg-transparent">
+                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}&rate=${slip.monthly_rate}&status=occupied`}>
+                          Inquire About This Slip
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full">
                         <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
                       </Button>
                     </div>

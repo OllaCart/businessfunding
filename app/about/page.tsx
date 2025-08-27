@@ -76,7 +76,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="font-serif font-semibold text-xl mb-3">Familiarity</h3>
                 <p className="text-muted-foreground">
-                  We strive for a relationship in every service we provide, from dock maintenance to customer care.
+                  We strive for a relationship further than just a dock assignment, from fueling requests to yacht detailing or management. We are not a corporate marina, we are a local,family owned marina.
                 </p>
               </CardContent>
             </Card>

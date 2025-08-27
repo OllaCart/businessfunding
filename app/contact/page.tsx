@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { useEffect } from "react"
 import { useState } from "react"
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -24,6 +25,34 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const searchParams = useSearchParams()
+
+  // Pre-populate form with slip information if available
+  useEffect(() => {
+    const slipId = searchParams.get('slip')
+    const slipNumber = searchParams.get('slipNumber')
+    const length = searchParams.get('length')
+    const beam = searchParams.get('beam')
+    const rate = searchParams.get('rate')
+    const status = searchParams.get('status')
+
+    if (slipId && slipNumber) {
+      let slipMessage = `I'm interested in Slip ${slipNumber} (${length}' × ${beam}'${rate ? `, $${rate}/month` : ''}).`
+      
+      if (status === 'occupied') {
+        slipMessage += ` I understand this slip is currently occupied, but I'd like to be notified when it becomes available or if there are similar slips available. Please provide information about the waitlist process and any upcoming availability.`
+      } else {
+        slipMessage += ` Please provide more information about availability, amenities, and the application process.`
+      }
+      
+      setFormData(prev => ({
+        ...prev,
+        subject: `Inquiry about Slip ${slipNumber}`,
+        message: slipMessage
+      }))
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
