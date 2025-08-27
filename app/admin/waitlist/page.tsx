@@ -557,6 +557,18 @@ The Marina By-The-Sea Team`
                         <Button
                           size="sm"
                           variant="outline"
+                          className="w-full text-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+                          onClick={() => setSlipOfferDialog({
+                            isOpen: true,
+                            entry,
+                            selectedSlip: slip
+                          })}
+                        >
+                          🎯 Create Slip Offer
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="w-full text-xs text-red-600 border-red-600 hover:bg-red-50"
                           onClick={() => setDeleteDialog({
                             isOpen: true,
