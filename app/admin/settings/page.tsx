@@ -451,6 +451,73 @@ The Marina By-The-Sea Administration Team`,
             </div>
           </CardContent>
         </Card>
+
+        {/* Database & Archive System */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Database & Archive System</CardTitle>
+            <p className="text-sm text-gray-600">
+              Manage user archives, email lists, and bulk communications
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">0</div>
+                <div className="text-sm text-blue-800">Total Archived Users</div>
+              </div>
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">0</div>
+                <div className="text-sm text-green-800">Waitlist Archive</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">0</div>
+                <div className="text-sm text-purple-800">Contact Archive</div>
+              </div>
+              <div className="text-center p-4 bg-orange-50 rounded-lg">
+                <div className="text-2xl font-bold text-orange-600">0</div>
+                <div className="text-sm text-orange-800">Email Campaigns</div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4">
+              <Button 
+                onClick={() => window.open('/admin/archive', '_blank')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                📊 View User Archive
+              </Button>
+              <Button 
+                onClick={() => window.open('/admin/email-campaigns', '_blank')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                📧 Manage Email Campaigns
+              </Button>
+              <Button 
+                onClick={() => window.open('/admin/archive/export', '_blank')}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                📥 Export to Excel
+              </Button>
+            </div>
+
+            {/* Setup Instructions */}
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Database Setup Required</h4>
+              <p className="text-sm text-yellow-700 mb-3">
+                The archive system needs to be initialized in your Supabase database. 
+                Run the SQL script <code className="bg-yellow-100 px-1 rounded">scripts/017_create_archive_tables.sql</code> to set up the required tables.
+              </p>
+              <div className="text-xs text-yellow-600">
+                <strong>What this creates:</strong> User archive tables, email campaign management, 
+                automatic archiving triggers for waitlist and contact submissions.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Approval Dialog */}
