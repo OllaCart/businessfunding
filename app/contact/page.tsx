@@ -1,8 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useEffect } from "react"
-import { useState } from "react"
+
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +13,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
-import { useSearchParams } from "next/navigation"
 
-export default function ContactPage() {
+function ContactForm() {
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -25,8 +26,6 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const searchParams = useSearchParams()
 
   // Pre-populate form with slip information if available
   useEffect(() => {
@@ -306,5 +305,20 @@ export default function ContactPage() {
 
       <MarinaFooter />
     </div>
+  )
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-lg">Loading contact form...</p>
+        </div>
+      </div>
+    }>
+      <ContactForm />
+    </Suspense>
   )
 }
