@@ -307,6 +307,60 @@ export default function AdminApplicationsPage() {
     )
   }
 
+  // Handle case where there are no applications at all
+  if (applications.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">Occupant Applications</h1>
+            <p className="text-muted-foreground">
+              Review and manage applications from boaters seeking slip occupancy
+            </p>
+          </div>
+
+          {/* Empty State */}
+          <div className="text-center py-16">
+            <FileText className="h-24 w-24 text-muted-foreground mx-auto mb-6" />
+            <h2 className="text-2xl font-semibold text-muted-foreground mb-4">No Applications Yet</h2>
+            <p className="text-lg text-muted-foreground mb-6 max-w-md mx-auto">
+              When boaters submit applications through the onboarding system, they will appear here for your review.
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-2xl mx-auto text-left">
+              <h3 className="font-semibold text-blue-800 mb-3">How the system works:</h3>
+              <ol className="text-blue-700 space-y-2 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                  <span>Create a slip offer from the Waitlist page</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                  <span>Boater receives email with secure application link</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                  <span>Boater submits application with all required information</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="bg-blue-200 text-blue-800 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
+                  <span>Application appears here for your review and approval</span>
+                </li>
+              </ol>
+            </div>
+            <div className="mt-6">
+              <Button 
+                onClick={() => window.location.href = '/admin/waitlist'}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Go to Waitlist
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
