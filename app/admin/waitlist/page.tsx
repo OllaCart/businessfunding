@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { createClient } from '@/lib/supabase/client'
-import { MoreHorizontal, Mail, Phone, User, Ship, Calendar, MapPin } from 'lucide-react'
 
 interface CurrentOccupant {
   id: string
@@ -288,44 +287,76 @@ The Marina By-The-Sea Team`
     }
   }
 
-  const createSlipOffer = async (entry: WaitlistEntry, slip: DockSlip, pricePerFoot: number, totalMonthlyCost: number, offerExpiresAt: string, termsAndConditions: string) => {
+  const createSlipOffer = async (entry: WaitlistEntry, slip: DockSlip, pricePerFoot: number, totalMonthlyCost: number) => {
     try {
       console.log('Creating slip offer:', { entry: entry.full_name, slip: slip.slip_number, pricePerFoot, totalMonthlyCost })
       
-      const response = await fetch('/api/slip-offers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          waitlistEntryId: entry.id,
-          slipId: slip.id,
-          offeredPricePerFoot: pricePerFoot,
-          totalMonthlyCost: totalMonthlyCost,
-          offerExpiresAt: offerExpiresAt,
-          termsAndConditions: termsAndConditions
-        })
+      const supabase = createClient()
+      
+      // Create slip offer record
+      const { data, error } = await supabase.rpc('create_slip_offer', {
+        waitlistEntryId: entry.id,
+        slipId: slip.id,
+        offeredPricePerFoot: pricePerFoot,
+        totalMonthlyCost: totalMonthlyCost,
+        offerExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+        termsAndConditions: 'Please contact us for details.'
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create slip offer')
+      if (error) {
+        console.error('Error creating slip offer:', error)
+        throw error
       }
 
-      const result = await response.json()
+      console.log('Slip offer created successfully:', data)
       
-      if (result.success) {
-        alert(`Slip offer created successfully! Password: ${result.offerPassword}`)
-        // setSlipOfferDialog({ isOpen: false, entry: null, selectedSlip: null }) // This state doesn't exist in the original file
-        // Refresh data to show updated status
-        await refreshWaitlistData()
-      } else {
-        throw new Error(result.error || 'Failed to create slip offer')
+      // Update waitlist entry status to 'offered'
+      const { error: updateError } = await supabase
+        .from('waitlist')
+        .update({ status: 'offered' })
+        .eq('id', entry.id)
+
+      if (updateError) {
+        console.error('Error updating waitlist status:', updateError)
       }
+
+      // Send email notification
+      try {
+        const response = await fetch('/api/slip-offers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            waitlistEntryId: entry.id,
+            slipId: slip.id,
+            pricePerFoot,
+            totalMonthlyCost,
+            recipientEmail: entry.email,
+            recipientName: entry.full_name,
+            slipNumber: slip.slip_number
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        console.log('Email notification sent successfully')
+        alert(`Slip offer sent successfully to ${entry.full_name}!`)
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError)
+        alert('Slip offer created but email failed to send')
+      }
+
+      // Close dialog and reset form
+      setSlipOfferDialog({ isOpen: false, entry: null, selectedSlip: null })
+      setSlipOfferForm({ pricePerFoot: 40, totalMonthlyCost: 0 })
+
     } catch (error) {
-      console.error('Error creating slip offer:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      alert(`Failed to create slip offer: ${errorMessage}`)
+      console.error('Error in createSlipOffer:', error)
+      alert('Failed to create slip offer')
+      throw error
     }
   }
 
@@ -795,6 +826,83 @@ The Marina By-The-Sea Team`
                 }}
               >
                 Delete Entry
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Slip Offer Dialog */}
+      <Dialog open={slipOfferDialog.isOpen} onOpenChange={(open) => 
+        setSlipOfferDialog(prev => ({ ...prev, isOpen: open }))
+      }>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Slip Offer</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="price-per-foot">Price Per Foot ($)</Label>
+                <Input
+                  id="price-per-foot"
+                  type="number"
+                  step="0.01"
+                  value={slipOfferForm.pricePerFoot}
+                  onChange={(e) => setSlipOfferForm(prev => ({ ...prev, pricePerFoot: parseFloat(e.target.value) || 0 }))}
+                  placeholder="40.00"
+                />
+              </div>
+              <div>
+                <Label htmlFor="total-monthly-cost">Total Monthly Cost ($)</Label>
+                <Input
+                  id="total-monthly-cost"
+                  type="number"
+                  step="0.01"
+                  value={slipOfferForm.totalMonthlyCost}
+                  readOnly
+                  className="bg-gray-50"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  {slipOfferDialog.selectedSlip?.length_capacity} ft × ${slipOfferForm.pricePerFoot}/ft = ${slipOfferForm.totalMonthlyCost}
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">Offer Summary</h4>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p><strong>Slip:</strong> {slipOfferDialog.selectedSlip?.slip_number}</p>
+                <p><strong>Length:</strong> {slipOfferDialog.selectedSlip?.length_capacity} feet</p>
+                <p><strong>Price per foot:</strong> ${slipOfferForm.pricePerFoot}</p>
+                <p><strong>Monthly cost:</strong> ${slipOfferForm.totalMonthlyCost}</p>
+                <p><strong>Recipient:</strong> {slipOfferDialog.entry?.full_name} ({slipOfferDialog.entry?.email})</p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setSlipOfferDialog({ isOpen: false, entry: null, selectedSlip: null })}
+              >
+                Cancel
+              </Button>
+              <Button onClick={async () => {
+                if (!slipOfferDialog.entry || !slipOfferDialog.selectedSlip) return
+                
+                try {
+                  await createSlipOffer(
+                    slipOfferDialog.entry,
+                    slipOfferDialog.selectedSlip,
+                    slipOfferForm.pricePerFoot,
+                    slipOfferForm.totalMonthlyCost
+                  )
+                } catch (error) {
+                  console.error('Error creating slip offer:', error)
+                }
+              }}>
+                Send Offer
               </Button>
             </div>
           </div>
