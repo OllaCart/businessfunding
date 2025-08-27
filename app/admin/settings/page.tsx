@@ -35,6 +35,12 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [archiveStats, setArchiveStats] = useState({
+    totalUsers: 0,
+    waitlistCount: 0,
+    contactCount: 0,
+    emailCampaigns: 0
+  })
   
   // Form states
   const [editName, setEditName] = useState('')
@@ -102,11 +108,27 @@ export default function AdminSettingsPage() {
         const pendingRequests = (allAdminsData || []).filter(admin => admin.role === 'pending_admin')
         setAdminRequests(pendingRequests)
         
+        // Fetch archive statistics
+        await fetchArchiveStats()
+        
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again.')
       } finally {
         setLoading(false)
+      }
+    }
+
+    const fetchArchiveStats = async () => {
+      try {
+        const response = await fetch('/api/archive-stats')
+        if (response.ok) {
+          const stats = await response.json()
+          setArchiveStats(stats)
+        }
+      } catch (error) {
+        console.error('Error fetching archive stats:', error)
+        // Don't fail the whole page if archive stats fail
       }
     }
 
@@ -464,19 +486,19 @@ The Marina By-The-Sea Administration Team`,
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">0</div>
+                <div className="text-2xl font-bold text-blue-600">{archiveStats.totalUsers}</div>
                 <div className="text-sm text-blue-800">Total Archived Users</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">0</div>
+                <div className="text-2xl font-bold text-green-600">{archiveStats.waitlistCount}</div>
                 <div className="text-sm text-green-800">Waitlist Archive</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">0</div>
+                <div className="text-2xl font-bold text-purple-600">{archiveStats.contactCount}</div>
                 <div className="text-sm text-purple-800">Contact Archive</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">0</div>
+                <div className="text-2xl font-bold text-orange-600">{archiveStats.emailCampaigns}</div>
                 <div className="text-sm text-orange-800">Email Campaigns</div>
               </div>
             </div>

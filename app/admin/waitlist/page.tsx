@@ -1064,12 +1064,12 @@ export default function AdminWaitlistPage() {
       const supabase = createClient()
       
       // Send a warning email to the user
-      const warningSubject = `Your Waitlist Entry on Marina By-The-Sea has been deleted`
+      const warningSubject = `Your Waitlist Entry on Marina By-The-Sea has been removed`
       const warningContent = `Dear ${entry.full_name},
 
-We regret to inform you that your waitlist entry for a slip at Marina By-The-Sea has been deleted. This action was taken because we were unable to accommodate your request for a slip based on current availability.
+We regret to inform you that your waitlist entry for a slip at Marina By-The-Sea has been removed from our active waitlist. This action was taken because we were unable to accommodate your request for a slip based on current availability.
 
-You are welcome to re-apply for a slip at any time.
+Your information has been archived in our system for future reference. You are welcome to re-apply for a slip at any time.
 
 Best regards,
 The Marina By-The-Sea Team`
@@ -1094,12 +1094,13 @@ The Marina By-The-Sea Team`
         throw new Error('Failed to send warning email for deletion')
       }
 
-      // Remove from all specific slips
-      console.log('Attempting to delete entry from all slips:', entry.full_name)
+      // Actually delete the entry from the waitlist table
+      // This will trigger the archive_waitlist_user() function automatically
+      console.log('Attempting to delete waitlist entry:', entry.full_name)
       
       const { error: deleteError } = await supabase
         .from('waitlist')
-        .update({ selected_slips: [] })
+        .delete()
         .eq('id', entry.id)
       
       if (deleteError) {
@@ -1107,7 +1108,7 @@ The Marina By-The-Sea Team`
         throw new Error(`Database error: ${deleteError.message}`)
       }
       
-      console.log('Successfully deleted entry from all slips:', entry.full_name)
+      console.log('Successfully deleted waitlist entry:', entry.full_name)
       
       // Refresh data
       const { data: waitlistData, error: waitlistError } = await supabase
@@ -1128,7 +1129,7 @@ The Marina By-The-Sea Team`
       }))
       
       setWaitlistEntries(validatedWaitlistData)
-      alert('Entry deleted successfully!')
+      alert('Entry removed and archived successfully!')
     } catch (error) {
       console.error('Error deleting entry:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'

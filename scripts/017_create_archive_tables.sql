@@ -144,12 +144,6 @@ CREATE TRIGGER trigger_archive_contact_submission
     FOR EACH ROW
     EXECUTE FUNCTION archive_contact_submission();
 
--- Insert sample data for testing
-INSERT INTO public.user_archive (email, full_name, phone, source_type, notes) VALUES
-('john.doe@example.com', 'John Doe', '+1234567890', 'general_interest', 'Sample archived user'),
-('jane.smith@example.com', 'Jane Smith', '+1987654321', 'former_occupant', 'Former slip 5 occupant'),
-('bob.wilson@example.com', 'Bob Wilson', '+1555666777', 'waitlist', 'Archived from waitlist');
-
 -- Grant necessary permissions
 GRANT ALL ON public.user_archive TO authenticated;
 GRANT ALL ON public.email_campaigns TO authenticated;
