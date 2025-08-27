@@ -18,6 +18,7 @@ const navigation = [
   { name: "Dock Slips", href: "/admin/slips", icon: Anchor },
   { name: "Posts", href: "/admin/posts", icon: FileText },
   { name: "Waitlist", href: "/admin/waitlist", icon: Users },
+  { name: "Applications", href: "/admin/applications", icon: FileText },
   { name: "Messages", href: "/admin/contacts", icon: MessageSquare },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
