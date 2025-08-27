@@ -9,6 +9,7 @@ import { Calendar, User, ArrowLeft, Tag, Clock, Share2 } from "lucide-react"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import Image from "next/image"
+import { ShareButton } from "@/components/share-button"
 
 interface Post {
   id: string
@@ -289,24 +290,10 @@ export default async function PostPage({ params }: PostPageProps) {
                   <span>Share this update:</span>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: post.title,
-                          text: post.excerpt || post.title,
-                          url: window.location.href,
-                        })
-                      } else {
-                        navigator.clipboard.writeText(window.location.href)
-                      }
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share
-                  </Button>
+                  <ShareButton 
+                    title={post.title || "Marina Update"} 
+                    excerpt={post.excerpt || post.title || "Marina Update"}
+                  />
                 </div>
               </div>
             </div>
