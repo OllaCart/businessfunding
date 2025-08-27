@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { createClient } from '@/lib/supabase/client'
+import { MoreHorizontal, Mail, Phone, User, Ship, Calendar, MapPin } from 'lucide-react'
 
 interface CurrentOccupant {
   id: string
@@ -50,20 +51,14 @@ interface WaitlistEntry {
   priority_order?: number
 }
 
-function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry, onDeleteEntry, setWaitlistEntries, slipOfferDialog, setSlipOfferDialog }: { 
+function PipelineView({ slips, waitlistEntries, currentOccupants, onUpdateOccupant, onDuplicateEntry, onDeleteEntry, setWaitlistEntries }: { 
   slips: DockSlip[], 
   waitlistEntries: WaitlistEntry[],
   currentOccupants: CurrentOccupant[],
   onUpdateOccupant: (occupant: CurrentOccupant) => void,
   onDuplicateEntry: (entry: WaitlistEntry, targetSlipId: string) => void,
   onDeleteEntry: (entry: WaitlistEntry) => void,
-  setWaitlistEntries: (entries: WaitlistEntry[]) => void,
-  slipOfferDialog: {
-    isOpen: boolean
-    entry: WaitlistEntry | null
-    selectedSlip: DockSlip | null
-  },
-  setSlipOfferDialog: (dialog: { isOpen: boolean; entry: WaitlistEntry | null; selectedSlip: DockSlip | null }) => void
+  setWaitlistEntries: (entries: WaitlistEntry[]) => void
 }) {
   const [draggedEntry, setDraggedEntry] = useState<WaitlistEntry | null>(null)
   const [emailDialog, setEmailDialog] = useState<{
@@ -1248,104 +1243,7 @@ The Marina By-The-Sea Team`
         onDuplicateEntry={handleDuplicateEntry}
         onDeleteEntry={handleDeleteEntry}
         setWaitlistEntries={setWaitlistEntries}
-        slipOfferDialog={slipOfferDialog}
-        setSlipOfferDialog={setSlipOfferDialog}
       />
-
-      {/* Slip Offer Dialog */}
-      <Dialog open={slipOfferDialog.isOpen} onOpenChange={(open) => 
-        setSlipOfferDialog(prev => ({ ...prev, isOpen: open }))
-      }>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Slip Offer</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="price-per-foot">Price Per Foot ($)</Label>
-                <Input
-                  id="price-per-foot"
-                  type="number"
-                  step="0.01"
-                  value={slipOfferForm.pricePerFoot}
-                  onChange={(e) => setSlipOfferForm(prev => ({ ...prev, pricePerFoot: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
-                />
-              </div>
-              <div>
-                <Label htmlFor="total-monthly-cost">Total Monthly Cost ($)</Label>
-                <Input
-                  id="total-monthly-cost"
-                  type="number"
-                  step="0.01"
-                  value={slipOfferForm.totalMonthlyCost}
-                  onChange={(e) => setSlipOfferForm(prev => ({ ...prev, totalMonthlyCost: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="offer-expires-at">Offer Expires At</Label>
-              <Input
-                id="offer-expires-at"
-                type="datetime-local"
-                value={slipOfferForm.offerExpiresAt}
-                onChange={(e) => setSlipOfferForm(prev => ({ ...prev, offerExpiresAt: e.target.value }))}
-                min={new Date().toISOString().slice(0, 16)}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="terms-and-conditions">Terms and Conditions</Label>
-              <Textarea
-                id="terms-and-conditions"
-                value={slipOfferForm.termsAndConditions}
-                onChange={(e) => setSlipOfferForm(prev => ({ ...prev, termsAndConditions: e.target.value }))}
-                rows={4}
-                placeholder="Enter any special terms or conditions for this offer..."
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setSlipOfferDialog({ isOpen: false, entry: null, selectedSlip: null })}
-              >
-                Cancel
-              </Button>
-              <Button onClick={async () => {
-                if (!slipOfferDialog.entry || !slipOfferDialog.selectedSlip) return
-                
-                try {
-                  await createSlipOffer(
-                    slipOfferDialog.entry,
-                    slipOfferDialog.selectedSlip,
-                    slipOfferForm.pricePerFoot,
-                    slipOfferForm.totalMonthlyCost,
-                    slipOfferForm.offerExpiresAt,
-                    slipOfferForm.termsAndConditions
-                  )
-                  
-                  // Reset form
-                  setSlipOfferForm({
-                    pricePerFoot: 0,
-                    totalMonthlyCost: 0,
-                    offerExpiresAt: '',
-                    termsAndConditions: ''
-                  })
-                } catch (error) {
-                  // Error already handled in createSlipOffer
-                }
-              }}>
-                Create Offer
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
