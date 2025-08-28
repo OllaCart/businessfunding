@@ -139,7 +139,9 @@ export function DynamicSlipsSection() {
 
                       <div className="space-y-2">
                         <Button asChild variant="outline" className="w-full">
-                          <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                          <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}${slip.show_price ? `&rate=${slip.monthly_rate}` : ''}`}>
+                            Inquire About This Slip
+                          </Link>
                         </Button>
                       </div>
                     </CardContent>
@@ -186,7 +188,9 @@ export function DynamicSlipsSection() {
 
                       <div className="space-y-2">
                         <Button asChild variant="outline" className="w-full">
-                          <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                          <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}${slip.show_price ? `&rate=${slip.monthly_rate}` : ''}`}>
+                            Inquire About This Slip
+                          </Link>
                         </Button>
                       </div>
                     </CardContent>

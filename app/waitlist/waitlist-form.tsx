@@ -241,7 +241,16 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
             Select all slips you'd be interested in, including currently occupied ones. You can choose multiple options.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {allSlips.map((slip) => (
+            {allSlips
+              .sort((a, b) => {
+                // First sort by availability (available first)
+                if (a.is_available !== b.is_available) {
+                  return a.is_available ? -1 : 1;
+                }
+                // Then sort by length from high to low
+                return b.length_capacity - a.length_capacity;
+              })
+              .map((slip) => (
               <div key={slip.id} className="flex items-center space-x-3 p-3 border rounded-lg">
                 <Checkbox
                   id={`slip-${slip.id}`}
