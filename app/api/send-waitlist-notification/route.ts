@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createPublicClient } from "@/lib/supabase/public"
 import { 
   sendWaitlistNotificationToAdmins, 
   sendWaitlistConfirmationToUser,
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     // Verify the request is authenticated (basic security)
-    const supabase = await createClient()
+    const supabase = createPublicClient()
 
     // Get slip details for the selected slips
     let slipDetails = []

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Contact Submission] Creating Supabase client...')
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     console.log('[Contact Submission] Supabase client created')
 
     // Save contact submission to database
