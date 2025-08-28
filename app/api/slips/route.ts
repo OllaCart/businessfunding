@@ -12,7 +12,7 @@ export async function GET() {
     const { data: slips, error } = await supabase
       .from("dock_slips")
       .select("*")
-      .order("slip_number")
+      .order("slip_number", { ascending: true })
     
     if (error) {
       console.error("[Slips API] Supabase error:", error)
@@ -24,11 +24,18 @@ export async function GET() {
     
     console.log('[Slips API] Successfully fetched slips:', slips?.length || 0)
     
-    const availableSlips = slips?.filter((slip) => slip.is_available) || []
+    // Sort numerically by slip number to ensure proper order (1, 2, 3... 14)
+    const sortedSlips = slips?.sort((a, b) => {
+      const aNum = parseInt(a.slip_number)
+      const bNum = parseInt(b.slip_number)
+      return aNum - bNum
+    }) || []
+    
+    const availableSlips = sortedSlips.filter((slip) => slip.is_available) || []
     
     return NextResponse.json({
       availableSlips,
-      totalSlips: slips?.length || 0,
+      totalSlips: sortedSlips.length || 0,
       availableCount: availableSlips.length
     })
     
