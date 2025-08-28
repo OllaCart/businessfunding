@@ -79,8 +79,9 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
           full_name: formData.full_name,
           phone: formData.phone || null,
           boat_length: formData.boat_length ? Number.parseInt(formData.boat_length) : null,
-          preferred_slip_type: formData.selected_slips.length > 0 ? formData.selected_slips.join(', ') : null,
+          selected_slips: formData.selected_slips.length > 0 ? formData.selected_slips : [],
           message: formData.message || null,
+          status: 'pending',
         },
       ])
 

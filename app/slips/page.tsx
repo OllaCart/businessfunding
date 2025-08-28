@@ -329,11 +329,6 @@ export default async function SlipsPage() {
                     </div>
 
                     <div className="pt-2 space-y-2">
-                      <Button asChild variant="outline" className="w-full bg-transparent">
-                        <Link href={`/contact?slip=${slip.id}&slipNumber=${slip.slip_number}&length=${slip.length_capacity}&beam=${slip.beam_capacity}${slip.show_price ? `&rate=${slip.monthly_rate}` : ''}&status=occupied`}>
-                          Inquire About This Slip
-                        </Link>
-                      </Button>
                       <Button asChild variant="outline" className="w-full">
                         <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
                       </Button>

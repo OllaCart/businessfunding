@@ -100,52 +100,101 @@ export function DynamicSlipsSection() {
         </div>
 
         {availableSlips.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {availableSlips.map((slip) => (
-              <Card key={slip.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-serif font-bold text-xl">Slip {slip.slip_number}</h3>
-                    <Badge variant="default" className="bg-green-100 text-green-800">
-                      Available
-                    </Badge>
-                  </div>
-                  
-                  <div className="space-y-3 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Dimensions</span>
-                      <span className="font-medium">{slip.length_capacity}' L × {slip.beam_capacity}' W</span>
-                    </div>
-                    
-                    {slip.show_price ? (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Monthly Rate</span>
-                        <span className="font-bold text-primary">${slip.monthly_rate.toLocaleString()}/mo</span>
+          availableSlips.length > 3 ? (
+            // Horizontal scroll for many slips
+            <div className="mb-8">
+              <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+                {availableSlips.map((slip) => (
+                  <Card key={slip.id} className="hover:shadow-lg transition-shadow min-w-[320px] flex-shrink-0">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-serif font-bold text-xl">Slip {slip.slip_number}</h3>
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          Available
+                        </Badge>
                       </div>
-                    ) : (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Pricing</span>
-                        <span className="text-muted-foreground">Upon request</span>
+                      
+                      <div className="space-y-3 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Dimensions</span>
+                          <span className="font-medium">{slip.length_capacity}' L × {slip.beam_capacity}' W</span>
+                        </div>
+                        
+                        {slip.show_price ? (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Monthly Rate</span>
+                            <span className="font-bold text-primary">${slip.monthly_rate.toLocaleString()}/mo</span>
+                          </div>
+                        ) : (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Pricing</span>
+                            <span className="text-muted-foreground">Upon request</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {slip.description && (
-                    <p className="text-sm text-muted-foreground mb-4">{slip.description}</p>
-                  )}
+                      {slip.description && (
+                        <p className="text-sm text-muted-foreground mb-4">{slip.description}</p>
+                      )}
 
-                  <div className="space-y-2">
-                    <Button asChild className="w-full bg-primary hover:bg-primary/90">
-                      <Link href="/contact">Inquire About This Slip</Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                      <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <div className="space-y-2">
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : (
+            // Centered grid for fewer slips
+            <div className="flex justify-center mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl">
+                {availableSlips.map((slip) => (
+                  <Card key={slip.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-serif font-bold text-xl">Slip {slip.slip_number}</h3>
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          Available
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Dimensions</span>
+                          <span className="font-medium">{slip.length_capacity}' L × {slip.beam_capacity}' W</span>
+                        </div>
+                        
+                        {slip.show_price ? (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Monthly Rate</span>
+                            <span className="font-bold text-primary">${slip.monthly_rate.toLocaleString()}/mo</span>
+                          </div>
+                        ) : (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Pricing</span>
+                            <span className="text-muted-foreground">Upon request</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {slip.description && (
+                        <p className="text-sm text-muted-foreground mb-4">{slip.description}</p>
+                      )}
+
+                      <div className="space-y-2">
+                        <Button asChild variant="outline" className="w-full">
+                          <Link href={`/waitlist?slips=${slip.id}`}>Join Waitlist for This Slip</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )
         ) : (
           <Card className="text-center py-12">
             <CardContent>
