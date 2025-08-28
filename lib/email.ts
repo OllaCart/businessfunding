@@ -307,6 +307,202 @@ Phone: (954) 790-1588
   }
 }
 
+export interface ContactSubmission {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  subject?: string
+  message: string
+  created_at: string
+}
+
+export async function sendContactConfirmationToUser(submission: ContactSubmission) {
+  console.log('[v0] Sending contact confirmation to user:', submission.email)
+  
+  const transporter = createTransporter()
+  if (!transporter) {
+    console.warn('[v0] Gmail not configured - skipping user confirmation')
+    return
+  }
+
+  const emailContent = `
+Thank you for contacting Marina By-The-Sea!
+
+We have received your message and will get back to you as soon as possible.
+
+📋 YOUR MESSAGE DETAILS:
+Name: ${submission.name}
+Email: ${submission.email}
+Phone: ${submission.phone || 'Not provided'}
+Subject: ${submission.subject || 'General Inquiry'}
+Message: ${submission.message}
+
+📅 SUBMITTED: ${new Date(submission.created_at).toLocaleString()}
+
+📞 CONTACT INFORMATION:
+Phone: (954) 790-1588
+Address: 230 Basin Drive, Lauderdale By-The-Sea, FL 33308
+
+⏰ BUSINESS HOURS:
+Monday - Friday: 8:00 AM - 5:00 PM
+Saturday: 9:00 AM - 3:00 PM
+Sunday: Closed
+
+We appreciate your interest in our marina and will respond to your inquiry within 24-48 hours.
+
+Best regards,
+The Marina By-The-Sea Team
+
+---
+This is an automated confirmation from Marina By-The-Sea
+  `.trim()
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+        🚤 Thank you for contacting Marina By-The-Sea!
+      </h2>
+      
+      <p style="color: #374151; font-size: 16px;">
+        We have received your message and will get back to you as soon as possible.
+      </p>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #374151; margin-top: 0;">📋 YOUR MESSAGE DETAILS</h3>
+        <p><strong>Name:</strong> ${submission.name}</p>
+        <p><strong>Email:</strong> ${submission.email}</p>
+        <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
+        <p><strong>Subject:</strong> ${submission.subject || 'General Inquiry'}</p>
+        <p><strong>Message:</strong> ${submission.message}</p>
+        <p><strong>Submitted:</strong> ${new Date(submission.created_at).toLocaleString()}</p>
+      </div>
+      
+      <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #1e40af; margin-top: 0;">📞 CONTACT INFORMATION</h3>
+        <p><strong>Phone:</strong> (954) 790-1588</p>
+        <p><strong>Address:</strong> 230 Basin Drive, Lauderdale By-The-Sea, FL 33308</p>
+      </div>
+      
+      <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #166534; margin-top: 0;">⏰ BUSINESS HOURS</h3>
+        <p><strong>Monday - Friday:</strong> 8:00 AM - 5:00 PM</p>
+        <p><strong>Saturday:</strong> 9:00 AM - 3:00 PM</p>
+        <p><strong>Sunday:</strong> Closed</p>
+      </div>
+      
+      <p style="color: #374151; font-size: 16px;">
+        We appreciate your interest in our marina and will respond to your inquiry within 24-48 hours.
+      </p>
+      
+      <p style="color: #374151; font-size: 16px;">
+        <strong>Best regards,</strong><br>
+        The Marina By-The-Sea Team
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+      <p style="color: #6b7280; font-size: 12px; text-align: center;">
+        This is an automated confirmation from Marina By-The-Sea
+      </p>
+    </div>
+  `
+
+  try {
+    await transporter.sendMail({
+      from: `"Marina By-The-Sea" <${process.env.GMAIL_USER}>`,
+      to: submission.email,
+      subject: `Thank you for contacting Marina By-The-Sea - ${submission.subject || 'General Inquiry'}`,
+      text: emailContent,
+      html: htmlContent,
+    })
+    
+    console.log('[v0] Contact confirmation sent successfully to:', submission.email)
+  } catch (error) {
+    console.error('[v0] Failed to send contact confirmation:', error)
+  }
+}
+
+export async function sendContactNotificationToAdmins(submission: ContactSubmission) {
+  console.log('[v0] Sending contact notification to admins')
+  
+  const transporter = createTransporter()
+  if (!transporter) {
+    console.warn('[v0] Gmail not configured - skipping admin notification')
+    return
+  }
+
+  console.log('[v0] Fetching admin emails...')
+  const adminEmails = await getAdminEmails()
+  console.log('[v0] Admin emails found:', adminEmails)
+  
+  if (adminEmails.length === 0) {
+    console.warn('[v0] No admin emails found for contact notification')
+    return
+  }
+
+  const emailContent = `
+New Contact Form Submission - Marina By-The-Sea
+
+📋 SUBMISSION DETAILS:
+Name: ${submission.name}
+Email: ${submission.email}
+Phone: ${submission.phone || 'Not provided'}
+Subject: ${submission.subject || 'General Inquiry'}
+Message: ${submission.message}
+
+📅 SUBMITTED: ${new Date(submission.created_at).toLocaleString()}
+
+🔗 VIEW IN ADMIN: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts
+
+---
+This is an automated notification from Marina By-The-Sea
+  `.trim()
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+        📧 New Contact Form Submission - Marina By-The-Sea
+      </h2>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
+        <p><strong>Name:</strong> ${submission.name}</p>
+        <p><strong>Email:</strong> ${submission.email}</p>
+        <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
+        <p><strong>Subject:</strong> ${submission.subject || 'General Inquiry'}</p>
+        <p><strong>Message:</strong> ${submission.message}</p>
+        <p><strong>Submitted:</strong> ${new Date(submission.created_at).toLocaleString()}</p>
+      </div>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.vercel.app'}/admin/contacts" 
+           style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          🔗 View in Admin Panel
+        </a>
+      </div>
+      
+      <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+      <p style="color: #6b7280; font-size: 12px; text-align: center;">
+        This is an automated notification from Marina By-The-Sea
+      </p>
+    </div>
+  `
+
+  try {
+    await transporter.sendMail({
+      from: `"Marina By-The-Sea" <${process.env.GMAIL_USER}>`,
+      to: adminEmails.join(', '),
+      subject: `New Contact Form Submission - ${submission.name}`,
+      text: emailContent,
+      html: htmlContent,
+    })
+    
+    console.log('[v0] Contact notification sent successfully to admins')
+  } catch (error) {
+    console.error('[v0] Failed to send contact notification to admins:', error)
+  }
+}
+
 async function getAdminEmails(): Promise<string[]> {
   try {
     // Create a public client to fetch admin emails
