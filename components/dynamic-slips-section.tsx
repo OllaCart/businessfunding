@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Anchor, ArrowRight } from "lucide-react"
+import { createPublicClient } from "@/lib/supabase/public"
 
 interface DockSlip {
   id: string
@@ -40,14 +41,16 @@ export function DynamicSlipsSection() {
 
   const fetchSlips = async () => {
     try {
-      const response = await fetch('/api/slips')
+      const supabase = createPublicClient()
+      const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch slips')
+      if (error) {
+        console.error("Error fetching slips:", error)
+        setAvailableSlips([])
+      } else if (slips) {
+        const available = slips.filter(slip => slip.is_available)
+        setAvailableSlips(available)
       }
-      
-      const data = await response.json()
-      setAvailableSlips(data.availableSlips || [])
     } catch (error) {
       console.error("Failed to fetch slips:", error)
       setAvailableSlips([])
