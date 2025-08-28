@@ -1,19 +1,13 @@
 -- Create onboarding system tables for Marina By-The-Sea
 -- This script adds tables for slip offers, occupant applications, and payment methods
+-- FIXED: Reordered to avoid circular dependencies
 
--- 1. Update waitlist table to add status tracking
-ALTER TABLE public.waitlist 
-ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'waitlisted' CHECK (status IN ('waitlisted', 'offered', 'pending_occupant', 'occupant')),
-ADD COLUMN IF NOT EXISTS offered_at TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS offer_expires_at TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS slip_offer_id UUID REFERENCES public.slip_offers(id);
-
--- 2. Create slip_offers table
+-- 1. First create slip_offers table (without foreign key constraints initially)
 CREATE TABLE IF NOT EXISTS public.slip_offers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    waitlist_entry_id UUID NOT NULL REFERENCES public.waitlist(id) ON DELETE CASCADE,
-    slip_id UUID NOT NULL REFERENCES public.dock_slips(id),
-    admin_id UUID NOT NULL REFERENCES public.admin_profiles(id),
+    waitlist_entry_id UUID NOT NULL,
+    slip_id UUID NOT NULL,
+    admin_id UUID NOT NULL,
     offered_price_per_foot DECIMAL(10,2) NOT NULL,
     monthly_tax_rate DECIMAL(5,4) DEFAULT 0.07, -- 7% default tax rate
     total_monthly_cost DECIMAL(10,2) NOT NULL,
@@ -25,7 +19,40 @@ CREATE TABLE IF NOT EXISTS public.slip_offers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Create occupant_applications table
+-- 2. Now add the foreign key constraints
+ALTER TABLE public.slip_offers 
+ADD CONSTRAINT fk_slip_offers_waitlist 
+FOREIGN KEY (waitlist_entry_id) REFERENCES public.waitlist(id) ON DELETE CASCADE;
+
+ALTER TABLE public.slip_offers 
+ADD CONSTRAINT fk_slip_offers_slip 
+FOREIGN KEY (slip_id) REFERENCES public.dock_slips(id);
+
+ALTER TABLE public.slip_offers 
+ADD CONSTRAINT fk_slip_offers_admin 
+FOREIGN KEY (admin_id) REFERENCES public.admin_profiles(id);
+
+-- 3. Now update waitlist table to add new columns
+ALTER TABLE public.waitlist 
+ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'waitlisted',
+ADD COLUMN IF NOT EXISTS offered_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS offer_expires_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS slip_offer_id UUID;
+
+-- 4. Add the foreign key constraint to waitlist
+ALTER TABLE public.waitlist 
+ADD CONSTRAINT fk_waitlist_slip_offer 
+FOREIGN KEY (slip_offer_id) REFERENCES public.slip_offers(id);
+
+-- 5. Add check constraint for status
+ALTER TABLE public.waitlist 
+DROP CONSTRAINT IF EXISTS waitlist_status_check;
+
+ALTER TABLE public.waitlist 
+ADD CONSTRAINT waitlist_status_check 
+CHECK (status IN ('waitlisted', 'offered', 'pending_occupant', 'occupant'));
+
+-- 6. Create occupant_applications table
 CREATE TABLE IF NOT EXISTS public.occupant_applications (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     slip_offer_id UUID NOT NULL REFERENCES public.slip_offers(id) ON DELETE CASCADE,
@@ -77,7 +104,7 @@ CREATE TABLE IF NOT EXISTS public.occupant_applications (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Create payment_methods table
+-- 7. Create payment_methods table
 CREATE TABLE IF NOT EXISTS public.payment_methods (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     occupant_application_id UUID NOT NULL REFERENCES public.occupant_applications(id) ON DELETE CASCADE,
@@ -103,7 +130,7 @@ CREATE TABLE IF NOT EXISTS public.payment_methods (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. Create application_documents table for file management
+-- 8. Create application_documents table for file management
 CREATE TABLE IF NOT EXISTS public.application_documents (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     occupant_application_id UUID NOT NULL REFERENCES public.occupant_applications(id) ON DELETE CASCADE,
@@ -118,7 +145,7 @@ CREATE TABLE IF NOT EXISTS public.application_documents (
     verified_by UUID REFERENCES public.admin_profiles(id)
 );
 
--- 6. Create indexes for performance
+-- 9. Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_waitlist_status ON public.waitlist(status);
 CREATE INDEX IF NOT EXISTS idx_waitlist_slip_offer_id ON public.waitlist(slip_offer_id);
 CREATE INDEX IF NOT EXISTS idx_slip_offers_waitlist_entry_id ON public.slip_offers(waitlist_entry_id);
@@ -130,7 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_occupant_applications_status ON public.occupant_a
 CREATE INDEX IF NOT EXISTS idx_payment_methods_application_id ON public.payment_methods(occupant_application_id);
 CREATE INDEX IF NOT EXISTS idx_application_documents_application_id ON public.application_documents(occupant_application_id);
 
--- 7. Create RLS policies for security
+-- 10. Create RLS policies for security
 ALTER TABLE public.slip_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.occupant_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_methods ENABLE ROW LEVEL SECURITY;
@@ -184,7 +211,7 @@ CREATE POLICY "payment_methods_public_insert" ON public.payment_methods
 CREATE POLICY "application_documents_public_insert" ON public.application_documents
     FOR INSERT WITH CHECK (true);
 
--- 8. Create triggers for automatic updates
+-- 11. Create triggers for automatic updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -202,7 +229,7 @@ CREATE TRIGGER update_occupant_applications_updated_at BEFORE UPDATE ON public.o
 CREATE TRIGGER update_payment_methods_updated_at BEFORE UPDATE ON public.payment_methods
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 9. Create function to generate secure passwords
+-- 12. Create function to generate secure passwords
 CREATE OR REPLACE FUNCTION generate_offer_password()
 RETURNS VARCHAR(100) AS $$
 DECLARE
@@ -218,7 +245,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 10. Create function to create slip offer
+-- 13. Create function to create slip offer
 CREATE OR REPLACE FUNCTION create_slip_offer(
     p_waitlist_entry_id UUID,
     p_slip_id UUID,
@@ -272,7 +299,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 11. Create function to transition to pending occupant
+-- 14. Create function to transition to pending occupant
 CREATE OR REPLACE FUNCTION transition_to_pending_occupant(p_slip_offer_id UUID)
 RETURNS VOID AS $$
 BEGIN
@@ -286,7 +313,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 12. Create function to complete onboarding
+-- 15. Create function to complete onboarding
 CREATE OR REPLACE FUNCTION complete_onboarding(p_occupant_application_id UUID, p_admin_id UUID)
 RETURNS VOID AS $$
 DECLARE
@@ -317,7 +344,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 13. Insert sample data for testing (optional)
+-- 16. Insert sample data for testing (optional)
 -- INSERT INTO public.slip_offers (waitlist_entry_id, slip_id, admin_id, offered_price_per_foot, total_monthly_cost, offer_password, offer_expires_at)
 -- VALUES (
 --     (SELECT id FROM public.waitlist LIMIT 1),
