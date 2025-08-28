@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { createPublicClient } from "@/lib/supabase/public"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -53,8 +53,8 @@ export default function ContactPage() {
     setError(null)
 
     try {
-      // Submit directly to Supabase using the same client that works in admin
-      const supabase = createClient()
+      // Submit directly to Supabase using the public client with anon key
+      const supabase = createPublicClient()
       
       const insertData = {
         name: formData.name,
@@ -63,12 +63,6 @@ export default function ContactPage() {
         subject: formData.subject || null,
         message: formData.message
       }
-      
-      console.log('Attempting to insert contact submission:', insertData)
-      console.log('Form data state:', formData)
-      console.log('Insert data object:', insertData)
-      console.log('Insert data keys:', Object.keys(insertData))
-      console.log('Insert data values:', Object.values(insertData))
       
       const { error } = await supabase
         .from('contact_submissions')

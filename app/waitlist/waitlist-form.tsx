@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { createClient } from "@/lib/supabase/client"
+import { createPublicClient } from "@/lib/supabase/public"
 import { CheckCircle, Anchor } from "lucide-react"
 
 interface DockSlip {
@@ -55,7 +55,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
     setIsSubmitting(true)
     setError(null)
 
-    const supabase = createClient()
+    const supabase = createPublicClient()
 
     try {
       // Check if email already exists
