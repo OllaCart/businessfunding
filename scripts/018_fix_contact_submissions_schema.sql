@@ -31,5 +31,41 @@ CREATE POLICY "contact_admin_all" ON public.contact_submissions FOR ALL USING (
   EXISTS (SELECT 1 FROM public.admin_profiles WHERE id = auth.uid())
 );
 
+-- Fix the trigger function to use the correct column name
+CREATE OR REPLACE FUNCTION archive_contact_submission()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.user_archive (
+        email,
+        full_name,
+        phone,
+        message,
+        source_type,
+        source_details,
+        notes
+    ) VALUES (
+        NEW.email,
+        NEW.name,  -- Changed from NEW.full_name to NEW.name
+        NEW.phone,
+        NEW.message,
+        'contact',
+        jsonb_build_object(
+            'contact_id', NEW.id,
+            'contact_created_at', NEW.created_at
+        ),
+        'Contact form submission'
+    );
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Recreate the trigger
+DROP TRIGGER IF EXISTS trigger_archive_contact_submission ON public.contact_submissions;
+CREATE TRIGGER trigger_archive_contact_submission
+    AFTER INSERT ON public.contact_submissions
+    FOR EACH ROW
+    EXECUTE FUNCTION archive_contact_submission();
+
 -- Verify the table was created correctly
 -- SELECT * FROM public.contact_submissions LIMIT 0;
