@@ -168,33 +168,6 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Admin Management Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Management</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2">Creating New Admin Accounts</h4>
-                <p className="text-blue-700 text-sm mb-3">
-                  To create a new admin account, use the Supabase dashboard:
-                </p>
-                <ol className="text-blue-700 text-sm space-y-1 ml-4">
-                  <li>1. Go to Supabase Dashboard → Authentication → Users</li>
-                  <li>2. Click "Add User" and create a new user</li>
-                  <li>3. Copy the user ID from the created user</li>
-                  <li>4. Go to SQL Editor and run:</li>
-                </ol>
-                <div className="bg-blue-100 border border-blue-300 rounded p-3 mt-3 font-mono text-sm">
-                  INSERT INTO admin_profiles (id, email, full_name, role) VALUES ('USER_ID_HERE', 'email@example.com', 'Full Name', 'admin');
-                </div>
-                <p className="text-blue-700 text-sm mt-3">
-                  Replace USER_ID_HERE with the actual user ID from step 3.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Quick Actions */}
           <Card>
             <CardHeader>

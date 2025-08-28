@@ -101,14 +101,5 @@ SELECT '=== IMPORTANT NOTES ===' as notes;
 SELECT '• Admin invitation system has been completely removed' as note1;
 SELECT '• All tables now have permissive policies (allows all operations)' as note2;
 SELECT '• This is a temporary fix to restore website functionality' as note3;
-SELECT '• You can manually create admin accounts in Supabase dashboard' as note4;
+SELECT '• Admin accounts can be managed directly in Supabase dashboard' as note4;
 SELECT '• Test the website now - everything should work!' as action;
-
--- 8. Manual admin creation instructions
-SELECT '=== MANUAL ADMIN CREATION ===' as instructions;
-SELECT 'To create an admin account manually:' as step1;
-SELECT '1. Go to Supabase Dashboard > Authentication > Users' as step2;
-SELECT '2. Click "Add User" and create a new user' as step3;
-SELECT '4. Go to SQL Editor and run:' as step4;
-SELECT '   INSERT INTO admin_profiles (id, email, full_name, role) VALUES (''USER_ID_HERE'', ''email@example.com'', ''Full Name'', ''admin'');' as step5;
-SELECT '5. Replace USER_ID_HERE with the actual user ID from step 2' as step6;
