@@ -68,16 +68,9 @@ export function validateAdminEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) return false
   
-  // Additional validation for admin emails
-  const domain = email.split('@')[1]
-  const allowedDomains = [
-    'marinabts.com',
-    'gmail.com',
-    'outlook.com',
-    'yahoo.com'
-  ]
-  
-  return allowedDomains.some(allowed => domain === allowed || domain.endsWith(`.${allowed}`))
+  // Allow any valid email domain for admin profiles
+  // This enables flexibility for different organizations and users
+  return true
 }
 
 /**

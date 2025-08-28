@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { checkRateLimit, validateAdminEmail, sanitizeInput } from '@/lib/security'
+import { checkRateLimit, validateAdminEmail, sanitizeInput, generateSecureToken } from '@/lib/security'
 
 interface AdminProfile {
   id: string
