@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Loader2, Eye, CheckCircle, XCircle, Clock, AlertCircle, FileText, User, Boat, CreditCard } from 'lucide-react'
+import { Loader2, Eye, CheckCircle, XCircle, Clock, AlertCircle, FileText, User, Anchor, CreditCard } from 'lucide-react'
 
 interface OccupantApplication {
   id: string
@@ -645,7 +645,7 @@ export default function AdminApplicationsPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Boat className="h-5 w-5" />
+                    <Anchor className="h-5 w-5" />
                     Boat Information
                   </CardTitle>
                 </CardHeader>

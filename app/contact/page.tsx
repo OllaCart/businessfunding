@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
 import { createPublicClient } from "@/lib/supabase/public"
-import { sendContactConfirmationToUser, sendContactNotificationToAdmins } from "@/lib/email"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -87,22 +86,21 @@ export default function ContactPage() {
 
       // Success! Now send email notifications
       try {
-        // Get the inserted data to send emails
-        const { data: insertedData } = await supabase
-          .from('contact_submissions')
-          .select('*')
-          .eq('email', formData.email)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-
-        if (insertedData) {
-          // Send confirmation email to user
-          await sendContactConfirmationToUser(insertedData)
-          
-          // Send notification email to admins
-          await sendContactNotificationToAdmins(insertedData)
-        }
+        // Send email notifications through API route
+        await fetch("/api/send-contact-emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            subject: formData.subject || null,
+            message: formData.message
+          }),
+        })
+        console.log("Email notifications sent successfully")
       } catch (emailError) {
         console.error('Failed to send email notifications:', emailError)
         // Don't fail the form submission if emails fail
