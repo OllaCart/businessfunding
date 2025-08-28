@@ -96,7 +96,8 @@ export async function sendAdminInvitationEmail(invitation: AdminInvitation) {
   console.log('[Admin Invitation] Starting email sending process...')
   
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.com'
+    // Use marinabts.com for production, fallback to environment variable
+    const baseUrl = 'https://www.marinabts.com'
     const setupUrl = `${baseUrl}/auth/setup-admin?token=${invitation.token}`
     const expiresDate = new Date(invitation.expires_at).toLocaleDateString('en-US', {
       weekday: 'long',
