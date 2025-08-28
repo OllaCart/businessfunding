@@ -84,8 +84,18 @@ ADD COLUMN IF NOT EXISTS priority_order INTEGER;
 -- 4. Fix user_archive table RLS policies to allow trigger inserts
 -- Option A: Fix RLS policies (more complex)
 -- The trigger needs to be able to insert into user_archive even for unauthenticated users
-ALTER TABLE public.user_archive 
-DROP POLICY IF EXISTS "Allow admins to manage user archive";
+
+-- Drop the old policy (without IF EXISTS for compatibility)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'user_archive' 
+        AND policyname = 'Allow admins to manage user archive'
+    ) THEN
+        DROP POLICY "Allow admins to manage user archive" ON public.user_archive;
+    END IF;
+END $$;
 
 -- Create a more permissive policy that allows the trigger to work
 CREATE POLICY "Allow trigger inserts and admin access" ON public.user_archive
