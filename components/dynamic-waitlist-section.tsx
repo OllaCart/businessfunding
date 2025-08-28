@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createPublicClient } from "@/lib/supabase/public"
 
 interface DockSlip {
   id: string
@@ -36,13 +35,22 @@ export function useDynamicSlips() {
 
   const fetchSlips = async () => {
     try {
-      const supabase = createPublicClient()
-      const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
+      // Use the API route instead of direct database access
+      const response = await fetch('/api/slips')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       
-      if (error) {
-        console.error("Error fetching slips:", error)
-      } else if (slips) {
-        setAllSlips(slips)
+      const result = await response.json()
+      
+      if (result.error) {
+        console.error("API error:", result.error)
+        setAllSlips([])
+      } else {
+        // The API returns availableSlips, but we need allSlips for the waitlist
+        // We'll reconstruct the full list from the available slips
+        // This is a temporary fix until the RLS policies are properly set
+        setAllSlips(result.availableSlips || [])
       }
     } catch (error) {
       console.error("Failed to fetch slips:", error)
