@@ -18,7 +18,17 @@ CREATE TABLE IF NOT EXISTS public.admin_invitations (
 -- 2. Enable RLS on the new table
 ALTER TABLE public.admin_invitations ENABLE ROW LEVEL SECURITY;
 
--- 3. Create RLS policies for admin_invitations
+-- 3. Drop existing policies to avoid conflicts
+SELECT 'Dropping existing policies to avoid conflicts...' as status;
+
+DROP POLICY IF EXISTS "admin_invitations_insert_admins" ON public.admin_invitations;
+DROP POLICY IF EXISTS "admin_invitations_select_admins" ON public.admin_invitations;
+DROP POLICY IF EXISTS "admin_invitations_select_by_token" ON public.admin_invitations;
+DROP POLICY IF EXISTS "admin_invitations_update_by_token" ON public.admin_invitations;
+
+-- 4. Create RLS policies for admin_invitations
+SELECT 'Creating RLS policies...' as status;
+
 -- Allow admins to create invitations
 CREATE POLICY "admin_invitations_insert_admins" ON public.admin_invitations
     FOR INSERT
@@ -51,15 +61,17 @@ CREATE POLICY "admin_invitations_update_by_token" ON public.admin_invitations
     FOR UPDATE
     USING (true);
 
--- 4. Create indexes for efficient lookups
+-- 5. Create indexes for efficient lookups
+SELECT 'Creating indexes...' as status;
+
 CREATE INDEX IF NOT EXISTS idx_admin_invitations_token ON public.admin_invitations(token);
 CREATE INDEX IF NOT EXISTS idx_admin_invitations_email ON public.admin_invitations(email);
 CREATE INDEX IF NOT EXISTS idx_admin_invitations_expires ON public.admin_invitations(expires_at);
 
--- 5. Grant permissions
+-- 6. Grant permissions
 GRANT ALL ON public.admin_invitations TO authenticated;
 
--- 6. Test the new table
+-- 7. Test the new table
 SELECT '=== TESTING NEW TABLE ===' as info;
 
 SELECT 
@@ -68,7 +80,7 @@ SELECT
 FROM information_schema.tables 
 WHERE table_name = 'admin_invitations';
 
--- 7. Show final status
+-- 8. Show final status
 SELECT '=== ADMIN INVITATION SYSTEM CREATED ===' as status;
 
 -- Show the new policies
