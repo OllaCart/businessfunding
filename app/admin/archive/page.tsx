@@ -464,7 +464,7 @@ export default function ArchivePage() {
         <CardContent>
           {filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {users.length === 0 ? 'No archived users found. The database may not be set up yet.' : 'No users match your search criteria.'}
+              {users.length === 0 ? 'No archived users found.' : 'No users match your search criteria.'}
             </div>
           ) : (
             <div className="space-y-4">
