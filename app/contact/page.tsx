@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { MarinaHeader } from "@/components/marina-header"
 import { MarinaFooter } from "@/components/marina-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,6 +24,29 @@ export default function ContactPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Check for URL parameters to pre-populate slip inquiry
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const slipId = urlParams.get('slip')
+      const slipNumber = urlParams.get('slipNumber')
+      const length = urlParams.get('length')
+      const beam = urlParams.get('beam')
+      const rate = urlParams.get('rate')
+      
+      if (slipId && slipNumber) {
+        // Pre-populate the message with slip information
+        const slipInfo = `I'm interested in Slip ${slipNumber} (${length}' L × ${beam}' W)${rate ? ` - Monthly rate: $${rate}` : ''}. Please provide more information about availability and pricing.`
+        
+        setFormData(prev => ({
+          ...prev,
+          subject: `Inquiry about Slip ${slipNumber}`,
+          message: slipInfo
+        }))
+      }
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -34,18 +56,25 @@ export default function ContactPage() {
       // Submit directly to Supabase using the same client that works in admin
       const supabase = createClient()
       
+      const insertData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        subject: formData.subject || null,
+        message: formData.message
+      }
+      
+      console.log('Attempting to insert contact submission:', insertData)
+      
       const { error } = await supabase
         .from('contact_submissions')
-        .insert([{
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          subject: formData.subject || null,
-          message: formData.message
-        }])
+        .insert([insertData])
 
       if (error) {
-        console.error('Database error:', error)
+        console.error('Database error details:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
+        console.error('Error details:', error.details)
         throw new Error(`Failed to submit contact form: ${error.message}`)
       }
 
