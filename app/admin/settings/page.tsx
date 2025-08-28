@@ -6,10 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { checkRateLimit, validateAdminEmail, sanitizeInput, generateSecureToken } from '@/lib/security'
 
 interface AdminProfile {
   id: string
@@ -17,26 +14,10 @@ interface AdminProfile {
   full_name: string
   role: 'admin' | 'pending_admin'
   created_at: string
-  approved_by?: string
-  approved_at?: string
-}
-
-interface AdminRequest {
-  id: string
-  email: string
-  full_name: string
-  role: 'pending_admin' | 'pending_approval'
-  created_at: string
-  message?: string
-  approved_by?: string
-  approved_at?: string
-  status: 'pending' | 'approved' | 'rejected'
-  rejection_reason?: string
 }
 
 export default function AdminSettingsPage() {
   const [currentAdmin, setCurrentAdmin] = useState<AdminProfile | null>(null)
-  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([])
   const [allAdmins, setAllAdmins] = useState<AdminProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,32 +32,6 @@ export default function AdminSettingsPage() {
   // Form states
   const [editName, setEditName] = useState('')
   const [isEditing, setIsEditing] = useState(false)
-  const [approvalDialog, setApprovalDialog] = useState<{
-    isOpen: boolean
-    request: AdminRequest | null
-    message: string
-  }>({
-    isOpen: false,
-    request: null,
-    message: ''
-  })
-
-  const [rejectionDialog, setRejectionDialog] = useState<{
-    isOpen: boolean
-    request: AdminRequest | null
-    reason: string
-  }>({
-    isOpen: false,
-    request: null,
-    reason: ''
-  })
-
-  const [newAdminForm, setNewAdminForm] = useState({
-    fullName: '',
-    email: '',
-    message: ''
-  })
-  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false)
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -100,65 +55,65 @@ export default function AdminSettingsPage() {
           return
         }
 
-        // Check if user is admin
-        const { data: adminProfile, error: adminError } = await supabase
+        setUser(currentUser)
+
+        // Fetch current admin profile
+        const { data: adminProfile, error: profileError } = await supabase
           .from('admin_profiles')
           .select('*')
           .eq('id', currentUser.id)
           .single()
 
-        if (adminError || !adminProfile || adminProfile.role !== 'admin') {
-          setError('Admin access required.')
+        if (profileError) {
+          console.error('Error fetching admin profile:', profileError)
+          setError('Failed to fetch admin profile. Please try again.')
           setLoading(false)
           return
         }
 
-        setUser(currentUser)
+        if (!adminProfile) {
+          setError('Admin profile not found. Please contact system administrator.')
+          setLoading(false)
+          return
+        }
+
         setCurrentAdmin(adminProfile)
-        setEditName(adminProfile.full_name)
-        
+        setEditName(adminProfile.full_name || '')
+
         // Fetch all admin profiles
         const { data: allAdminsData, error: adminsError } = await supabase
           .from('admin_profiles')
           .select('*')
           .order('created_at', { ascending: false })
-        
-        if (adminsError) throw adminsError
-        
-        setAllAdmins(allAdminsData || [])
-        
-        // Filter pending admin requests
-        const pendingRequests = (allAdminsData || []).filter(admin => 
-          admin.role === 'pending_admin' || admin.role === 'pending_approval'
-        )
-        setAdminRequests(pendingRequests)
-        
-        // Debug logging
-        console.log('All admins:', allAdminsData)
-        console.log('Pending requests:', pendingRequests)
-        console.log('Admin requests state:', pendingRequests)
-        
-        // Fetch archive statistics
-        await fetchArchiveStats()
-        
-      } catch (error) {
-        console.error('Error fetching data:', error)
-        setError('Failed to load data. Please try again.')
-      } finally {
-        setLoading(false)
-      }
-    }
 
-    const fetchArchiveStats = async () => {
-      try {
-        const response = await fetch('/api/archive-stats')
-        if (response.ok) {
-          const stats = await response.json()
-          setArchiveStats(stats)
+        if (adminsError) {
+          console.error('Error fetching admin profiles:', adminsError)
+          // Don't fail the whole page for this
+        } else {
+          setAllAdmins(allAdminsData || [])
         }
+
+        // Fetch archive stats
+        try {
+          const { data: statsData, error: statsError } = await supabase
+            .from('user_archive')
+            .select('*', { count: 'exact' })
+
+          if (!statsError && statsData) {
+            setArchiveStats(prev => ({
+              ...prev,
+              totalUsers: statsData.length || 0
+            }))
+          }
+        } catch (statsError) {
+          console.warn('Could not fetch archive stats:', statsError)
+        }
+
+        setLoading(false)
       } catch (error) {
-        console.error('Error fetching archive stats:', error)
-        // Don't fail the whole page if archive stats fail
+        console.error('Error in checkAuthAndFetchData:', error)
+        setError('An unexpected error occurred. Please try again.')
+        setLoading(false)
       }
     }
 
@@ -167,23 +122,18 @@ export default function AdminSettingsPage() {
 
   const handleUpdateName = async () => {
     if (!currentAdmin || !editName.trim()) return
-    
+
     try {
       const supabase = createClient()
       
-      const { error } = await supabase
+      const { error: updateError } = await supabase
         .from('admin_profiles')
         .update({ full_name: editName.trim() })
         .eq('id', currentAdmin.id)
       
-      if (error) throw error
+      if (updateError) throw updateError
       
-      // Update local state
       setCurrentAdmin(prev => prev ? { ...prev, full_name: editName.trim() } : null)
-      setAllAdmins(prev => prev.map(admin => 
-        admin.id === currentAdmin.id ? { ...admin, full_name: editName.trim() } : admin
-      ))
-      
       setIsEditing(false)
       alert('Name updated successfully!')
     } catch (error) {
@@ -192,359 +142,20 @@ export default function AdminSettingsPage() {
     }
   }
 
-  const handleApproveAdmin = async (request: AdminRequest, message: string) => {
+  const handleSignOut = async () => {
     try {
       const supabase = createClient()
-      
-      // First step: Approve the admin creation request
-      const { error: updateError } = await supabase
-        .from('admin_profiles')
-        .update({ 
-          role: 'pending_approval',
-          approved_by: currentAdmin?.id,
-          approved_at: new Date().toISOString(),
-          status: 'approved'
-        })
-        .eq('id', request.id)
-      
-      if (updateError) throw updateError
-      
-      // Send approval email
-      await sendApprovalEmail(request.email, request.full_name, message)
-      
-      // Refresh data
-      const { data: allAdminsData, error: adminsError } = await supabase
-        .from('admin_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (adminsError) throw adminsError
-      
-      setAllAdmins(allAdminsData || [])
-      const pendingRequests = (allAdminsData || []).filter(admin => 
-        admin.role === 'pending_admin' || admin.role === 'pending_approval'
-      )
-      setAdminRequests(pendingRequests)
-      
-      setApprovalDialog({ isOpen: false, request: null, message: '' })
-      alert('Admin creation request approved! The user can now create their account.')
+      await supabase.auth.signOut()
+      window.location.href = '/auth/login'
     } catch (error) {
-      console.error('Error approving admin request:', error)
-      alert('Failed to approve admin request. Please try again.')
-    }
-  }
-
-  const handleRejectAdmin = async (request: AdminRequest, reason: string) => {
-    try {
-      const supabase = createClient()
-      
-      // Reject the admin creation request
-      const { error: updateError } = await supabase
-        .from('admin_profiles')
-        .update({ 
-          status: 'rejected',
-          rejection_reason: reason
-        })
-        .eq('id', request.id)
-      
-      if (updateError) throw updateError
-      
-      // Send rejection email
-      await sendRejectionEmail(request.email, request.full_name, reason)
-      
-      // Refresh data
-      const { data: allAdminsData, error: adminsError } = await supabase
-        .from('admin_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (adminsError) throw adminsError
-      
-      setAllAdmins(allAdminsData || [])
-      const pendingRequests = (allAdminsData || []).filter(admin => 
-        admin.role === 'pending_admin' || admin.role === 'pending_approval'
-      )
-      setAdminRequests(pendingRequests)
-      
-      alert('Admin creation request rejected successfully.')
-    } catch (error) {
-      console.error('Error rejecting admin request:', error)
-      alert('Failed to reject admin request. Please try again.')
-    }
-  }
-
-  const handleGrantAccess = async (request: AdminRequest) => {
-    try {
-      const supabase = createClient()
-      
-      // Grant full admin access
-      const { error: updateError } = await supabase
-        .from('admin_profiles')
-        .update({ 
-          role: 'admin',
-          status: 'active'
-        })
-        .eq('id', request.id)
-      
-      if (updateError) throw updateError
-      
-      // Send access granted email
-      await sendAccessGrantedEmail(request.email, request.full_name)
-      
-      // Refresh data
-      const { data: allAdminsData, error: adminsError } = await supabase
-        .from('admin_profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-      
-      if (adminsError) throw adminsError
-      
-      setAllAdmins(allAdminsData || [])
-      const pendingRequests = (allAdminsData || []).filter(admin => 
-        admin.role === 'pending_admin' || admin.role === 'pending_approval'
-      )
-      setAdminRequests(pendingRequests)
-      
-      alert('Admin access granted successfully!')
-    } catch (error) {
-      console.error('Error granting admin access:', error)
-      alert('Failed to grant admin access. Please try again.')
-    }
-  }
-
-  const handleCreateAdmin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentAdmin) {
-      alert('You must be logged in as an admin to create new admin accounts.')
-      return
-    }
-
-    // Rate limiting check
-    const rateLimitKey = `create_admin_${currentAdmin.id}`
-    if (!checkRateLimit(rateLimitKey, 3, 60 * 60 * 1000)) { // 3 attempts per hour
-      alert('Too many admin creation attempts. Please wait before trying again.')
-      return
-    }
-
-    // Input validation
-    if (!newAdminForm.fullName || !newAdminForm.email) {
-      alert('Full name and email are required.')
-      return
-    }
-
-    // Email validation
-    if (!validateAdminEmail(newAdminForm.email)) {
-      alert('Please enter a valid email address from an allowed domain.')
-      return
-    }
-
-    // Sanitize inputs
-    const sanitizedFullName = sanitizeInput(newAdminForm.fullName)
-    const sanitizedEmail = sanitizeInput(newAdminForm.email)
-    const sanitizedMessage = sanitizeInput(newAdminForm.message)
-
-    setIsCreatingAdmin(true)
-    try {
-      const supabase = createClient()
-
-      // Check if admin already exists
-      const { data: existingAdmin, error: checkError } = await supabase
-        .from('admin_profiles')
-        .select('id')
-        .eq('email', sanitizedEmail)
-        .single()
-
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
-        throw checkError
-      }
-
-      if (existingAdmin) {
-        alert('An admin with this email address already exists.')
-        return
-      }
-
-      // Create new admin profile
-      const { error: createError } = await supabase
-        .from('admin_profiles')
-        .insert({
-          email: sanitizedEmail,
-          full_name: sanitizedFullName,
-          role: 'pending_admin'
-        })
-
-      if (createError) throw createError
-
-      // Try to send creation request email, but don't fail if it doesn't work
-      let emailSent = false
-      try {
-        await sendCreationRequestEmail(sanitizedEmail, sanitizedFullName, sanitizedMessage)
-        emailSent = true
-      } catch (emailError) {
-        console.warn('Failed to send creation request email:', emailError)
-        // Continue with admin creation even if email fails
-      }
-
-      if (emailSent) {
-        alert('New admin account creation request sent! The user will receive an email to complete their setup.')
-      } else {
-        alert('New admin account created successfully! However, the notification email could not be sent due to email configuration issues. The user can still access the system with their email address.')
-      }
-      
-      setNewAdminForm({ fullName: '', email: '', message: '' })
-    } catch (error) {
-      console.error('Error creating new admin account:', error)
-      alert('Failed to create new admin account. Please try again.')
-    } finally {
-      setIsCreatingAdmin(false)
-    }
-  }
-
-  const sendApprovalEmail = async (email: string, fullName: string, message: string) => {
-    try {
-      const response = await fetch('/api/send-admin-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'Admin Access Approved - Marina By-The-Sea',
-          content: `Dear ${fullName},
-
-Your admin access request has been approved! You now have full administrative access to the Marina By-The-Sea management system.
-
-${message ? `\nMessage from approver: ${message}` : ''}
-
-You can now:
-- Manage dock slips and availability
-- Process waitlist applications
-- Edit blog posts and content
-- Approve other admin requests
-- Access all administrative functions
-
-Welcome to the team!
-
-Best regards,
-The Marina By-The-Sea Administration Team`,
-          fromName: currentAdmin?.full_name || 'Admin'
-        })
-      })
-
-      if (!response.ok) {
-        console.warn('Failed to send approval email, but admin was approved')
-      }
-    } catch (error) {
-      console.warn('Failed to send approval email:', error)
-    }
-  }
-
-  const sendRejectionEmail = async (email: string, fullName: string, reason: string) => {
-    try {
-      const response = await fetch('/api/send-admin-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'Admin Access Rejected - Marina By-The-Sea',
-          content: `Dear ${fullName},
-
-Your admin access request has been rejected.
-
-Reason: ${reason}
-
-If you believe this is an error, please contact the administrator.
-
-Best regards,
-The Marina By-The-Sea Administration Team`,
-          fromName: currentAdmin?.full_name || 'Admin'
-        })
-      })
-
-      if (!response.ok) {
-        console.warn('Failed to send rejection email, but admin was rejected')
-      }
-    } catch (error) {
-      console.warn('Failed to send rejection email:', error)
-    }
-  }
-
-  const sendAccessGrantedEmail = async (email: string, fullName: string) => {
-    try {
-      const response = await fetch('/api/send-admin-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'Admin Access Granted - Marina By-The-Sea',
-          content: `Dear ${fullName},
-
-Your admin access request has been granted! You now have full administrative access to the Marina By-The-Sea management system.
-
-You can now:
-- Manage dock slips and availability
-- Process waitlist applications
-- Edit blog posts and content
-- Approve other admin requests
-- Access all administrative functions
-
-Welcome to the team!
-
-Best regards,
-The Marina By-The-Sea Administration Team`,
-          fromName: currentAdmin?.full_name || 'Admin'
-        })
-      })
-
-      if (!response.ok) {
-        console.warn('Failed to send access granted email, but admin was granted')
-      }
-    } catch (error) {
-      console.warn('Failed to send access granted email:', error)
-    }
-  }
-
-  const sendCreationRequestEmail = async (email: string, fullName: string, message: string) => {
-    try {
-      const response = await fetch('/api/send-admin-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: email,
-          subject: 'New Admin Account Request - Marina By-The-Sea',
-          content: `Dear ${fullName},
-
-You have been invited to create a new admin account for Marina By-The-Sea.
-
-${message ? `\nMessage from inviter: ${message}` : ''}
-
-Please click the link below to complete your setup:
-[Your Admin Setup Link]
-
-This link will expire in 24 hours.
-
-Best regards,
-The Marina By-The-Sea Administration Team`,
-          fromName: currentAdmin?.full_name || 'Admin'
-        })
-      })
-
-      if (!response.ok) {
-        console.warn('Failed to send creation request email:', response.statusText)
-      }
-    } catch (error) {
-      console.warn('Failed to send creation request email:', error)
+      console.error('Error signing out:', error)
+      alert('Failed to sign out. Please try again.')
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-4 text-lg">Loading admin settings...</p>
@@ -555,489 +166,248 @@ The Marina By-The-Sea Administration Team`,
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Error</h2>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Error</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          {error.includes('Authentication') && (
-            <a 
-              href="/auth/login" 
-              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Go to Login
-            </a>
-          )}
+          <Button onClick={() => window.location.href = '/auth/login'}>
+            Go to Login
+          </Button>
         </div>
       </div>
     )
   }
 
-  if (!user || !currentAdmin) {
+  if (!currentAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-lg">Verifying access...</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-md mx-auto text-center">
+          <div className="text-yellow-600 text-6xl mb-4">🔒</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Admin Access Required</h1>
+          <p className="text-gray-600 mb-6">You need admin privileges to access this page.</p>
+          <Button onClick={() => window.location.href = '/auth/login'}>
+            Go to Login
+          </Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Admin Settings</h1>
-          <div className="text-sm text-gray-600">
-            Logged in as: {currentAdmin.full_name}
-          </div>
+    <div className="container mx-auto px-4 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Settings</h1>
+          <p className="text-gray-600">Manage your admin profile and system settings</p>
         </div>
-
-        {/* Profile Settings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  value={currentAdmin.email}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
-              </div>
-              <div>
-                <Label htmlFor="full-name">Full Name</Label>
-                {isEditing ? (
-                  <div className="flex space-x-2">
-                    <Input
-                      id="full-name"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Enter your full name"
-                    />
-                    <Button onClick={handleUpdateName} size="sm">
-                      Save
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setIsEditing(false)
-                        setEditName(currentAdmin.full_name)
-                      }} 
-                      size="sm"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="full-name"
-                      value={currentAdmin.full_name}
-                      disabled
-                      className="bg-gray-50"
-                    />
-                    <Button onClick={() => setIsEditing(true)} size="sm">
-                      Edit
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Admin Requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Requests Management</CardTitle>
-            <p className="text-sm text-gray-600">
-              Step 1: Approve creation request • Step 2: Grant access after account creation
-            </p>
-          </CardHeader>
-          <CardContent>
-            {adminRequests.length > 0 ? (
-              <div className="space-y-4">
-                {adminRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{request.full_name}</div>
-                      <div className="text-sm text-gray-600">{request.email}</div>
-                      <div className="text-xs text-gray-500">
-                        Requested: {new Date(request.created_at).toLocaleDateString()}
-                      </div>
-                      {request.message && (
-                        <div className="text-sm text-gray-700 mt-1">
-                          <strong>Message:</strong> {request.message}
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge className={
-                          request.role === 'pending_admin' 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }>
-                          {request.role === 'pending_admin' ? 'Pending Approval' : 'Approved - Grant Access'}
-                        </Badge>
-                        {request.approved_by && (
-                          <span className="text-xs text-gray-500">
-                            Approved by: {allAdmins.find(a => a.id === request.approved_by)?.full_name || 'Unknown'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      {request.role === 'pending_admin' ? (
-                        // Step 1: Approve the creation request
-                        <>
-                          <Button
-                            onClick={() => setApprovalDialog({
-                              isOpen: true,
-                              request,
-                              message: ''
-                            })}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            ✅ Approve Creation
-                          </Button>
-                          <Button
-                            onClick={() => setRejectionDialog({
-                              isOpen: true,
-                              request,
-                              reason: ''
-                            })}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            ❌ Reject
-                          </Button>
-                        </>
-                      ) : request.role === 'pending_approval' ? (
-                        // Step 2: Grant full access
-                        <>
-                          <Button
-                            onClick={() => handleGrantAccess(request)}
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            🔓 Grant Access
-                          </Button>
-                          <Button
-                            onClick={() => setRejectionDialog({
-                              isOpen: true,
-                              request,
-                              reason: ''
-                            })}
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600 border-red-600 hover:bg-red-50"
-                          >
-                            ❌ Revoke Approval
-                          </Button>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-500 mb-4">
-                  <div className="text-4xl mb-2">📋</div>
-                  <h3 className="text-lg font-medium">No Pending Admin Requests</h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    All admin requests have been processed or there are no pending requests.
-                  </p>
-                </div>
-                <div className="text-xs text-gray-400">
-                  <p>When someone requests admin access, they will appear here for approval.</p>
-                  <p>The system uses a two-step process: creation approval, then access granting.</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Current Admins */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Current Administrators ({allAdmins.filter(a => a.role === 'admin').length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {allAdmins
-                .filter(admin => admin.role === 'admin')
-                .map((admin) => (
-                  <div key={admin.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div>
-                        <div className="font-medium">{admin.full_name}</div>
-                        <div className="text-sm text-gray-600">{admin.email}</div>
-                      </div>
-                      {admin.id === currentAdmin.id && (
-                        <Badge className="bg-blue-100 text-blue-800">You</Badge>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500">
-                        {admin.approved_at ? (
-                          `Approved: ${new Date(admin.approved_at).toLocaleDateString()}`
-                        ) : (
-                          'Original Admin'
-                        )}
-                      </div>
-                      {admin.approved_by && (
-                        <div className="text-xs text-gray-500">
-                          by: {allAdmins.find(a => a.id === admin.approved_by)?.full_name || 'Unknown'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Database & Archive System */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Database & Archive System</CardTitle>
-            <p className="text-sm text-gray-600">
-              Manage user archives, email lists, and bulk communications
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{archiveStats.totalUsers}</div>
-                <div className="text-sm text-blue-800">Total Archived Users</div>
-              </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{archiveStats.waitlistCount}</div>
-                <div className="text-sm text-green-800">Waitlist Archive</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{archiveStats.contactCount}</div>
-                <div className="text-sm text-purple-800">Contact Archive</div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-4">
-              <Button 
-                onClick={() => window.open('/admin/archive', '_blank')}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                📊 View User Archive
-              </Button>
-              <Button 
-                onClick={() => window.open('/admin/email-campaigns', '_blank')}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                📧 Manage Email Campaigns
-              </Button>
-              <Button 
-                onClick={() => window.open('/admin/archive/export', '_blank')}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-              >
-                📥 Export to Excel
-              </Button>
-            </div>
-
-            {/* Setup Instructions */}
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Database Setup Required</h4>
-              <p className="text-sm text-yellow-700 mb-3">
-                The archive system needs to be initialized in your Supabase database. 
-                Run the SQL script <code className="bg-yellow-100 px-1 rounded">scripts/017_create_archive_tables.sql</code> to set up the required tables.
-              </p>
-              <div className="text-xs text-yellow-600">
-                <strong>What this creates:</strong> User archive tables, email campaign management, 
-                automatic archiving triggers for waitlist and contact submissions.
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Create New Admin Account */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Create New Admin Account</CardTitle>
-            <p className="text-sm text-gray-600">
-              Securely create new administrator accounts. Only existing admins can access this feature.
-            </p>
-          </CardHeader>
-          <CardContent>
-            {/* Email Configuration Notice */}
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
-              <h4 className="font-semibold text-blue-800 mb-2">📧 Email Configuration</h4>
-              <p className="text-sm text-blue-700 mb-2">
-                To send notification emails to new admin users, ensure your Gmail environment variables are configured:
-              </p>
-              <div className="text-xs text-blue-600 font-mono bg-blue-100 p-2 rounded">
-                GMAIL_USER=your_email@gmail.com<br/>
-                GMAIL_APP_PASSWORD=your_app_password
-              </div>
-              <p className="text-xs text-blue-600 mt-2">
-                <strong>Note:</strong> Admin accounts can still be created without email configuration, but users won't receive setup notifications.
-              </p>
-            </div>
-            
-            <form onSubmit={handleCreateAdmin} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="new-admin-name">Full Name *</Label>
-                  <Input
-                    id="new-admin-name"
-                    value={newAdminForm.fullName}
-                    onChange={(e) => setNewAdminForm(prev => ({ ...prev, fullName: e.target.value }))}
-                    placeholder="Enter full name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="new-admin-email">Email Address *</Label>
-                  <Input
-                    id="new-admin-email"
-                    type="email"
-                    value={newAdminForm.email}
-                    onChange={(e) => setNewAdminForm(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="admin@example.com"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="new-admin-message">Welcome Message (Optional)</Label>
-                <Textarea
-                  id="new-admin-message"
-                  value={newAdminForm.message}
-                  onChange={(e) => setNewAdminForm(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Add a personal welcome message..."
-                  rows={3}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  type="submit" 
-                  disabled={!newAdminForm.fullName || !newAdminForm.email || isCreatingAdmin}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {isCreatingAdmin ? "Creating..." : "Create Admin Account"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <Button onClick={handleSignOut} variant="outline">
+          Sign Out
+        </Button>
       </div>
 
-      {/* Approval Dialog */}
-      <Dialog open={approvalDialog.isOpen} onOpenChange={(open) => 
-        setApprovalDialog(prev => ({ ...prev, isOpen: open }))
-      }>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Approve Admin Creation Request</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Two-Step Process:</strong><br/>
-                1. This approval allows the user to create their admin account<br/>
-                2. After account creation, you'll need to grant full access
+      {/* Admin Profile */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Profile</CardTitle>
+          <p className="text-sm text-gray-600">
+            Manage your personal admin account information
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="admin-email">Email Address</Label>
+              <Input
+                id="admin-email"
+                value={currentAdmin.email}
+                disabled
+                className="bg-gray-50"
+              />
+              <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="admin-role">Role</Label>
+              <Input
+                id="admin-role"
+                value={currentAdmin.role === 'admin' ? 'Administrator' : 'Pending Admin'}
+                disabled
+                className="bg-gray-50"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {currentAdmin.role === 'pending_admin' 
+                  ? 'Your account is pending approval' 
+                  : 'You have full administrative access'
+                }
               </p>
             </div>
-            
-            <div>
-              <Label htmlFor="approval-message">Approval Message (Optional)</Label>
-              <textarea
-                id="approval-message"
-                className="w-full p-2 border rounded"
-                rows={3}
-                placeholder="Add a personal message for the new admin..."
-                value={approvalDialog.message}
-                onChange={(e) => setApprovalDialog(prev => ({ ...prev, message: e.target.value }))}
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setApprovalDialog({ isOpen: false, request: null, message: '' })}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (approvalDialog.request) {
-                    handleApproveAdmin(approvalDialog.request, approvalDialog.message)
-                  }
-                }}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Approve Creation Request
-              </Button>
-            </div>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Rejection Dialog */}
-      <Dialog open={rejectionDialog.isOpen} onOpenChange={(open) => 
-        setRejectionDialog(prev => ({ ...prev, isOpen: open }))
-      }>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reject Admin Request</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="rejection-reason">Reason for Rejection</Label>
-              <textarea
-                id="rejection-reason"
-                className="w-full p-2 border rounded"
-                rows={3}
-                placeholder="Enter the reason for rejecting this admin request..."
-                value={rejectionDialog.reason}
-                onChange={(e) => setRejectionDialog(prev => ({ ...prev, reason: e.target.value }))}
+          <div>
+            <Label htmlFor="admin-name">Full Name</Label>
+            <div className="flex gap-2">
+              <Input
+                id="admin-name"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                disabled={!isEditing}
+                className="flex-1"
               />
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setRejectionDialog({ isOpen: false, request: null, reason: '' })}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (rejectionDialog.request) {
-                    handleRejectAdmin(rejectionDialog.request, rejectionDialog.reason)
-                  }
-                }}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Reject Admin
-              </Button>
+              {isEditing ? (
+                <>
+                  <Button onClick={handleUpdateName} size="sm">
+                    Save
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setEditName(currentAdmin.full_name || '')
+                      setIsEditing(false)
+                    }} 
+                    variant="outline" 
+                    size="sm"
+                  >
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                  Edit
+                </Button>
+              )}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          <div className="text-sm text-gray-600">
+            <strong>Account Created:</strong> {new Date(currentAdmin.created_at).toLocaleDateString()}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle>System Overview</CardTitle>
+          <p className="text-sm text-gray-600">
+            Current system status and user counts
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{allAdmins.length}</div>
+              <div className="text-sm text-blue-800">Total Admins</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{archiveStats.totalUsers}</div>
+              <div className="text-sm text-green-800">Archived Users</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">-</div>
+              <div className="text-sm text-purple-800">Active Users</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg">
+              <div className="text-2xl font-bold text-orange-600">-</div>
+              <div className="text-sm text-orange-800">System Status</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Admin Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Management</CardTitle>
+          <p className="text-sm text-gray-600">
+            View all admin accounts in the system
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {allAdmins.map((admin) => (
+              <div key={admin.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                    <span className="text-gray-600 font-semibold">
+                      {admin.full_name?.charAt(0) || admin.email.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-medium">{admin.full_name || 'No name set'}</div>
+                    <div className="text-sm text-gray-500">{admin.email}</div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Badge variant={admin.role === 'admin' ? 'default' : 'secondary'}>
+                    {admin.role === 'admin' ? 'Administrator' : 'Pending'}
+                  </Badge>
+                  {admin.id === currentAdmin.id && (
+                    <Badge variant="outline">You</Badge>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Database & Archive System */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Database & Archive System</CardTitle>
+          <p className="text-sm text-gray-600">
+            Manage user archives and system data
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{archiveStats.totalUsers}</div>
+              <div className="text-sm text-blue-800">Total Archived Users</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{archiveStats.waitlistCount}</div>
+              <div className="text-sm text-green-800">Waitlist Archive</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">{archiveStats.contactCount}</div>
+              <div className="text-sm text-purple-800">Contact Archive</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-4">
+            <Button 
+              onClick={() => window.open('/admin/archive', '_blank')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              📊 View User Archive
+            </Button>
+            <Button 
+              onClick={() => window.open('/admin/archive/export', '_blank')}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              📥 Export to Excel
+            </Button>
+          </div>
+
+          {/* Setup Instructions */}
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Database Setup Required</h4>
+            <p className="text-sm text-yellow-700 mb-3">
+              The archive system needs to be initialized in your Supabase database. 
+              Run the SQL script <code className="bg-yellow-100 px-1 rounded">scripts/017_create_archive_tables.sql</code> to set up the required tables.
+            </p>
+            <div className="text-xs text-yellow-600">
+              <strong>What this creates:</strong> User archive tables, email campaign management, 
+              automatic archiving triggers for waitlist and contact submissions.
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
