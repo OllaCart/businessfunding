@@ -98,27 +98,22 @@ export default function AdminSlipsPage() {
 
   const fetchSlips = async () => {
     try {
-      const { data, error } = await supabase.from("dock_slips").select("*").order("slip_number")
-
-      if (error) throw error
+      const supabase = createClient()
+      const { data, error } = await supabase.from("dock_slips").select("*").order("slip_number", { ascending: true })
       
-      // Ensure all slips have the required fields with fallbacks
-      const processedSlips = (data || []).map(slip => ({
-        ...slip,
-        length_capacity: slip.length_capacity || slip.capacity || 25,
-        beam_capacity: slip.beam_capacity || Math.max(8, Math.min((slip.length_capacity || slip.capacity || 25) / 3, 20)),
-        show_price: slip.show_price !== undefined ? slip.show_price : true,
-        amenities: slip.amenities || []
-      }))
-      
-      setSlips(processedSlips)
+      if (error) {
+        console.error("Error fetching slips:", error)
+      } else if (data) {
+        // Sort numerically by slip number to ensure proper order (1, 2, 3... 14)
+        const sortedSlips = data.sort((a, b) => {
+          const aNum = parseInt(a.slip_number)
+          const bNum = parseInt(b.slip_number)
+          return aNum - bNum
+        })
+        setSlips(sortedSlips)
+      }
     } catch (error) {
       console.error("Error fetching slips:", error)
-      toast({
-        title: "Error",
-        description: "Failed to fetch dock slips. Please ensure the database schema is up to date.",
-        variant: "destructive",
-      })
     } finally {
       setLoading(false)
     }

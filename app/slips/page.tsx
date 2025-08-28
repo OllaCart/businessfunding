@@ -43,7 +43,7 @@ const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> 
 export default async function SlipsPage() {
   const supabase = await createClient()
 
-  const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number")
+  const { data: slips, error } = await supabase.from("dock_slips").select("*").order("slip_number", { ascending: true })
 
   if (error) {
     console.error("Error fetching slips:", error)
