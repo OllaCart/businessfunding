@@ -7,8 +7,10 @@ SELECT policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies 
 WHERE tablename = 'admin_profiles';
 
--- Drop the restrictive insert policy
+-- Drop existing policies to avoid conflicts
 DROP POLICY IF EXISTS "admin_profiles_insert_own" ON public.admin_profiles;
+DROP POLICY IF EXISTS "admin_profiles_insert_admins" ON public.admin_profiles;
+DROP POLICY IF EXISTS "admin_profiles_select_admins" ON public.admin_profiles;
 
 -- Create a new policy that allows admins to insert new admin profiles
 CREATE POLICY "admin_profiles_insert_admins" ON public.admin_profiles
