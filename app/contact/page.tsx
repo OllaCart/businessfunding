@@ -49,6 +49,10 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // FORCE BROWSER TO USE NEW CODE - REMOVE THIS AFTER TESTING
+    alert('NEW CODE RUNNING - version 2024.01.08.v3')
+    
     setIsSubmitting(true)
     setError(null)
 
