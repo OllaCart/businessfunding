@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
+import { generateSecureToken } from '@/lib/security'
 
 interface AdminProfile {
   id: string
@@ -16,9 +18,21 @@ interface AdminProfile {
   created_at: string
 }
 
+interface AdminInvitation {
+  id: string
+  email: string
+  full_name: string
+  invited_by: string
+  token: string
+  expires_at: string
+  status: string
+  created_at: string
+}
+
 export default function AdminSettingsPage() {
   const [currentAdmin, setCurrentAdmin] = useState<AdminProfile | null>(null)
   const [allAdmins, setAllAdmins] = useState<AdminProfile[]>([])
+  const [invitations, setInvitations] = useState<AdminInvitation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -32,6 +46,14 @@ export default function AdminSettingsPage() {
   // Form states
   const [editName, setEditName] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  
+  // Admin invitation form
+  const [inviteForm, setInviteForm] = useState({
+    fullName: '',
+    email: '',
+    message: ''
+  })
+  const [isInviting, setIsInviting] = useState(false)
 
   useEffect(() => {
     const checkAuthAndFetchData = async () => {
@@ -93,6 +115,19 @@ export default function AdminSettingsPage() {
           setAllAdmins(allAdminsData || [])
         }
 
+        // Fetch admin invitations
+        const { data: invitationsData, error: invitationsError } = await supabase
+          .from('admin_invitations')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (invitationsError) {
+          console.error('Error fetching invitations:', invitationsError)
+          // Don't fail the whole page for this
+        } else {
+          setInvitations(invitationsData || [])
+        }
+
         // Fetch archive stats
         try {
           const { data: statsData, error: statsError } = await supabase
@@ -139,6 +174,74 @@ export default function AdminSettingsPage() {
     } catch (error) {
       console.error('Error updating name:', error)
       alert('Failed to update name. Please try again.')
+    }
+  }
+
+  const handleInviteAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!currentAdmin || !inviteForm.fullName || !inviteForm.email) {
+      alert('Please fill in all required fields')
+      return
+    }
+
+    setIsInviting(true)
+
+    try {
+      const supabase = createClient()
+
+      // Generate secure token
+      const token = generateSecureToken()
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7) // 7 days from now
+
+      // Create invitation
+      const { error: inviteError } = await supabase
+        .from('admin_invitations')
+        .insert({
+          email: inviteForm.email,
+          full_name: inviteForm.fullName,
+          invited_by: currentAdmin.id,
+          token: token,
+          expires_at: expiresAt.toISOString(),
+          status: 'pending'
+        })
+
+      if (inviteError) throw inviteError
+
+      // Generate invitation URL
+      const baseUrl = window.location.origin
+      const inviteUrl = `${baseUrl}/auth/setup-admin?token=${token}`
+
+      // Show success with invitation details
+      alert(`Admin invitation created successfully!
+
+Invitation Details:
+- Name: ${inviteForm.fullName}
+- Email: ${inviteForm.email}
+- Expires: ${expiresAt.toLocaleDateString()}
+- Setup URL: ${inviteUrl}
+
+Share this URL with the invited user. They will be able to set their own password and complete the setup.`)
+
+      // Reset form
+      setInviteForm({ fullName: '', email: '', message: '' })
+
+      // Refresh invitations list
+      const { data: invitationsData, error: invitationsError } = await supabase
+        .from('admin_invitations')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!invitationsError) {
+        setInvitations(invitationsData || [])
+      }
+
+    } catch (error: any) {
+      console.error('Error creating invitation:', error)
+      alert(`Failed to create invitation: ${error.message}`)
+    } finally {
+      setIsInviting(false)
     }
   }
 
@@ -285,6 +388,110 @@ export default function AdminSettingsPage() {
         </CardContent>
       </Card>
 
+      {/* Invite New Admin */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Invite New Admin</CardTitle>
+          <p className="text-sm text-gray-600">
+            Send an invitation to create a new admin account. The user will set their own password.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleInviteAdmin} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="invite-name">Full Name *</Label>
+                <Input
+                  id="invite-name"
+                  value={inviteForm.fullName}
+                  onChange={(e) => setInviteForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Enter full name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="invite-email">Email Address *</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="admin@example.com"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label htmlFor="invite-message">Personal Message (Optional)</Label>
+              <Textarea
+                id="invite-message"
+                value={inviteForm.message}
+                onChange={(e) => setInviteForm(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Add a personal message for the invitation..."
+                rows={3}
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                type="submit" 
+                disabled={!inviteForm.fullName || !inviteForm.email || isInviting}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isInviting ? "Creating Invitation..." : "Send Invitation"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Pending Invitations */}
+      {invitations.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Invitations</CardTitle>
+            <p className="text-sm text-gray-600">
+              Track admin invitations and their status
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {invitations.map((invitation) => (
+                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold">📧</span>
+                    </div>
+                    <div>
+                      <div className="font-medium">{invitation.full_name}</div>
+                      <div className="text-sm text-gray-500">{invitation.email}</div>
+                      <div className="text-xs text-gray-400">
+                        Invited: {new Date(invitation.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant={
+                      invitation.status === 'pending' ? 'default' : 
+                      invitation.status === 'used' ? 'secondary' : 'destructive'
+                    }>
+                      {invitation.status === 'pending' ? 'Pending' : 
+                       invitation.status === 'used' ? 'Used' : 'Expired'}
+                    </Badge>
+                    {invitation.status === 'pending' && (
+                      <div className="text-xs text-gray-500">
+                        Expires: {new Date(invitation.expires_at).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* System Overview */}
       <Card>
         <CardHeader>
@@ -304,8 +511,8 @@ export default function AdminSettingsPage() {
               <div className="text-sm text-green-800">Archived Users</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">-</div>
-              <div className="text-sm text-purple-800">Active Users</div>
+              <div className="text-2xl font-bold text-purple-600">{invitations.filter(i => i.status === 'pending').length}</div>
+              <div className="text-sm text-purple-800">Pending Invitations</div>
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <div className="text-2xl font-bold text-orange-600">-</div>
