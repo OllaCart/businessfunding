@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
-import { createPublicClient } from "@/lib/supabase/public"
+import { createClient } from "@/lib/supabase/client"
 import { CheckCircle, Anchor } from "lucide-react"
 
 interface DockSlip {
@@ -54,7 +55,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
     setIsSubmitting(true)
     setError(null)
 
-    const supabase = createPublicClient()
+    const supabase = createClient()
 
     try {
       // Check if email already exists
@@ -72,7 +73,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
         return
       }
 
-      // Insert new waitlist entry directly to Supabase
+      // Insert new waitlist entry directly to Supabase using the same client that works in admin
       const { error } = await supabase.from("waitlist").insert([
         {
           email: formData.email,

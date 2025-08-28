@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
-import { createPublicClient } from "@/lib/supabase/public"
+import { createClient } from "@/lib/supabase/client"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -31,8 +31,8 @@ export default function ContactPage() {
     setError(null)
 
     try {
-      // Submit directly to Supabase
-      const supabase = createPublicClient()
+      // Submit directly to Supabase using the same client that works in admin
+      const supabase = createClient()
       
       const { error } = await supabase
         .from('contact_submissions')
