@@ -65,6 +65,10 @@ export default function ContactPage() {
       }
       
       console.log('Attempting to insert contact submission:', insertData)
+      console.log('Form data state:', formData)
+      console.log('Insert data object:', insertData)
+      console.log('Insert data keys:', Object.keys(insertData))
+      console.log('Insert data values:', Object.values(insertData))
       
       const { error } = await supabase
         .from('contact_submissions')
