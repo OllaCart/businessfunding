@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
+import { createPublicClient } from "@/lib/supabase/public"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -30,28 +31,30 @@ export default function ContactPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/contact-submission', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to submit contact form')
-      }
-
-      const result = await response.json()
+      // Submit directly to Supabase
+      const supabase = createPublicClient()
       
-      if (result.success) {
-        setIsSubmitted(true)
-        setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
-      } else {
-        throw new Error(result.error || 'Failed to submit contact form')
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([{
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          subject: formData.subject || null,
+          message: formData.message
+        }])
+
+      if (error) {
+        console.error('Database error:', error)
+        throw new Error(`Failed to submit contact form: ${error.message}`)
       }
+
+      // Success!
+      setIsSubmitted(true)
+      setFormData({ name: "", email: "", phone: "", subject: "", message: "" })
+      
     } catch (error: unknown) {
+      console.error('Contact form error:', error)
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsSubmitting(false)

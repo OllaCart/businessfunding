@@ -72,7 +72,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
         return
       }
 
-      // Insert new waitlist entry
+      // Insert new waitlist entry directly to Supabase
       const { error } = await supabase.from("waitlist").insert([
         {
           email: formData.email,
@@ -87,7 +87,7 @@ export function WaitlistForm({ allSlips, preSelectedSlips = [] }: WaitlistFormPr
 
       if (error) throw error
 
-      // Send email notifications
+      // Send email notifications through API route
       try {
         await fetch("/api/send-waitlist-notification", {
           method: "POST",
