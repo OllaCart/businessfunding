@@ -1,9 +1,13 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/public"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = await createClient()
+    console.log('[Slips API] Starting to fetch slips...')
+    
+    const supabase = createClient()
+    
+    console.log('[Slips API] Supabase client created, querying dock_slips...')
     
     const { data: slips, error } = await supabase
       .from("dock_slips")
@@ -11,12 +15,14 @@ export async function GET() {
       .order("slip_number")
     
     if (error) {
-      console.error("Error fetching slips:", error)
+      console.error("[Slips API] Supabase error:", error)
       return NextResponse.json(
-        { error: "Failed to fetch slips" },
+        { error: "Failed to fetch slips", details: error.message },
         { status: 500 }
       )
     }
+    
+    console.log('[Slips API] Successfully fetched slips:', slips?.length || 0)
     
     const availableSlips = slips?.filter((slip) => slip.is_available) || []
     
@@ -27,9 +33,9 @@ export async function GET() {
     })
     
   } catch (error) {
-    console.error("Error in slips API:", error)
+    console.error("[Slips API] Unexpected error:", error)
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
