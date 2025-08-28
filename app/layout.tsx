@@ -19,23 +19,27 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Marina By-The-Sea - Premium Dock Slips in Lauderdale-By-The-Sea",
+  title: "Marina By-The-Sea - Premium Floating Dock Slips in Lauderdale-By-The-Sea",
   description:
-    "Experience luxury on the water at Marina By-The-Sea. Premium floating dock slips with 24/7, fuel refuellings, and detailing services. Book your slip today.",
+    "Experience luxury on the water at Marina By-The-Sea. Premium floating dock slips with 24/7 access, fuel refueling, and detailing services. Book your slip today in beautiful Lauderdale-By-The-Sea, Florida.",
   keywords: [
     "marina",
     "dock slips",
     "boat storage",
     "marine services",
     "Lauderdale By-The-Sea",
+    "Florida marina",
     "luxury marina",
     "boat rental",
     "harbor",
     "yacht club",
+    "floating docks",
+    "boat fuel",
+    "marine detailing"
   ],
   authors: [{ name: "Marina By-The-Sea" }],
-  creator: "MarinaBTS",
-  publisher: "MarinaBTS",
+  creator: "Marina By-The-Sea",
+  publisher: "Marina By-The-Sea",
   formatDetection: {
     email: false,
     address: false,
@@ -46,16 +50,22 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Marina By-The-Sea - Premium Dock Slips in Lauderdale-By-The-Sea",
-    description: "Experience convenience and luxury on the water in Lauderdale-By-The-Sea with premium floating dock slips.",
+    title: "Marina By-The-Sea - Premium Floating Slips in Lauderdale-By-The-Sea",
+    description: "Experience convenience and luxury on the water in Lauderdale-By-The-Sea with premium floating dock slips, 24/7 access, and full marine services.",
     url: "https://marinabts.com",
-    siteName: "MarinaBTS",
+    siteName: "Marina By-The-Sea",
     images: [
       {
-        url: "/placeholder.svg?height=630&width=1200",
+        url: "/images/marina-logo.svg",
+        width: 400,
+        height: 400,
+        alt: "Marina By-The-Sea Logo - Premium marina services in Lauderdale-By-The-Sea",
+      },
+      {
+        url: "/images/marina-overview.jpg",
         width: 1200,
         height: 630,
-        alt: "Marina By-The-Sea - Floating dock slips in Lauderdale-By-The-Sea",
+        alt: "Marina By-The-Sea - Beautiful marina overview with floating dock slips",
       },
     ],
     locale: "en_US",
@@ -64,8 +74,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Marina By-The-Sea - Premium Dock Slips & Marine Services",
-    description: "Experience luxury on the water with premium dock slips in Lauderdale-By-The-Sea.",
-    images: ["/placeholder.svg?height=630&width=1200"],
+    description: "Experience luxury on the water with premium dock slips in Lauderdale-By-The-Sea, Florida. 24/7 access, fuel, and full marine services.",
+    images: ["/images/marina-overview.jpg"],
   },
   robots: {
     index: true,
@@ -78,7 +88,13 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  generator: "v0.app",
+  generator: "Next.js",
+  icons: {
+    icon: [
+      { url: "/images/marina-logo.svg", type: "image/svg+xml" }
+    ],
+    apple: "/images/marina-logo.svg",
+  },
 }
 // suggest changes to the schema.org
 
