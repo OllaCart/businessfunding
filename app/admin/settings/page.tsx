@@ -369,10 +369,7 @@ export default function AdminSettingsPage() {
         .insert({
           email: sanitizedEmail,
           full_name: sanitizedFullName,
-          role: 'pending_admin',
-          status: 'pending',
-          created_by: currentAdmin.id,
-          created_at: new Date().toISOString()
+          role: 'pending_admin'
         })
 
       if (createError) throw createError
