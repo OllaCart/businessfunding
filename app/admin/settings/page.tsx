@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { generateSecureToken } from '@/lib/security'
+import { sendAdminInvitationEmail } from '@/lib/email'
 
 interface AdminProfile {
   id: string
@@ -209,20 +210,42 @@ export default function AdminSettingsPage() {
 
       if (inviteError) throw inviteError
 
-      // Generate invitation URL
-      const baseUrl = window.location.origin
-      const inviteUrl = `${baseUrl}/auth/setup-admin?token=${token}`
+      // Send invitation email
+      try {
+        await sendAdminInvitationEmail({
+          email: inviteForm.email,
+          full_name: inviteForm.fullName,
+          invited_by_name: currentAdmin.full_name || 'Marina Administrator',
+          token: token,
+          expires_at: expiresAt.toISOString(),
+          message: inviteForm.message
+        })
 
-      // Show success with invitation details
-      alert(`Admin invitation created successfully!
+        // Show success message
+        alert(`Admin invitation sent successfully!
 
 Invitation Details:
 - Name: ${inviteForm.fullName}
 - Email: ${inviteForm.email}
 - Expires: ${expiresAt.toLocaleDateString()}
-- Setup URL: ${inviteUrl}
 
-Share this URL with the invited user. They will be able to set their own password and complete the setup.`)
+The invited user has received an email with setup instructions. They will be able to set their own password and complete the setup process.`)
+
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError)
+        
+        // Show success but warn about email
+        alert(`Admin invitation created successfully!
+
+Invitation Details:
+- Name: ${inviteForm.fullName}
+- Email: ${inviteForm.email}
+- Expires: ${expiresAt.toLocaleDateString()}
+
+⚠️ WARNING: The invitation email could not be sent due to email configuration issues. You may need to manually share the setup URL with the invited user.
+
+Setup URL: ${window.location.origin}/auth/setup-admin?token=${token}`)
+      }
 
       // Reset form
       setInviteForm({ fullName: '', email: '', message: '' })
