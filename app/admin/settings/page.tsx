@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { generateSecureToken } from '@/lib/security'
-import { sendAdminInvitationEmail } from '@/lib/email'
 
 interface AdminProfile {
   id: string
@@ -210,16 +209,26 @@ export default function AdminSettingsPage() {
 
       if (inviteError) throw inviteError
 
-      // Send invitation email
+      // Send invitation email through API route
       try {
-        await sendAdminInvitationEmail({
-          email: inviteForm.email,
-          full_name: inviteForm.fullName,
-          invited_by_name: currentAdmin.full_name || 'Marina Administrator',
-          token: token,
-          expires_at: expiresAt.toISOString(),
-          message: inviteForm.message
+        const response = await fetch('/api/send-admin-invitation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: inviteForm.email,
+            full_name: inviteForm.fullName,
+            invited_by_name: currentAdmin.full_name || 'Marina Administrator',
+            token: token,
+            expires_at: expiresAt.toISOString(),
+            message: inviteForm.message
+          }),
         })
+
+        if (!response.ok) {
+          throw new Error(`Email API responded with status: ${response.status}`)
+        }
 
         // Show success message
         alert(`Admin invitation sent successfully!
