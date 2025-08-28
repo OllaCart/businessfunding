@@ -9,6 +9,9 @@ import Link from "next/link"
 import Image from "next/image"
 import { Anchor, Wifi, Zap, Droplets, Shield, Car, Fuel, Wrench, Star, Cable, Waves } from "lucide-react"
 
+// Force dynamic rendering to prevent static generation issues with Supabase server client
+export const dynamic = 'force-dynamic'
+
 interface DockSlip {
   id: string
   slip_number: string

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Calendar, User, ArrowRight } from "lucide-react"
 
+// Force dynamic rendering to prevent static generation issues with Supabase server client
+export const dynamic = 'force-dynamic'
+
 interface Post {
   id: string
   title: string

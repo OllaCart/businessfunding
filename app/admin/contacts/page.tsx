@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MessageSquare, Calendar, Phone, Mail } from "lucide-react"
 
+// Force dynamic rendering to prevent static generation issues with Supabase server client and auth
+export const dynamic = 'force-dynamic'
+
 export default async function AdminContactsPage() {
   const supabase = await createClient()
 

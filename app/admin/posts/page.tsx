@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Plus, Edit, Eye, Calendar, User } from "lucide-react"
 
+// Force dynamic rendering to prevent static generation issues with Supabase server client and auth
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPostsPage() {
   const supabase = await createClient()
 

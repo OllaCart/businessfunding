@@ -11,6 +11,9 @@ import { Metadata } from "next"
 import { SafeImage } from "@/components/ui/safe-image"
 import { ShareButton } from "@/components/share-button"
 
+// Force dynamic rendering to prevent static generation issues with Supabase server client
+export const dynamic = 'force-dynamic'
+
 interface Post {
   id: string
   title: string
