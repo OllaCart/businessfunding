@@ -48,6 +48,14 @@ export interface EndOccupancyData {
   personal_message: string
 }
 
+export interface AdminEmailData {
+  to: string
+  subject: string
+  content: string
+  fromName: string
+  htmlContent?: string
+}
+
 // Gmail API helper functions
 async function getGmailAccessToken() {
   // For Google Workspace, you'll need to set up OAuth2 credentials
@@ -259,19 +267,19 @@ export async function sendWaitlistNotificationToAdmins(
   console.log('[Waitlist] Starting admin notification process...')
   
   try {
-    const adminEmails = await getAdminEmails()
+  const adminEmails = await getAdminEmails()
     console.log('[Waitlist] Admin emails found:', adminEmails)
-    
-    if (adminEmails.length === 0) {
+  
+  if (adminEmails.length === 0) {
       console.warn('[Waitlist] No admin emails found for waitlist notification')
-      return
-    }
+    return
+  }
 
-    const slipDetailsText = slipDetails.map(slip => 
-      `• Slip ${slip.slip_number}: ${slip.length_capacity}' × ${slip.beam_capacity}' (${slip.is_available ? 'Available' : 'Occupied'})`
-    ).join('\n')
+  const slipDetailsText = slipDetails.map(slip => 
+    `• Slip ${slip.slip_number}: ${slip.length_capacity}' × ${slip.beam_capacity}' (${slip.is_available ? 'Available' : 'Occupied'})`
+  ).join('\n')
 
-    const emailContent = `
+  const emailContent = `
 New Waitlist Submission - Marina By-The-Sea
 
 📋 SUBMISSION DETAILS:
@@ -292,34 +300,34 @@ ${submission.message || 'No additional message'}
 
 ---
 This is an automated notification from Marina By-The-Sea
-    `.trim()
+  `.trim()
 
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
-          🚤 New Waitlist Submission - Marina By-The-Sea
-        </h2>
-        
-        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
-          <p><strong>Name:</strong> ${submission.full_name}</p>
-          <p><strong>Email:</strong> ${submission.email}</p>
-          <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
-          <p><strong>Boat Length:</strong> ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}</p>
-        </div>
-        
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+        🚤 New Waitlist Submission - Marina By-The-Sea
+      </h2>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
+        <p><strong>Name:</strong> ${submission.full_name}</p>
+        <p><strong>Email:</strong> ${submission.email}</p>
+        <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
+        <p><strong>Boat Length:</strong> ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}</p>
+      </div>
+      
+      <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #0c4a6e; margin-top: 0;">🚤 INTERESTED SLIPS</h3>
           <pre style="white-space: pre-wrap; margin: 0;">${slipDetailsText}</pre>
-        </div>
-        
-        ${submission.message ? `
+      </div>
+      
+      ${submission.message ? `
         <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="color: #92400e; margin-top: 0;">💬 MESSAGE</h3>
           <p style="margin: 0;">${submission.message}</p>
         </div>
-        ` : ''}
-        
+      ` : ''}
+      
         <div style="text-align: center; margin-top: 30px;">
           <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.com'}/admin/waitlist" 
              style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
@@ -417,8 +425,8 @@ The Marina By-The-Sea Team
             <li>Marine detailing services</li>
             <li>Professional marina staff</li>
           </ul>
-        </div>
-        
+      </div>
+      
         <p style="color: #374151; font-size: 14px;">
           If you have any urgent questions, please call us directly.
         </p>
@@ -426,9 +434,9 @@ The Marina By-The-Sea Team
         <p style="color: #374151; font-size: 16px;">
           Best regards,<br>
           The Marina By-The-Sea Team
-        </p>
-      </div>
-    `
+      </p>
+    </div>
+  `
 
     await sendGmailMessage(
       submission.email,
@@ -515,6 +523,177 @@ This is an automated notification from Marina By-The-Sea
     
   } catch (error) {
     console.error('[Contact] Error in admin notification process:', error)
+    throw error
+  }
+}
+
+export async function sendAdminEmail(data: AdminEmailData) {
+  console.log('[Admin Email] Sending email...')
+  
+  try {
+    const emailContent = data.content
+
+    const htmlContent = data.htmlContent || `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🚤 Marina By-The-Sea</h1>
+          <p style="color: #dbeafe; margin: 10px 0 0 0; font-size: 16px;">Message from ${data.fromName}</p>
+        </div>
+        
+        <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <div style="white-space: pre-wrap; color: #374151; font-size: 16px; line-height: 1.6;">
+            ${emailContent.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; background: #f9fafb;">
+          <p style="color: #6b7280; font-size: 12px; margin: 0;">
+            Marina By-The-Sea<br>
+            Premium Floating Dock Slips in Lauderdale-By-The-Sea, Florida
+          </p>
+        </div>
+      </div>
+    `
+
+    await sendGmailMessage(
+      data.to,
+      data.subject,
+      emailContent,
+      htmlContent
+    )
+    
+    console.log('[Admin Email] Email sent successfully to:', data.to)
+    return { success: true }
+    
+  } catch (error) {
+    console.error('[Admin Email] Failed to send email:', error)
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+}
+
+export async function sendWaitlistConfirmationToUser(submission: WaitlistSubmission, slipDetails: SlipInfo[]) {
+  console.log('[Waitlist] Sending confirmation to user...')
+  
+  try {
+    const slipDetailsText = slipDetails.map(slip => 
+      `• Slip ${slip.slip_number}: ${slip.length_capacity}' × ${slip.beam_capacity}' (${slip.is_available ? 'Available' : 'Occupied'})`
+    ).join('\n')
+
+    const emailContent = `
+Thank you for joining our waitlist - Marina By-The-Sea
+
+Dear ${submission.full_name},
+
+Thank you for your interest in Marina By-The-Sea! We have received your waitlist application and will be in touch as soon as a suitable slip becomes available.
+
+📋 YOUR APPLICATION DETAILS:
+Name: ${submission.full_name}
+Email: ${submission.email}
+Phone: ${submission.phone || 'Not provided'}
+Boat Length: ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}
+
+🚤 INTERESTED SLIPS:
+${slipDetailsText}
+
+💬 MESSAGE:
+${submission.message || 'No additional message'}
+
+📅 SUBMITTED: ${new Date().toLocaleString()}
+
+🚤 ABOUT MARINA BY-THE-SEA:
+We offer premium floating dock slips in beautiful Lauderdale-By-The-Sea, Florida, with:
+• 24/7 access to your vessel
+• Fuel refueling services
+• Marine detailing services
+• Professional marina staff
+
+📧 WHAT HAPPENS NEXT:
+• We will review your application
+• You will be contacted when a suitable slip becomes available
+• Priority is given based on slip preferences and boat specifications
+
+If you have any questions or need to update your application, please don't hesitate to contact us.
+
+Best regards,
+The Marina By-The-Sea Team
+  `.trim()
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
+          🚤 Thank you for joining our waitlist - Marina By-The-Sea
+        </h2>
+        
+        <p style="color: #374151; font-size: 16px;">
+          Dear <strong>${submission.full_name}</strong>,
+        </p>
+        
+        <p style="color: #374151; font-size: 16px;">
+          Thank you for your interest in Marina By-The-Sea! We have received your waitlist application and will be in touch as soon as a suitable slip becomes available.
+        </p>
+      
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #374151; margin-top: 0;">📋 YOUR APPLICATION DETAILS</h3>
+        <p><strong>Name:</strong> ${submission.full_name}</p>
+        <p><strong>Email:</strong> ${submission.email}</p>
+        <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
+        <p><strong>Boat Length:</strong> ${submission.boat_length ? `${submission.boat_length} ft` : 'Not specified'}</p>
+        </div>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #0c4a6e; margin-top: 0;">🚤 INTERESTED SLIPS</h3>
+          <pre style="white-space: pre-wrap; margin: 0;">${slipDetailsText}</pre>
+      </div>
+      
+        ${submission.message ? `
+        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #92400e; margin-top: 0;">💬 MESSAGE</h3>
+          <p style="margin: 0;">${submission.message}</p>
+        </div>
+        ` : ''}
+        
+        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #065f46; margin-top: 0;">🚤 ABOUT MARINA BY-THE-SEA</h3>
+          <p style="margin: 0;">We offer premium floating dock slips in beautiful Lauderdale-By-The-Sea, Florida, with:</p>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>24/7 access to your vessel</li>
+            <li>Fuel refueling services</li>
+            <li>Marine detailing services</li>
+            <li>Professional marina staff</li>
+          </ul>
+      </div>
+      
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #0c4a6e; margin-top: 0;">📧 WHAT HAPPENS NEXT</h3>
+          <ul style="color: #0c4a6e; margin: 10px 0; padding-left: 20px;">
+            <li>We will review your application</li>
+            <li>You will be contacted when a suitable slip becomes available</li>
+            <li>Priority is given based on slip preferences and boat specifications</li>
+          </ul>
+      </div>
+      
+        <p style="color: #374151; font-size: 14px;">
+          If you have any questions or need to update your application, please don't hesitate to contact us.
+        </p>
+        
+        <p style="color: #374151; font-size: 16px;">
+          Best regards,<br>
+          The Marina By-The-Sea Team
+        </p>
+    </div>
+  `
+
+    await sendGmailMessage(
+      submission.email,
+      '🚤 Thank you for joining our waitlist - Marina By-The-Sea',
+      emailContent,
+      htmlContent
+    )
+    
+    console.log('[Waitlist] Confirmation sent to user successfully')
+    
+  } catch (error) {
+    console.error('[Waitlist] Failed to send confirmation to user:', error)
     throw error
   }
 }

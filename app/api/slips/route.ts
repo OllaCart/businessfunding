@@ -1,11 +1,11 @@
-import { createClient } from "@/lib/supabase/public"
+import { createPublicClient } from "@/lib/supabase/public"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
     console.log('[Slips API] Starting to fetch slips...')
     
-    const supabase = createClient()
+    const supabase = createPublicClient()
     
     console.log('[Slips API] Supabase client created, querying dock_slips...')
     
