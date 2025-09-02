@@ -39,6 +39,15 @@ export interface ContactSubmission {
   created_at: string
 }
 
+export interface EndOccupancyData {
+  full_name: string
+  email: string
+  boat_name: string
+  slip_number: string
+  departure_date: string
+  personal_message: string
+}
+
 // Gmail API helper functions
 async function getGmailAccessToken() {
   // For Google Workspace, you'll need to set up OAuth2 credentials
@@ -506,6 +515,134 @@ This is an automated notification from Marina By-The-Sea
     
   } catch (error) {
     console.error('[Contact] Error in admin notification process:', error)
+    throw error
+  }
+}
+
+export async function sendEndOccupancyEmail(data: EndOccupancyData) {
+  console.log('[End Occupancy] Sending email to occupant...')
+  
+  try {
+    const departureDate = new Date(data.departure_date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+
+    const emailContent = `
+End of Occupancy - Marina By-The-Sea
+
+Dear ${data.full_name},
+
+Thank you for being a valued occupant at Marina By-The-Sea. We hope you have enjoyed your time with us.
+
+📋 OCCUPANCY DETAILS:
+Boat: ${data.boat_name}
+Slip: ${data.slip_number}
+Departure Date: ${departureDate}
+
+${data.personal_message ? `\n💬 PERSONAL MESSAGE:\n${data.personal_message}\n` : ''}
+
+🙏 THANK YOU:
+We sincerely appreciate your business and hope you had a wonderful experience at our marina. Your satisfaction is our priority, and we hope to welcome you back in the future.
+
+🚤 FINAL STEPS:
+• Please ensure all personal belongings are removed from your slip
+• Complete any outstanding payments or fees
+• Return any marina equipment or access cards
+• Notify us of any maintenance issues before departure
+
+📧 CONTACT US:
+If you have any questions or need assistance with your departure, please don't hesitate to contact us.
+
+We wish you fair winds and following seas!
+
+Best regards,
+The Marina By-The-Sea Team
+    `.trim()
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🚤 Marina By-The-Sea</h1>
+          <p style="color: #dbeafe; margin: 10px 0 0 0; font-size: 16px;">End of Occupancy Notice</p>
+        </div>
+        
+        <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <h2 style="color: #1f2937; margin-top: 0; font-size: 24px;">Thank You for Your Stay!</h2>
+          
+          <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+            Dear <strong>${data.full_name}</strong>,
+          </p>
+          
+          <p style="color: #374151; font-size: 16px; line-height: 1.6;">
+            Thank you for being a valued occupant at Marina By-The-Sea. We hope you have enjoyed your time with us and that your experience has been everything you hoped for.
+          </p>
+          
+          <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+            <h3 style="color: #1f2937; margin-top: 0; font-size: 18px;">📋 Occupancy Details</h3>
+            <p style="color: #374151; margin: 5px 0;"><strong>Boat:</strong> ${data.boat_name}</p>
+            <p style="color: #374151; margin: 5px 0;"><strong>Slip:</strong> ${data.slip_number}</p>
+            <p style="color: #374151; margin: 5px 0;"><strong>Departure Date:</strong> ${departureDate}</p>
+          </div>
+          
+          ${data.personal_message ? `
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <h3 style="color: #92400e; margin-top: 0; font-size: 18px;">💬 Personal Message</h3>
+            <p style="color: #92400e; margin: 0; font-style: italic;">"${data.personal_message}"</p>
+          </div>
+          ` : ''}
+          
+          <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+            <h3 style="color: #065f46; margin-top: 0; font-size: 18px;">🙏 Thank You</h3>
+            <p style="color: #065f46; margin: 0;">
+              We sincerely appreciate your business and hope you had a wonderful experience at our marina. 
+              Your satisfaction is our priority, and we hope to welcome you back in the future.
+            </p>
+          </div>
+          
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+            <h3 style="color: #0c4a6e; margin-top: 0; font-size: 18px;">🚤 Final Steps</h3>
+            <ul style="color: #0c4a6e; margin: 10px 0; padding-left: 20px;">
+              <li>Please ensure all personal belongings are removed from your slip</li>
+              <li>Complete any outstanding payments or fees</li>
+              <li>Return any marina equipment or access cards</li>
+              <li>Notify us of any maintenance issues before departure</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              If you have any questions or need assistance with your departure, please don't hesitate to contact us.
+            </p>
+            <p style="color: #1f2937; font-size: 16px; margin: 10px 0 0 0; font-weight: bold;">
+              We wish you fair winds and following seas!
+            </p>
+          </div>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; background: #f9fafb;">
+          <p style="color: #6b7280; font-size: 12px; margin: 0;">
+            Best regards,<br>
+            The Marina By-The-Sea Team<br>
+            Premium Floating Dock Slips in Lauderdale-By-The-Sea, Florida
+          </p>
+        </div>
+      </div>
+    `
+
+    await sendGmailMessage(
+      data.email,
+      '🚤 End of Occupancy - Marina By-The-Sea',
+      emailContent,
+      htmlContent
+    )
+    
+    console.log('[End Occupancy] Email sent successfully to:', data.email)
+    
+  } catch (error) {
+    console.error('[End Occupancy] Failed to send email:', error)
     throw error
   }
 }

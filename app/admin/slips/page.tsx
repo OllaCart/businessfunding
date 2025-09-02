@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Plus, Edit, Trash2, Anchor, DollarSign, Users, Wifi, Zap, Droplets, Shield, UserPlus, Archive } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import EndOccupancyModal from "@/components/end-occupancy-modal"
 
 interface DockSlip {
   id: string
@@ -67,6 +68,10 @@ export default function AdminSlipsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isOccupantDialogOpen, setIsOccupantDialogOpen] = useState(false)
   const [selectedSlip, setSelectedSlip] = useState<DockSlip | null>(null)
+  const [endOccupancyModal, setEndOccupancyModal] = useState<{
+    isOpen: boolean
+    occupant: CurrentOccupant | null
+  }>({ isOpen: false, occupant: null })
   const [formData, setFormData] = useState({
     slip_number: "",
     length_capacity: "",
@@ -328,66 +333,10 @@ export default function AdminSlipsPage() {
     }
   }
 
-  const handleEndOccupancy = async (slipId: string) => {
-    try {
-      const occupant = getOccupantForSlip(slipId)
-      if (!occupant) return
-
-      // Archive the occupant to user_archive table
-      const { error: archiveError } = await supabase
-        .from("user_archive")
-        .insert({
-          full_name: occupant.full_name,
-          email: occupant.email,
-          phone: occupant.phone,
-          boat_name: occupant.boat_name,
-          boat_length: occupant.boat_length,
-          boat_beam: occupant.boat_beam,
-          monthly_rate: occupant.monthly_rate,
-          notes: occupant.notes,
-          status: "former_occupant",
-          archived_at: new Date().toISOString(),
-          archive_reason: "End of occupancy",
-          slip_number: slips.find(s => s.id === slipId)?.slip_number || "Unknown"
-        })
-
-      if (archiveError) throw archiveError
-
-      // Delete the current occupant
-      const { error: deleteError } = await supabase
-        .from("current_occupants")
-        .delete()
-        .eq("id", occupant.id)
-
-      if (deleteError) throw deleteError
-
-      // Update the slip to mark it as available
-      const { error: slipError } = await supabase
-        .from("dock_slips")
-        .update({ 
-          is_available: true,
-          current_occupant_id: null
-        })
-        .eq("id", slipId)
-
-      if (slipError) throw slipError
-
-      // Refresh data
-      await fetchSlips()
-      await fetchOccupants()
-
-      toast({
-        title: "Success",
-        description: `Occupancy ended for Slip ${slips.find(s => s.id === slipId)?.slip_number}. Occupant archived.`,
-      })
-    } catch (error) {
-      console.error("Error ending occupancy:", error)
-      toast({
-        title: "Error",
-        description: "Failed to end occupancy",
-        variant: "destructive",
-      })
-    }
+  const handleOccupancyEnded = async () => {
+    // Refresh data after occupancy is ended
+    await fetchSlips()
+    await fetchOccupants()
   }
 
 
@@ -537,7 +486,18 @@ export default function AdminSlipsPage() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleEndOccupancy(slip.id)}
+                      onClick={() => {
+                        const occupant = getOccupantForSlip(slip.id)
+                        if (occupant) {
+                          setEndOccupancyModal({
+                            isOpen: true,
+                            occupant: {
+                              ...occupant,
+                              slip_number: slip.slip_number
+                            }
+                          })
+                        }
+                      }}
                       className="flex-1 text-orange-600"
                     >
                       <Archive className="h-4 w-4 mr-1" />
@@ -778,6 +738,16 @@ export default function AdminSlipsPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* End Occupancy Modal */}
+      {endOccupancyModal.occupant && (
+        <EndOccupancyModal
+          isOpen={endOccupancyModal.isOpen}
+          onClose={() => setEndOccupancyModal({ isOpen: false, occupant: null })}
+          occupant={endOccupancyModal.occupant}
+          onOccupancyEnded={handleOccupancyEnded}
+        />
+      )}
     </div>
   )
 }
