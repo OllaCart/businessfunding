@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "description": "Marina By-The-Sea website with slip management and waitlist system",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
