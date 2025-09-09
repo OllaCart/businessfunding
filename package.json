@@ -1,8 +1,8 @@
 {
-  "name": "marina-website",
+  "name": "sure-thing-lending",
   "version": "0.1.0",
   "private": true,
-  "description": "Marina By-The-Sea website with slip management and waitlist system",
+  "description": "Sure Thing Lending - Business funding platform with loan programs and application system",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"

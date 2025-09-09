@@ -16,7 +16,15 @@ CREATE TABLE IF NOT EXISTS public.current_occupants (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable RLS for current occupants
+-- Enable RLS for current occupantspage-49d468035ca2520e.js:1  POST https://marinabts2.vercel.app/api/contact-submission 500 (Internal Server Error)
+N @ page-49d468035ca2520e.js:1
+iG @ e7327965-dc8f00d07db00fa9.js:1
+(anonymous) @ e7327965-dc8f00d07db00fa9.js:1
+nS @ e7327965-dc8f00d07db00fa9.js:1
+i4 @ e7327965-dc8f00d07db00fa9.js:1
+ce @ e7327965-dc8f00d07db00fa9.js:1
+s9 @ e7327965-dc8f00d07db00fa9.js:1Understand this error
+page-49d468035ca2520e.js:1  POST https://marinabts2.vercel.app/api/contact-submission 500 (Internal Server Error)
 ALTER TABLE public.current_occupants ENABLE ROW LEVEL SECURITY;
 
 -- Admin can manage all current occupants

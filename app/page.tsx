@@ -1,42 +1,32 @@
-import { MarinaHeader } from "@/components/marina-header"
-import { MarinaFooter } from "@/components/marina-footer"
+import { BusinessHeader } from "@/components/business-header"
+import { BusinessFooter } from "@/components/business-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { Shield, Fuel, Wrench, Star, ArrowRight } from "lucide-react"
+import { Shield, Zap, TrendingUp, Star, ArrowRight, DollarSign, Clock, CheckCircle } from "lucide-react"
 import { Suspense } from "react"
-import { DynamicSlipsSection } from "@/components/dynamic-slips-section"
+import { DynamicLoanProgramsSection } from "@/components/dynamic-loan-programs-section"
 
 
 
-function HeroVideoSkeleton() {
+function HeroBackgroundSkeleton() {
   return (
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 animate-pulse" />
+    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-pulse" />
   )
 }
 
-function HeroVideo() {
+function HeroBackground() {
   return (
-    <Suspense fallback={<HeroVideoSkeleton />}>
+    <Suspense fallback={<HeroBackgroundSkeleton />}>
       <div className="absolute inset-0">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: "url('/images/marina-overview.jpg')",
+            backgroundImage: "url('/images/business-hero.jpg')",
           }}
         />
-
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-          poster="/images/marina-overview.jpg"
-        >
-          <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/dji_fly_0_0_0_1726323726600_video_cache%20%281%29-5ZK1KE1Z9PYRlJKRNDVkeJjkpmbQb2.MOV" type="video/mp4" />
-        </video>
+        <div className="absolute inset-0 glass-hero" />
       </div>
     </Suspense>
   )
@@ -45,33 +35,32 @@ function HeroVideo() {
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      <MarinaHeader />
+      <BusinessHeader />
 
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <HeroVideo />
+        <HeroBackground />
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/40" />
 
         <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-5xl">
           <h1 className="font-serif font-black text-4xl sm:text-5xl lg:text-7xl mb-6 leading-tight animate-fade-in-up">
-            Experience Luxury
+            Get the Business Funding
             <br />
-            <span className="text-secondary bg-gradient-to-r from-secondary to-secondary/80 bg-clip-text text-transparent">
-              By The Sea
+            <span className="gradient-text">
+              You Need to Grow
             </span>
           </h1>
           <p className="text-xl sm:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-            Premium floating dock with 24/7 security, and exceptional service at Lauderdale-By-The-Sea's most
-            convenient waterfront marina destination.
+            Fast approval, competitive rates, and flexible terms. Our business loan programs are designed to help your business thrive with the capital it needs to succeed.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
             <Button
               asChild
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 group"
+              className="glass-button text-primary-foreground hover:text-primary-foreground text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 group"
             >
-              <Link href="/slips">
-                View Available Slips
+              <Link href="/onboarding/apply">
+                Apply for Funding
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -81,11 +70,9 @@ export default function HomePage() {
               variant="outline"
               className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-lg px-8 py-4 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              <Link href="/waitlist">Join Waitlist</Link>
+              <Link href="/loans">View Loan Programs</Link>
             </Button>
           </div>
-
-
         </div>
       </section>
 
@@ -94,58 +81,58 @@ export default function HomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground mb-4">
-              Marina By-The-Sea Services
+              Why Choose Sure Thing Lending
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need for the ultimate South Florida boating experience, all in one premium location.
+              We provide the funding solutions your business needs to grow and succeed with competitive rates and exceptional service.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
+            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                  <Zap className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Fast Approval</h3>
+                <p className="text-muted-foreground">
+                  Get approved in as little as 24 hours with our streamlined application process and quick decision making.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
+                  <DollarSign className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform" />
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Competitive Rates</h3>
+                <p className="text-muted-foreground">
+                  Access to competitive interest rates and flexible terms designed to fit your business needs and budget.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
+                  <TrendingUp className="h-8 w-8 text-accent group-hover:scale-110 transition-transform" />
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Growth Focused</h3>
+                <p className="text-muted-foreground">
+                  Our loan programs are specifically designed to support business growth, expansion, and operational needs.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
                   <Shield className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">24/7 Security</h3>
+                <h3 className="font-serif font-semibold text-xl mb-3">Trusted Partner</h3>
                 <p className="text-muted-foreground">
-                  Round-the-clock security monitoring and gated access for complete peace of mind.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Fuel className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Fuel Delivery</h3>
-                <p className="text-muted-foreground">
-                  Local fuel services with competitive pricing facilitate convenient dock-side delivery.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Wrench className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Diesel Engines</h3>
-                <p className="text-muted-foreground">
-                  Our dockmaster specializes in diesel engine maintenance, service, and repairs.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Star className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Locals</h3>
-                <p className="text-muted-foreground">
-                  We have extensive contacts for marine services including provisioning, cleaning, and maintenance.
+                  Licensed under Unbeatable Loans with a proven track record of helping businesses achieve their financial goals.
                 </p>
               </CardContent>
             </Card>
@@ -153,11 +140,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Available Slips Section */}
-      <DynamicSlipsSection />
+      {/* Available Loan Programs Section */}
+      <DynamicLoanProgramsSection />
 
-
-      <MarinaFooter />
+      <BusinessFooter />
     </div>
   )
 }

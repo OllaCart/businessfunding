@@ -19,53 +19,53 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Marina By-The-Sea - Premium Floating Dock Slips in Lauderdale-By-The-Sea",
+  title: "Sure Thing Lending - Business Funding & Loan Programs | Unbeatable Loans",
   description:
-    "Experience luxury on the water at Marina By-The-Sea. Premium floating dock slips with 24/7 access, fuel refueling, and detailing services. Book your slip today in beautiful Lauderdale-By-The-Sea, Florida.",
+    "Get the business funding you need with Sure Thing Lending. Fast approval, competitive rates, and flexible terms for small to medium businesses. Apply today for your business loan.",
   keywords: [
-    "marina",
-    "dock slips",
-    "boat storage",
-    "marine services",
-    "Lauderdale By-The-Sea",
-    "Florida marina",
-    "luxury marina",
-    "boat rental",
-    "harbor",
-    "yacht club",
-    "floating docks",
-    "boat fuel",
-    "marine detailing"
+    "business funding",
+    "business loans",
+    "small business loans",
+    "commercial loans",
+    "business financing",
+    "working capital",
+    "equipment financing",
+    "business credit",
+    "loan programs",
+    "unbeatable loans",
+    "sure thing lending",
+    "business capital",
+    "commercial funding"
   ],
-  authors: [{ name: "Marina By-The-Sea" }],
-  creator: "Marina By-The-Sea",
-  publisher: "Marina By-The-Sea",
+  authors: [{ name: "Unbeatable Loans" }],
+  creator: "Unbeatable Loans",
+  publisher: "Unbeatable Loans",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://marinabts.com"),
+  metadataBase: new URL("https://surethinglending.com"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Marina By-The-Sea - Premium Floating Slips in Lauderdale-By-The-Sea",
-    description: "Experience convenience and luxury on the water in Lauderdale-By-The-Sea with premium floating dock slips, 24/7 access, and full marine services.",
-    url: "https://marinabts.com",
-    siteName: "Marina By-The-Sea",
+    title: "Sure Thing Lending - Business Funding & Loan Programs",
+    description: "Get the business funding you need with competitive rates, fast approval, and flexible terms. Apply today for your business loan with Unbeatable Loans.",
+    url: "https://surethinglending.com",
+    siteName: "Sure Thing Lending",
     images: [
       {
-        url: "/images/marina-logo.svg",
+        url: "/images/business-logo.svg",
         width: 400,
         height: 400,
-        alt: "Marina By-The-Sea Logo - Premium marina services in Lauderdale-By-The-Sea",
+        alt: "Sure Thing Lending Logo - Business funding and loan programs",
       },
       {
-        url: "/images/marina-overview.jpg",
+        url: "/images/business-hero.jpg",
         width: 1200,
         height: 630,
-        alt: "Marina By-The-Sea - Beautiful marina overview with floating dock slips",
+        alt: "Sure Thing Lending - Business funding solutions for growth",
       },
     ],
     locale: "en_US",
@@ -73,9 +73,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Marina By-The-Sea - Premium Dock Slips & Marine Services",
-    description: "Experience luxury on the water with premium dock slips in Lauderdale-By-The-Sea, Florida. 24/7 access, fuel, and full marine services.",
-    images: ["/images/marina-overview.jpg"],
+    title: "Sure Thing Lending - Business Funding & Loan Programs",
+    description: "Get the business funding you need with competitive rates and fast approval. Apply today for your business loan.",
+    images: ["/images/business-hero.jpg"],
   },
   robots: {
     index: true,
@@ -91,9 +91,9 @@ export const metadata: Metadata = {
   generator: "Next.js",
   icons: {
     icon: [
-      { url: "/images/marina-logo.svg", type: "image/svg+xml" }
+      { url: "/images/business-logo.svg", type: "image/svg+xml" }
     ],
-    apple: "/images/marina-logo.svg",
+    apple: "/images/business-logo.svg",
   },
 }
 // suggest changes to the schema.org
@@ -111,50 +111,52 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Marina",
-              name: "Marina By-The-Sea",
-              description: "Premium dock slips and marine services with 24/7 security and concierge services",
-              url: "https://marinabts.com",
-              telephone: "+1-954-790-1588",
-              email: "dylan@dreamsdev.co",
+              "@type": "FinancialService",
+              name: "Sure Thing Lending",
+              description: "Business funding and loan programs with competitive rates, fast approval, and flexible terms for small to medium businesses",
+              url: "https://surethinglending.com",
+              telephone: "+1-800-SURE-LOAN",
+              email: "info@surethinglending.com",
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "230 Basin Drive",
-                addressLocality: "Lauderdale-By-The-Sea",
+                streetAddress: "123 Business Plaza",
+                addressLocality: "Miami",
                 addressRegion: "FL",
-                postalCode: "33308",
+                postalCode: "33101",
                 addressCountry: "US",
               },
-              geo: {
-                "@type": "GeoCoordinates",
-                latitude: 25.26189223,
-                longitude: -80.099866,
-              },
-              openingHours: "Mo-Su 00:00-23:59",
-              priceRange: "$$$",
-              amenityFeature: [
+              openingHours: "Mo-Fr 09:00-18:00",
+              priceRange: "$$",
+              serviceType: [
                 {
-                  "@type": "LocationFeatureSpecification",
-                  name: "24/7 Security",
+                  "@type": "Service",
+                  name: "Business Loans",
+                  description: "Small business loans with competitive rates"
                 },
                 {
-                  "@type": "LocationFeatureSpecification",
-                  name: "Fuel Refuelling",
+                  "@type": "Service", 
+                  name: "Working Capital",
+                  description: "Working capital financing for business operations"
                 },
                 {
-                  "@type": "LocationFeatureSpecification",
-                  name: "Detailing Service",
+                  "@type": "Service",
+                  name: "Equipment Financing",
+                  description: "Equipment financing for business growth"
                 },
                 {
-                  "@type": "LocationFeatureSpecification",
-                  name: "Maintenance Referrals",
-                },
+                  "@type": "Service",
+                  name: "Commercial Loans",
+                  description: "Commercial real estate and business loans"
+                }
               ],
-              hasMap: "https://maps.google.com/?q=25.26189223,-80.099866",
               areaServed: {
-                "@type": "City",
-                name: "Lauderdale-By-The-Sea"
+                "@type": "Country",
+                name: "United States"
               },
+              provider: {
+                "@type": "Organization",
+                name: "Unbeatable Loans"
+              }
             }),
           }}
         />
