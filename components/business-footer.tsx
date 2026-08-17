@@ -101,7 +101,7 @@ export function BusinessFooter() {
         <div className="border-t border-border/50 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-muted-foreground">
-              <p>&copy; 2024 Sure Thing Lending. All rights reserved.</p>
+              <p>&copy; 2026 Sure Thing Lending. All rights reserved.</p>
               <p className="mt-1">Licensed under Unbeatable Loans | Equal Housing Lender</p>
             </div>
             <div className="flex space-x-6 text-sm">

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 
@@ -27,9 +26,6 @@ export function BusinessHeader() {
             </Link>
             <Link href="/about" className="text-foreground hover:text-primary transition-colors">
               About
-            </Link>
-            <Link href="/posts" className="text-foreground hover:text-primary transition-colors">
-              Resources
             </Link>
             <Link href="/contact" className="text-foreground hover:text-primary transition-colors">
               Contact
@@ -62,13 +58,6 @@ export function BusinessHeader() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
-              </Link>
-              <Link
-                href="/posts"
-                className="text-foreground hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Resources
               </Link>
               <Link
                 href="/contact"

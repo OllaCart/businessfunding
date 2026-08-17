@@ -1,0 +1,28 @@
+---
+description: Git identity and GitHub settings for this project
+alwaysApply: true
+---
+
+# Git & GitHub — businessfunding
+
+## Commit identity
+
+- Always commit as **John Pastre** `<john@ollacart.com>`.
+- Use the repo-local git config (`user.name`, `user.email`) — do not change global git config.
+- Push to **https://github.com/OllaCart/businessfunding.git** using the **OllaCart** GitHub account.
+
+## No Cursor attribution
+
+- Never add `Co-authored-by: Cursor` or any Cursor agent attribution to commit messages.
+- Keep commit messages professional and focused on the change only.
+
+## Example commit
+
+```bash
+git commit -m "$(cat <<'EOF'
+Short summary of the change.
+
+Optional one-sentence explanation of why.
+EOF
+)"
+```

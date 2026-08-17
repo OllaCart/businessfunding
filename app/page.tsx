@@ -2,11 +2,10 @@ import { BusinessHeader } from "@/components/business-header"
 import { BusinessFooter } from "@/components/business-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
-import { Shield, Zap, TrendingUp, Star, ArrowRight, DollarSign, Clock, CheckCircle } from "lucide-react"
+import { Shield, Zap, TrendingUp, ArrowRight, DollarSign } from "lucide-react"
 import { Suspense } from "react"
-import { DynamicLoanProgramsSection } from "@/components/dynamic-loan-programs-section"
+// Removed loan programs section - focusing on application flow
 
 
 
@@ -140,8 +139,83 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Available Loan Programs Section */}
-      <DynamicLoanProgramsSection />
+      {/* Application Process Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">
+              Simple Application Process
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Get funded in 3 easy steps - it only takes a few minutes to complete your application
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-primary">1</span>
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Apply Online</h3>
+                <p className="text-muted-foreground">
+                  Complete our simple online application with your business and personal information. 
+                  It takes just a few minutes.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-secondary">2</span>
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Quick Review</h3>
+                <p className="text-muted-foreground">
+                  Our team reviews your application and may request additional documentation. 
+                  We typically respond within 24 hours.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-accent">3</span>
+                </div>
+                <h3 className="font-serif font-semibold text-xl mb-3">Get Funded</h3>
+                <p className="text-muted-foreground">
+                  Once approved, funds are typically deposited into your business account 
+                  within 1-3 business days.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 gradient-primary text-primary-foreground">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-4">Ready to Grow Your Business?</h2>
+          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
+            Join businesses across the country that trust Sure Thing Lending for fast, flexible funding.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary" className="bg-white hover:bg-white/90 text-primary">
+              <Link href="/onboarding/apply">Start Your Application</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-white/30 text-white hover:bg-white/10 bg-transparent"
+            >
+              <Link href="/contact">Talk to a Specialist</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
       <BusinessFooter />
     </div>
