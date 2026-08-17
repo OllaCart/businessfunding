@@ -15,6 +15,7 @@ alwaysApply: true
 
 - Never add `Co-authored-by: Cursor` or any Cursor agent attribution to commit messages.
 - Keep commit messages professional and focused on the change only.
+- Cursor may inject a co-author line automatically; if it appears, rewrite the commit with `git commit-tree` and verify the message is clean before pushing.
 
 ## Example commit
 
