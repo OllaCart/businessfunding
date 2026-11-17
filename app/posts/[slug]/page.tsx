@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { MarinaHeader } from "@/components/marina-header"
-import { MarinaFooter } from "@/components/marina-footer"
+import { BusinessHeader } from "@/components/business-header"
+import { BusinessFooter } from "@/components/business-footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     }
 
     const title = post.meta_title || post.title
-    const description = post.meta_description || post.excerpt || "Marina update and news from Marina By-The-Sea."
+    const description = post.meta_description || post.excerpt || "A note from Sure Thing Lending on business funding."
 
     return {
       title,
@@ -210,7 +210,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <MarinaHeader />
+      <BusinessHeader />
 
       <article className="pt-24 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,7 +248,7 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.admin_profiles && (
                 <div className="flex items-center space-x-1">
                   <User className="h-4 w-4" />
-                  <span>By {post.admin_profiles.full_name || "Marina Staff"}</span>
+                  <span>By {post.admin_profiles.full_name || "Sure Thing Lending"}</span>
                 </div>
               )}
               <div className="flex items-center space-x-1">
@@ -301,8 +301,8 @@ export default async function PostPage({ params }: PostPageProps) {
                 </div>
                 <div className="flex gap-2">
                   <ShareButton 
-                    title={post.title || "Marina Update"} 
-                    excerpt={post.excerpt || post.title || "Marina Update"}
+                    title={post.title || "Funding note"} 
+                    excerpt={post.excerpt || post.title || "Funding note"}
                   />
                 </div>
               </div>
@@ -358,13 +358,13 @@ export default async function PostPage({ params }: PostPageProps) {
       {/* CTA Section */}
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-6">Questions About This Update?</h2>
+          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-6">Looking for a funding path?</h2>
           <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Our marina team is here to help. Contact us for more information or to discuss how this affects your slip.
+            The guides explain the options. The contact form is for a pointer, not a rate quote.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-secondary hover:bg-secondary/90">
-              <Link href="/contact">Contact Marina Office</Link>
+              <Link href="/guides">Read the guides</Link>
             </Button>
             <Button
               asChild
@@ -372,13 +372,13 @@ export default async function PostPage({ params }: PostPageProps) {
               variant="outline"
               className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
             >
-              <Link href="/slips">View Available Slips</Link>
+              <Link href="/contact">Ask which path fits</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <MarinaFooter />
+      <BusinessFooter />
     </div>
   )
   } catch (error) {

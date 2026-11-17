@@ -1,47 +1,26 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next"
+import { SITE_URL } from "@/lib/site"
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.com'
-  
-  // Static pages
-  const staticPages = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/slips`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/waitlist`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/posts`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.9,
-    },
+  const paths = [
+    { path: "", priority: 1, changeFrequency: "weekly" as const },
+    { path: "/loans", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "/guides", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "/guides/working-capital", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/guides/equipment-and-inventory", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/guides/commercial-property", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/guides/how-funding-works", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/about", priority: 0.7, changeFrequency: "monthly" as const },
+    { path: "/contact", priority: 0.6, changeFrequency: "yearly" as const },
+    { path: "/disclosures", priority: 0.3, changeFrequency: "yearly" as const },
+    { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
+    { path: "/terms", priority: 0.3, changeFrequency: "yearly" as const },
   ]
 
-  return staticPages
+  return paths.map((page) => ({
+    url: `${SITE_URL}${page.path}`,
+    lastModified: new Date(),
+    changeFrequency: page.changeFrequency,
+    priority: page.priority,
+  }))
 }

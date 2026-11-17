@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
-import { MarinaHeader } from "@/components/marina-header"
-import { MarinaFooter } from "@/components/marina-footer"
+import { BusinessHeader } from "@/components/business-header"
+import { BusinessFooter } from "@/components/business-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -81,18 +81,18 @@ export default async function PostsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MarinaHeader />
+      <BusinessHeader />
 
       {/* Hero Section */}
       <section className="pt-24 pb-16 bg-gradient-to-br from-primary/5 to-secondary/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
-              Marina Updates
+              Notes
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Stay informed with the latest news, events, and updates from Marina By-The-Sea. From new amenities to
-              seasonal information, we keep you connected to everything happening at our marina.
+              Occasional notes on business funding. The standing explanations live in the guides, which do not depend on
+              this list.
             </p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default async function PostsPage() {
                           {posts[0].admin_profiles && (
                             <div className="flex items-center space-x-1">
                               <User className="h-4 w-4" />
-                              <span>{posts[0].admin_profiles.full_name || "Marina Staff"}</span>
+                              <span>{posts[0].admin_profiles.full_name || "Sure Thing Lending"}</span>
                             </div>
                           )}
                         </div>
@@ -180,7 +180,7 @@ export default async function PostsPage() {
                               <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <Calendar className="h-6 w-6 text-primary" />
                               </div>
-                              <p className="text-sm text-muted-foreground">Marina Update</p>
+                              <p className="text-sm text-muted-foreground">Note</p>
                             </div>
                           )}
                         </div>
@@ -228,11 +228,11 @@ export default async function PostsPage() {
                 <p className="text-muted-foreground mb-6">
                   {posts === null 
                     ? "Unable to load posts at this time. Please try again later."
-                    : "We haven't published any updates yet. Check back soon for the latest marina news and announcements."
+                    : "No notes are published yet. The funding guides are the place to start."
                   }
                 </p>
                 <Button asChild className="bg-primary hover:bg-primary/90">
-                  <Link href="/contact">Contact Us for Information</Link>
+                  <Link href="/guides">Read the guides</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -243,22 +243,22 @@ export default async function PostsPage() {
       {/* Newsletter CTA */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Stay Updated</h2>
+          <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Start with a guide</h2>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Never miss important marina updates, events, or announcements. Join our community to stay informed.
+            The guides explain working capital, equipment, and property loans without a rate sheet.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
-              <Link href="/waitlist">Join Our Community</Link>
+              <Link href="/guides">Read the guides</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/contact">Contact Marina Office</Link>
+              <Link href="/contact">Ask which path fits</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <MarinaFooter />
+      <BusinessFooter />
     </div>
   )
 }

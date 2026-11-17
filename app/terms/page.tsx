@@ -1,6 +1,13 @@
 import { BusinessHeader } from "@/components/business-header"
 import { BusinessFooter } from "@/components/business-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { pageMetadata } from "@/lib/site"
+
+export const metadata = pageMetadata(
+  "Terms",
+  "Terms for using Sure Thing Lending, an informational business-funding referral site. Guides are not loan offers.",
+  "/terms",
+)
 
 export default function TermsPage() {
   return (
@@ -31,8 +38,8 @@ export default function TermsPage() {
                 <h2>5. Accuracy of Materials</h2>
                 <p>The materials appearing on Sure Thing Lending's website could include technical, typographical, or photographic errors. Sure Thing Lending does not warrant that any of the materials on its website are accurate, complete, or current.</p>
                 
-                <h2>6. Links</h2>
-                <p>Sure Thing Lending has not reviewed all of the sites linked to its website and is not responsible for the contents of any such linked site. The inclusion of any link does not imply endorsement by Sure Thing Lending of the site.</p>
+                <h2>6. Links and referrals</h2>
+                <p>Pages on this site link to related properties when that property is a relevant next step for the reader. Those links are intentional referrals, and the common ownership is disclosed on the Disclosures page. Sure Thing Lending does not control those sites and is not responsible for their content, rates, or product terms. A link is not a loan offer and not a promise that you will be approved.</p>
                 
                 <h2>7. Modifications</h2>
                 <p>Sure Thing Lending may revise these terms of service for its website at any time without notice. By using this website you are agreeing to be bound by the then current version of these terms of service.</p>
