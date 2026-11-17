@@ -16,6 +16,10 @@ export default function WorkingCapitalGuidePage() {
       title="Working capital and getting paid"
       lede="A cash gap has two different fixes. One is borrowing against the business. The other is changing how client money arrives. Pick the one that matches the cause."
       breadcrumb={{ href: "/guides", label: "Guides" }}
+      image={{
+        src: "/images/working-capital.jpg",
+        alt: "Envelopes and a calculator on a small-business desk, standing in for a cash-flow gap.",
+      }}
     >
       <section className="space-y-3">
         <h2 className="font-serif font-bold text-2xl text-foreground">What working capital is for</h2>

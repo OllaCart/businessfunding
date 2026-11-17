@@ -16,6 +16,10 @@ export default function EquipmentGuidePage() {
       title="Equipment and inventory"
       lede="Financing a purchase only makes sense after you know what you are buying and what it costs from more than one seller. The loan, the lease, and the cash price are three different deals."
       breadcrumb={{ href: "/guides", label: "Guides" }}
+      image={{
+        src: "/images/equipment-inventory.jpg",
+        alt: "A commercial mixer beside shelves of plain boxes in a workshop.",
+      }}
     >
       <section className="space-y-3">
         <h2 className="font-serif font-bold text-2xl text-foreground">Equipment is not the same as a cash gap</h2>

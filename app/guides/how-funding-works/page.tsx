@@ -15,6 +15,10 @@ export default function HowFundingWorksPage() {
       title="How to compare a funding offer"
       lede="A useful offer can be read without a teaser rate. These are the items that change what you will actually pay, and the pages to open once you know which kind of money you need."
       breadcrumb={{ href: "/guides", label: "Guides" }}
+      image={{
+        src: "/images/compare-offers.jpg",
+        alt: "Two stacks of blank paper and a pen, ready for comparing a funding offer.",
+      }}
     >
       <section className="space-y-3">
         <h2 className="font-serif font-bold text-2xl text-foreground">Name the job first</h2>

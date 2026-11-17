@@ -16,6 +16,10 @@ export default function CommercialPropertyGuidePage() {
       title="Commercial and investment property"
       lede="If the money buys or carries real estate, you are in mortgage products. The useful next step is a licensed broker that publishes the rate, not a generic business-funding form."
       breadcrumb={{ href: "/guides", label: "Guides" }}
+      image={{
+        src: "/images/commercial-property.jpg",
+        alt: "A two-story brick commercial building with a ground-floor storefront.",
+      }}
     >
       <section className="space-y-3">
         <h2 className="font-serif font-bold text-2xl text-foreground">Match the product to the property</h2>

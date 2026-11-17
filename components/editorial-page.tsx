@@ -8,12 +8,14 @@ export function EditorialPage({
   title,
   lede,
   breadcrumb,
+  image,
   children,
 }: {
   eyebrow?: string
   title: string
   lede: string
   breadcrumb?: { href: string; label: string }
+  image?: { src: string; alt: string }
   children: ReactNode
 }) {
   return (
@@ -35,6 +37,11 @@ export function EditorialPage({
               {eyebrow && <p className="text-sm font-semibold uppercase tracking-wide text-primary mb-3">{eyebrow}</p>}
               <h1 className="font-serif font-bold text-4xl sm:text-5xl text-foreground mb-6 leading-tight">{title}</h1>
               <p className="text-xl text-muted-foreground leading-relaxed">{lede}</p>
+              {image && (
+                <figure className="mt-8">
+                  <img src={image.src} alt={image.alt} className="w-full h-64 sm:h-80 object-cover rounded-xl" />
+                </figure>
+              )}
             </div>
           </div>
         </header>

@@ -4,26 +4,19 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowRight, ArrowUpRight, Building2, ShoppingBag, Wallet } from "lucide-react"
-import { Suspense } from "react"
+import { fundingProgramCount } from "@/lib/funding-programs"
 import { ollaCart, swiftfi, unbeatableLoans } from "@/lib/site"
-
-function HeroBackgroundSkeleton() {
-  return <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-pulse" />
-}
 
 function HeroBackground() {
   return (
-    <Suspense fallback={<HeroBackgroundSkeleton />}>
-      <div className="absolute inset-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/images/business-hero.jpg')",
-          }}
-        />
-        <div className="absolute inset-0 glass-hero" />
-      </div>
-    </Suspense>
+    <div className="absolute inset-0">
+      <img
+        src="/images/business-hero.jpg"
+        alt="A neighborhood bakery and a workshop on the same block, the kind of businesses this guide is written for."
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 glass-hero" />
+    </div>
   )
 }
 
@@ -37,6 +30,8 @@ const paths = [
     externalNote: "Swiftfi gives US clients a US bank account and settles you in stablecoin. It is not a loan.",
     guideHref: "/guides/working-capital",
     guideLabel: "Read the working-capital guide",
+    image: "/images/working-capital.jpg",
+    imageAlt: "Envelopes and a calculator on a small-business desk, standing in for a cash-flow gap.",
   },
   {
     icon: ShoppingBag,
@@ -47,6 +42,8 @@ const paths = [
     externalNote: "OllaCart is a universal cart: save products from any store, then check out on that store's site.",
     guideHref: "/guides/equipment-and-inventory",
     guideLabel: "Read the equipment and inventory guide",
+    image: "/images/equipment-inventory.jpg",
+    imageAlt: "A commercial mixer beside shelves of plain boxes in a workshop.",
   },
   {
     icon: Building2,
@@ -57,6 +54,8 @@ const paths = [
     externalNote: `Unbeatable Loans is a licensed mortgage broker (NMLS #${unbeatableLoans.nmls}) and arranges loans with other lenders.`,
     guideHref: "/guides/commercial-property",
     guideLabel: "Read the property guide",
+    image: "/images/commercial-property.jpg",
+    imageAlt: "A two-story brick commercial building with a ground-floor storefront.",
   },
 ]
 
@@ -110,8 +109,11 @@ export default function HomePage() {
               Start with the use of funds
             </h2>
             <p className="text-xl text-muted-foreground">
-              The useful question is what the money is for. Each path below has one guide on this site and one related
-              site that can take the next action.
+              The useful question is what the money is for.{" "}
+              <Link href="/loans" className="text-primary font-medium hover:underline">
+                {fundingProgramCount} funding paths
+              </Link>{" "}
+              are explained on this site. Three of them have a related site that can take the next action.
             </p>
           </div>
 
@@ -119,7 +121,8 @@ export default function HomePage() {
             {paths.map((path) => {
               const Icon = path.icon
               return (
-                <Card key={path.title} className="glass-card hover:shadow-xl transition-shadow">
+                <Card key={path.title} className="glass-card hover:shadow-xl transition-shadow overflow-hidden">
+                  <img src={path.image} alt={path.imageAlt} className="h-44 w-full object-cover" />
                   <CardContent className="p-8 flex flex-col h-full">
                     <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-5">
                       <Icon className="h-7 w-7 text-primary" aria-hidden="true" />

@@ -37,6 +37,10 @@ export default function AboutPage() {
       eyebrow="About"
       title="A referral guide, not a rate advertisement"
       lede="Sure Thing Lending exists to explain business funding in plain language and to send you onward when a specific next step is actually useful. It does not quote rates, promise approval, or lend under its own license."
+      image={{
+        src: "/images/about-desk.jpg",
+        alt: "A closed notebook, a blank sheet, a pencil, and a cup on a wooden desk.",
+      }}
     >
       <section className="space-y-3">
         <h2 className="font-serif font-bold text-2xl text-foreground">What we do</h2>
