@@ -363,84 +363,46 @@ export async function sendContactConfirmationToUser(submission: ContactSubmissio
   
   try {
     const emailContent = `
-Thank you for contacting Marina By-The-Sea!
+We received your question — Sure Thing Lending
 
 Dear ${submission.name},
 
-Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.
+We received your note. If there is a guide or a related site that matches what you described, that is the reply to expect. This message is not a loan application, a rate quote, or an approval.
 
-📋 MESSAGE DETAILS:
-Subject: ${submission.subject || 'General Inquiry'}
+What you sent:
+Subject: ${submission.subject || 'General question'}
 Message: ${submission.message}
 Submitted: ${new Date(submission.created_at).toLocaleString()}
 
-📧 OUR RESPONSE:
-We typically respond within 24-48 hours during business days.
+Guides: https://surethinglending.com/guides
 
-🚤 ABOUT MARINA BY-THE-SEA:
-We offer premium floating dock slips in beautiful Lauderdale-By-The-Sea, Florida, with:
-• 24/7 access to your vessel
-• Fuel refueling services
-• Marine detailing services
-• Professional marina staff
-
-If you have any urgent questions, please call us directly.
-
-Best regards,
-The Marina By-The-Sea Team
+Sure Thing Lending
     `.trim()
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
-          🚤 Thank you for contacting Marina By-The-Sea!
+          We received your question
         </h2>
-        
+        <p style="color: #374151; font-size: 16px;">Dear <strong>${submission.name}</strong>,</p>
         <p style="color: #374151; font-size: 16px;">
-          Dear <strong>${submission.name}</strong>,
+          We received your note. If there is a guide or a related site that matches what you described, that is the reply to expect. This message is not a loan application, a rate quote, or an approval.
         </p>
-        
-        <p style="color: #374151; font-size: 16px;">
-          Thank you for reaching out to us. We have received your message and will get back to you as soon as possible.
-        </p>
-        
         <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #374151; margin-top: 0;">📋 MESSAGE DETAILS</h3>
-          <p><strong>Subject:</strong> ${submission.subject || 'General Inquiry'}</p>
+          <p><strong>Subject:</strong> ${submission.subject || 'General question'}</p>
           <p><strong>Message:</strong> ${submission.message}</p>
           <p><strong>Submitted:</strong> ${new Date(submission.created_at).toLocaleString()}</p>
         </div>
-        
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #0c4a6e; margin-top: 0;">📧 OUR RESPONSE</h3>
-          <p style="margin: 0;">We typically respond within 24-48 hours during business days.</p>
-        </div>
-        
-        <div style="background: #ecfdf5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #065f46; margin-top: 0;">🚤 ABOUT MARINA BY-THE-SEA</h3>
-          <p style="margin: 0;">We offer premium floating dock slips in beautiful Lauderdale-By-The-Sea, Florida, with:</p>
-          <ul style="margin: 10px 0; padding-left: 20px;">
-            <li>24/7 access to your vessel</li>
-            <li>Fuel refueling services</li>
-            <li>Marine detailing services</li>
-            <li>Professional marina staff</li>
-          </ul>
-      </div>
-      
-        <p style="color: #374151; font-size: 14px;">
-          If you have any urgent questions, please call us directly.
-        </p>
-        
         <p style="color: #374151; font-size: 16px;">
-          Best regards,<br>
-          The Marina By-The-Sea Team
-      </p>
-    </div>
-  `
+          <a href="https://surethinglending.com/guides">Read the funding guides</a>
+        </p>
+        <p style="color: #374151; font-size: 16px;">Sure Thing Lending</p>
+      </div>
+    `
 
     await sendGmailMessage(
       submission.email,
-      '🚤 Thank you for contacting Marina By-The-Sea!',
+      'We received your question — Sure Thing Lending',
       emailContent,
       htmlContent
     )
@@ -464,45 +426,33 @@ export async function sendContactNotificationToAdmins(submission: ContactSubmiss
       return
     }
 
+    const adminUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://surethinglending.com'
     const emailContent = `
-New Contact Form Submission - Marina By-The-Sea
+New funding question — Sure Thing Lending
 
-📋 SUBMISSION DETAILS:
 Name: ${submission.name}
 Email: ${submission.email}
 Phone: ${submission.phone || 'Not provided'}
-Subject: ${submission.subject || 'General Inquiry'}
+Subject: ${submission.subject || 'General question'}
 Message: ${submission.message}
 
-📅 SUBMITTED: ${new Date(submission.created_at).toLocaleString()}
-
-🔗 VIEW IN ADMIN: ${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.com'}/admin/contacts
-
----
-This is an automated notification from Marina By-The-Sea
+Submitted: ${new Date(submission.created_at).toLocaleString()}
+Admin: ${adminUrl}/admin/contacts
     `.trim()
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1f2937; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
-          🚤 New Contact Form Submission - Marina By-The-Sea
+          New funding question
         </h2>
-        
         <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #374151; margin-top: 0;">📋 SUBMISSION DETAILS</h3>
           <p><strong>Name:</strong> ${submission.name}</p>
           <p><strong>Email:</strong> ${submission.email}</p>
           <p><strong>Phone:</strong> ${submission.phone || 'Not provided'}</p>
-          <p><strong>Subject:</strong> ${submission.subject || 'General Inquiry'}</p>
+          <p><strong>Subject:</strong> ${submission.subject || 'General question'}</p>
           <p><strong>Message:</strong> ${submission.message}</p>
         </div>
-        
-        <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://marinabts.com'}/admin/contacts" 
-             style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-            View in Admin Panel
-          </p>
-        </div>
+        <p><a href="${adminUrl}/admin/contacts">View in admin</a></p>
       </div>
     `
 
@@ -511,7 +461,7 @@ This is an automated notification from Marina By-The-Sea
       try {
         await sendGmailMessage(
           adminEmail,
-          '🚤 New Contact Form Submission - Marina By-The-Sea',
+          'New funding question — Sure Thing Lending',
           emailContent,
           htmlContent
         )

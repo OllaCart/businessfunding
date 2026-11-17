@@ -19,27 +19,23 @@ const openSans = Open_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Sure Thing Lending - Business Funding & Loan Programs | Unbeatable Loans",
+  title: {
+    default: "Sure Thing Lending | Business funding, explained",
+    template: "%s | Sure Thing Lending",
+  },
   description:
-    "Get the business funding you need with Sure Thing Lending. Fast approval, competitive rates, and flexible terms for small to medium businesses. Apply today for your business loan.",
+    "Sure Thing Lending explains working capital, equipment purchases, and property loans in plain language, then refers you to a next step that fits. No rates and no approval promises.",
   keywords: [
     "business funding",
-    "business loans",
-    "small business loans",
-    "commercial loans",
-    "business financing",
     "working capital",
     "equipment financing",
-    "business credit",
-    "loan programs",
-    "unbeatable loans",
+    "commercial property loans",
+    "business funding guide",
     "sure thing lending",
-    "business capital",
-    "commercial funding"
   ],
-  authors: [{ name: "Unbeatable Loans" }],
-  creator: "Unbeatable Loans",
-  publisher: "Unbeatable Loans",
+  authors: [{ name: "Sure Thing Lending" }],
+  creator: "Sure Thing Lending",
+  publisher: "Sure Thing Lending",
   formatDetection: {
     email: false,
     address: false,
@@ -50,8 +46,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Sure Thing Lending - Business Funding & Loan Programs",
-    description: "Get the business funding you need with competitive rates, fast approval, and flexible terms. Apply today for your business loan with Unbeatable Loans.",
+    title: "Sure Thing Lending | Business funding, explained",
+    description:
+      "Plain-language guides to business funding, with a referral to the next step that matches the use of funds.",
     url: "https://surethinglending.com",
     siteName: "Sure Thing Lending",
     images: [
@@ -59,13 +56,13 @@ export const metadata: Metadata = {
         url: "/images/business-logo.svg",
         width: 400,
         height: 400,
-        alt: "Sure Thing Lending Logo - Business funding and loan programs",
+        alt: "Sure Thing Lending",
       },
       {
         url: "/images/business-hero.jpg",
         width: 1200,
         height: 630,
-        alt: "Sure Thing Lending - Business funding solutions for growth",
+        alt: "Sure Thing Lending, a business funding referral guide",
       },
     ],
     locale: "en_US",
@@ -73,8 +70,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sure Thing Lending - Business Funding & Loan Programs",
-    description: "Get the business funding you need with competitive rates and fast approval. Apply today for your business loan.",
+    title: "Sure Thing Lending | Business funding, explained",
+    description:
+      "Plain-language guides to business funding, with a referral to the next step that matches the use of funds.",
     images: ["/images/business-hero.jpg"],
   },
   robots: {
@@ -111,52 +109,16 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "FinancialService",
+              "@type": "WebSite",
               name: "Sure Thing Lending",
-              description: "Business funding and loan programs with competitive rates, fast approval, and flexible terms for small to medium businesses",
               url: "https://surethinglending.com",
-              telephone: "+1-800-SURE-LOAN",
-              email: "info@surethinglending.com",
-              address: {
-                "@type": "PostalAddress",
-                streetAddress: "123 Business Plaza",
-                addressLocality: "Miami",
-                addressRegion: "FL",
-                postalCode: "33101",
-                addressCountry: "US",
-              },
-              openingHours: "Mo-Fr 09:00-18:00",
-              priceRange: "$$",
-              serviceType: [
-                {
-                  "@type": "Service",
-                  name: "Business Loans",
-                  description: "Small business loans with competitive rates"
-                },
-                {
-                  "@type": "Service", 
-                  name: "Working Capital",
-                  description: "Working capital financing for business operations"
-                },
-                {
-                  "@type": "Service",
-                  name: "Equipment Financing",
-                  description: "Equipment financing for business growth"
-                },
-                {
-                  "@type": "Service",
-                  name: "Commercial Loans",
-                  description: "Commercial real estate and business loans"
-                }
-              ],
-              areaServed: {
-                "@type": "Country",
-                name: "United States"
-              },
-              provider: {
+              description:
+                "Plain-language guides to business funding. The site explains working capital, equipment purchases, and property loans, then refers readers to a fitting next step.",
+              publisher: {
                 "@type": "Organization",
-                name: "Unbeatable Loans"
-              }
+                name: "Sure Thing Lending",
+                url: "https://surethinglending.com",
+              },
             }),
           }}
         />

@@ -1,6 +1,13 @@
 import { BusinessHeader } from "@/components/business-header"
 import { BusinessFooter } from "@/components/business-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { pageMetadata } from "@/lib/site"
+
+export const metadata = pageMetadata(
+  "Privacy",
+  "How Sure Thing Lending handles information you send through the contact form, and how outbound links to related sites work.",
+  "/privacy",
+)
 
 export default function PrivacyPage() {
   return (
@@ -35,7 +42,7 @@ export default function PrivacyPage() {
                 <p>We use cookies and similar tracking technologies to enhance your experience on our website and analyze usage patterns.</p>
                 
                 <h2>7. Third-Party Services</h2>
-                <p>Our website may contain links to third-party websites. We are not responsible for the privacy practices of these external sites.</p>
+                <p>Some pages link to related sites (Swiftfi, Unbeatable Loans, and OllaCart) when that site is a useful next step. Those sites have their own privacy practices. The relationship is described on the Disclosures page.</p>
                 
                 <h2>8. Changes to This Policy</h2>
                 <p>We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page.</p>

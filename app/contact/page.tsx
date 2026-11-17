@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { MapPin, Phone, Mail, Clock, CheckCircle } from "lucide-react"
+import { CheckCircle } from "lucide-react"
+import Link from "next/link"
 import { createPublicClient } from "@/lib/supabase/public"
 
 export default function ContactPage() {
@@ -80,11 +81,11 @@ export default function ContactPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
-              Contact Us
+              Ask which path fits
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Have questions about business funding? Our lending specialists are ready to help you find the right
-              solution for your business.
+              Tell us what the money is for. We will point you at a guide on this site, or at a related site that does
+              that job. A reply is a referral, not a rate quote or an approval.
             </p>
           </div>
         </div>
@@ -94,70 +95,48 @@ export default function ContactPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div>
-              <h2 className="font-serif font-bold text-3xl text-foreground mb-8">Get In Touch</h2>
+              <h2 className="font-serif font-bold text-3xl text-foreground mb-8">Before you write</h2>
 
               <div className="space-y-6">
                 <Card className="glass-card">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Office</h3>
-                        <p className="text-muted-foreground">
-                          123 Business Plaza
-                          <br />
-                          Miami, FL 33101
-                        </p>
-                      </div>
-                    </div>
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-semibold text-lg">Read the matching guide</h3>
+                    <p className="text-muted-foreground">
+                      Most questions are already answered, without a rate, in the{" "}
+                      <Link href="/guides" className="text-primary font-medium hover:underline">
+                        funding guides
+                      </Link>
+                      .
+                    </p>
                   </CardContent>
                 </Card>
 
                 <Card className="glass-card">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Phone className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Phone</h3>
-                        <p className="text-muted-foreground">(800) SURE-LOAN</p>
-                      </div>
-                    </div>
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-semibold text-lg">Property and home loans</h3>
+                    <p className="text-muted-foreground">
+                      If you already know you need a mortgage, a commercial property loan, a bridge loan, a DSCR loan,
+                      or a fix-and-flip loan, skip this form.{" "}
+                      <a
+                        href="https://unbeatableloans.com"
+                        target="_blank"
+                        rel="noopener"
+                        className="text-primary font-medium hover:underline"
+                      >
+                        Unbeatable Loans
+                      </a>{" "}
+                      is the licensed mortgage broker (NMLS #1827883) that publishes those rates. It is a related site.
+                    </p>
                   </CardContent>
                 </Card>
 
                 <Card className="glass-card">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Mail className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Email</h3>
-                        <p className="text-muted-foreground">info@surethinglending.com</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="glass-card">
-                  <CardContent className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Clock className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg mb-1">Business Hours</h3>
-                        <p className="text-muted-foreground">
-                          Monday - Friday: 9:00 AM - 6:00 PM EST
-                          <br />
-                          Saturday - Sunday: Closed
-                        </p>
-                      </div>
-                    </div>
+                  <CardContent className="p-6 space-y-3">
+                    <h3 className="font-semibold text-lg">What to include</h3>
+                    <p className="text-muted-foreground">
+                      Say what the funds would pay for, roughly how much, and how the business gets paid. Do not send a
+                      Social Security number or a full account number in this form.
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -176,7 +155,8 @@ export default function ContactPage() {
                       </div>
                       <h3 className="font-semibold text-xl mb-2">Message Sent!</h3>
                       <p className="text-muted-foreground mb-6">
-                        Thank you for reaching out. A lending specialist will get back to you within one business day.
+                        Thank you. If there is a guide or a related site that fits what you described, that is the
+                        reply you should expect. This message is not an application and it does not reserve a rate.
                       </p>
                       <Button onClick={() => setIsSubmitted(false)} variant="outline">
                         Send Another Message
@@ -231,7 +211,7 @@ export default function ContactPage() {
                             type="text"
                             value={formData.subject}
                             onChange={handleChange}
-                            placeholder="Funding inquiry, rates, etc."
+                            placeholder="Working capital, equipment, property..."
                           />
                         </div>
                       </div>

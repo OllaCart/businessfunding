@@ -1,187 +1,104 @@
-import { BusinessHeader } from "@/components/business-header"
-import { BusinessFooter } from "@/components/business-footer"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Users, Award, Clock, Shield, TrendingUp, DollarSign } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { EditorialPage } from "@/components/editorial-page"
+import { ollaCart, pageMetadata, swiftfi, unbeatableLoans } from "@/lib/site"
+
+export const metadata = pageMetadata(
+  "About Sure Thing Lending",
+  "Sure Thing Lending is a plain-language referral guide to business funding. It explains options and points readers to Swiftfi, Unbeatable Loans, or OllaCart only when that site is the right next step.",
+  "/about",
+)
+
+const related = [
+  {
+    name: swiftfi.name,
+    url: swiftfi.url,
+    role: "Getting paid",
+    body: "Swiftfi gives freelancers and individuals US bank details so US clients can pay by ACH or wire. The payout settles in stablecoin. Use it when the problem is slow payment, not when you need to borrow.",
+  },
+  {
+    name: unbeatableLoans.name,
+    url: unbeatableLoans.url,
+    role: "Mortgages and property",
+    body: `Unbeatable Loans is a licensed mortgage broker (NMLS #${unbeatableLoans.nmls}). It publishes rates for home loans and for investor products such as DSCR, fix and flip, bridge, and commercial, and it arranges those loans with other lenders.`,
+  },
+  {
+    name: ollaCart.name,
+    url: ollaCart.url,
+    role: "Comparing purchases",
+    body: "OllaCart is a universal shopping cart. Save equipment, inventory, or supplies from any store, then check out on the store’s own site. Use it to price a purchase before you decide how to pay for it. It does not lend.",
+  },
+]
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <BusinessHeader />
-
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-primary/5 to-secondary/5">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="font-serif font-bold text-4xl sm:text-5xl lg:text-6xl text-foreground mb-6">
-              About Sure Thing Lending
-            </h1>
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Your trusted partner for business funding solutions. We help businesses grow and succeed with fast, flexible, and competitive loan programs.
-            </p>
-          </div>
-        </div>
+    <EditorialPage
+      eyebrow="About"
+      title="A referral guide, not a rate advertisement"
+      lede="Sure Thing Lending exists to explain business funding in plain language and to send you onward when a specific next step is actually useful. It does not quote rates, promise approval, or lend under its own license."
+    >
+      <section className="space-y-3">
+        <h2 className="font-serif font-bold text-2xl text-foreground">What we do</h2>
+        <p className="text-muted-foreground">
+          Readers arrive with a cash gap, a purchase, or a property. Those are different products. The{" "}
+          <Link href="/loans" className="text-primary font-medium hover:underline">
+            funding options
+          </Link>{" "}
+          page and the{" "}
+          <Link href="/guides" className="text-primary font-medium hover:underline">
+            guides
+          </Link>{" "}
+          sort them. If you want a person to point at the right one, the{" "}
+          <Link href="/contact" className="text-primary font-medium hover:underline">
+            contact form
+          </Link>{" "}
+          is a referral question, not an application.
+        </p>
       </section>
 
-      {/* Story Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-6">Our Mission</h2>
-              <div className="space-y-4 text-muted-foreground">
-                <p>
-                  At Sure Thing Lending, we believe that every business deserves access to the capital it needs to grow and succeed. 
-                  We're not just another lending company – we're your strategic partner in business growth.
-                </p>
-                <p>
-                  Licensed under Unbeatable Loans, we provide fast, flexible, and competitive business funding solutions 
-                  tailored to meet the unique needs of small to medium-sized businesses across the United States.
-                </p>
-                <p>
-                  Our streamlined application process and quick approval times mean you can get the funding you need 
-                  when you need it most. We understand that time is money, and we're committed to getting you funded quickly.
-                </p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="w-full h-64 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <DollarSign className="h-16 w-16 text-primary mx-auto mb-4" />
-                  <p className="text-lg font-semibold text-foreground">Business Funding Solutions</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <section className="space-y-3">
+        <h2 className="font-serif font-bold text-2xl text-foreground">What we do not do</h2>
+        <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
+          <li>We do not publish interest rates, approval times, or loan amounts.</li>
+          <li>We do not claim a lending license or an NMLS number for this website.</li>
+          <li>We do not present customer counts or testimonials we cannot source.</li>
+          <li>We do not put the same outbound links on every page.</li>
+        </ul>
       </section>
 
-      {/* Values Section */}
-      <section className="py-16 bg-muted">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Our Values</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              These core principles guide everything we do at Sure Thing Lending.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Speed</h3>
-                <p className="text-muted-foreground">
-                  We understand that business opportunities don't wait. Our streamlined process gets you approved 
-                  and funded in as little as 24 hours, so you can seize opportunities when they arise.
-                </p>
+      <section className="space-y-4">
+        <h2 className="font-serif font-bold text-2xl text-foreground">Related sites, and the job each one does</h2>
+        <p className="text-muted-foreground">
+          Swiftfi, Unbeatable Loans, and OllaCart are in the same ownership group as this site. Each one is linked from
+          the guide that matches its job, and from this page so the relationship is visible. Details are also in the{" "}
+          <Link href="/disclosures" className="text-primary font-medium hover:underline">
+            disclosures
+          </Link>
+          .
+        </p>
+        <div className="space-y-4">
+          {related.map((site) => (
+            <Card key={site.url} className="glass-card">
+              <CardContent className="p-6">
+                <p className="text-sm font-semibold text-primary mb-1">{site.role}</p>
+                <h3 className="font-serif font-semibold text-xl mb-2">{site.name}</h3>
+                <p className="text-muted-foreground mb-4">{site.body}</p>
+                <a href={site.url} target="_blank" rel="noopener" className="font-medium text-primary hover:underline">
+                  Visit {site.name}
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
               </CardContent>
             </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-secondary" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Trust</h3>
-                <p className="text-muted-foreground">
-                  Licensed under Unbeatable Loans, we maintain the highest standards of integrity and transparency. 
-                  Your business success is our success, and we're committed to building long-term partnerships.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-8 w-8 text-accent" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Growth</h3>
-                <p className="text-muted-foreground">
-                  We're not just providing loans – we're investing in your business's future. Our flexible terms 
-                  and competitive rates are designed to support your growth journey.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">Why Choose Sure Thing Lending?</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              We make business funding simple, fast, and accessible.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary">24h</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Fast Approval</h3>
-              <p className="text-sm text-muted-foreground">Get approved in as little as 24 hours</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-secondary">$10K</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Flexible Amounts</h3>
-              <p className="text-sm text-muted-foreground">From $10,000 to $5,000,000</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-accent">4%</span>
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Competitive Rates</h3>
-              <p className="text-sm text-muted-foreground">Starting as low as 4% APR</p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Expert Support</h3>
-              <p className="text-sm text-muted-foreground">Dedicated team to help you succeed</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact CTA */}
-      <section className="py-16 gradient-primary text-primary-foreground">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-6">Ready to Get Funded?</h2>
-          <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Join thousands of businesses that have trusted Sure Thing Lending for their funding needs. 
-            Apply today and get the capital your business needs to grow.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="bg-white hover:bg-white/90 text-primary">
-              <Link href="/onboarding/apply">Apply Now</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/30 text-white hover:bg-white/10 bg-transparent"
-            >
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <BusinessFooter />
-    </div>
+      <div>
+        <Button asChild className="glass-button text-primary-foreground">
+          <Link href="/guides">Start with the guides</Link>
+        </Button>
+      </div>
+    </EditorialPage>
   )
 }

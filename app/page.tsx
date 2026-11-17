@@ -3,16 +3,12 @@ import { BusinessFooter } from "@/components/business-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
-import { Shield, Zap, TrendingUp, ArrowRight, DollarSign } from "lucide-react"
+import { ArrowRight, ArrowUpRight, Building2, ShoppingBag, Wallet } from "lucide-react"
 import { Suspense } from "react"
-// Removed loan programs section - focusing on application flow
-
-
+import { ollaCart, swiftfi, unbeatableLoans } from "@/lib/site"
 
 function HeroBackgroundSkeleton() {
-  return (
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-pulse" />
-  )
+  return <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 animate-pulse" />
 }
 
 function HeroBackground() {
@@ -31,179 +27,178 @@ function HeroBackground() {
   )
 }
 
+const paths = [
+  {
+    icon: Wallet,
+    title: "Cash is slow to arrive",
+    body: "A funding conversation often starts because clients pay late. Borrowing covers the gap. Getting paid on a faster rail can remove the gap.",
+    externalHref: swiftfi.url,
+    externalLabel: "See how Swiftfi pays freelancers",
+    externalNote: "Swiftfi gives US clients a US bank account and settles you in stablecoin. It is not a loan.",
+    guideHref: "/guides/working-capital",
+    guideLabel: "Read the working-capital guide",
+  },
+  {
+    icon: ShoppingBag,
+    title: "You need equipment or inventory",
+    body: "Price the purchase before you finance it. A loan, a lease, and paying cash are different deals, and the right one depends on what you are buying.",
+    externalHref: ollaCart.url,
+    externalLabel: "Compare purchases in OllaCart",
+    externalNote: "OllaCart is a universal cart: save products from any store, then check out on that store's site.",
+    guideHref: "/guides/equipment-and-inventory",
+    guideLabel: "Read the equipment and inventory guide",
+  },
+  {
+    icon: Building2,
+    title: "The asset is property",
+    body: "A shop, a rental, a flip, or a home is a mortgage conversation, not a generic business-loan form. Rates for those products are published elsewhere.",
+    externalHref: unbeatableLoans.url,
+    externalLabel: "Open Unbeatable Loans",
+    externalNote: `Unbeatable Loans is a licensed mortgage broker (NMLS #${unbeatableLoans.nmls}) and arranges loans with other lenders.`,
+    guideHref: "/guides/commercial-property",
+    guideLabel: "Read the property guide",
+  },
+]
+
 export default function HomePage() {
   return (
     <div className="min-h-screen">
       <BusinessHeader />
 
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
         <HeroBackground />
-
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/40" />
 
-        <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-5xl">
-          <h1 className="font-serif font-black text-4xl sm:text-5xl lg:text-7xl mb-6 leading-tight animate-fade-in-up">
-            Get the Business Funding
+        <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-4xl py-28">
+          <p className="text-sm font-semibold uppercase tracking-wide text-white/80 mb-4">Business funding referral guide</p>
+          <h1 className="font-serif font-black text-4xl sm:text-5xl lg:text-6xl mb-6 leading-tight">
+            Find the funding path
             <br />
-            <span className="gradient-text">
-              You Need to Grow
-            </span>
+            <span className="gradient-text">that matches the problem</span>
           </h1>
-          <p className="text-xl sm:text-2xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-200">
-            Fast approval, competitive rates, and flexible terms. Our business loan programs are designed to help your business thrive with the capital it needs to succeed.
+          <p className="text-lg sm:text-xl mb-8 text-white/90 max-w-3xl mx-auto leading-relaxed">
+            Sure Thing Lending explains working capital, equipment purchases, and property loans in plain language, then
+            sends you to a next step that actually does that job. This site does not quote rates or promise an approval.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
               size="lg"
-              className="glass-button text-primary-foreground hover:text-primary-foreground text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300 group"
+              className="glass-button text-primary-foreground hover:text-primary-foreground text-lg px-8 py-4"
             >
-              <Link href="/onboarding/apply">
-                Apply for Funding
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <Link href="/loans">
+                See funding options
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <Button
               asChild
               size="lg"
               variant="outline"
-              className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-lg px-8 py-4 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-lg px-8 py-4 backdrop-blur-sm"
             >
-              <Link href="/loans">View Loan Programs</Link>
+              <Link href="/guides">Read the guides</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="py-20 bg-background scroll-mt-16" id="services">
+      <section className="py-20 bg-background" id="paths">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
             <h2 className="font-serif font-bold text-3xl sm:text-4xl lg:text-5xl text-foreground mb-4">
-              Why Choose Sure Thing Lending
+              Start with the use of funds
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              We provide the funding solutions your business needs to grow and succeed with competitive rates and exceptional service.
+            <p className="text-xl text-muted-foreground">
+              The useful question is what the money is for. Each path below has one guide on this site and one related
+              site that can take the next action.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Zap className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Fast Approval</h3>
-                <p className="text-muted-foreground">
-                  Get approved in as little as 24 hours with our streamlined application process and quick decision making.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-secondary/20 transition-colors">
-                  <DollarSign className="h-8 w-8 text-secondary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Competitive Rates</h3>
-                <p className="text-muted-foreground">
-                  Access to competitive interest rates and flexible terms designed to fit your business needs and budget.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
-                  <TrendingUp className="h-8 w-8 text-accent group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Growth Focused</h3>
-                <p className="text-muted-foreground">
-                  Our loan programs are specifically designed to support business growth, expansion, and operational needs.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                  <Shield className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Trusted Partner</h3>
-                <p className="text-muted-foreground">
-                  Licensed under Unbeatable Loans with a proven track record of helping businesses achieve their financial goals.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {paths.map((path) => {
+              const Icon = path.icon
+              return (
+                <Card key={path.title} className="glass-card hover:shadow-xl transition-shadow">
+                  <CardContent className="p-8 flex flex-col h-full">
+                    <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-5">
+                      <Icon className="h-7 w-7 text-primary" aria-hidden="true" />
+                    </div>
+                    <h3 className="font-serif font-semibold text-2xl mb-3">{path.title}</h3>
+                    <p className="text-muted-foreground mb-4">{path.body}</p>
+                    <p className="text-sm text-muted-foreground mb-6">{path.externalNote}</p>
+                    <div className="mt-auto space-y-3">
+                      <a
+                        href={path.externalHref}
+                        target="_blank"
+                        rel="noopener"
+                        className="inline-flex items-center font-semibold text-primary hover:underline"
+                      >
+                        {path.externalLabel}
+                        <ArrowUpRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                      <div>
+                        <Link href={path.guideHref} className="inline-flex items-center text-foreground hover:text-primary">
+                          {path.guideLabel}
+                          <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </div>
       </section>
 
-      {/* Application Process Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4">
-              Simple Application Process
+          <div className="max-w-3xl mx-auto">
+            <h2 className="font-serif font-bold text-3xl sm:text-4xl text-foreground mb-4 text-center">
+              What this site will not tell you
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Get funded in 3 easy steps - it only takes a few minutes to complete your application
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-primary">1</span>
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Apply Online</h3>
-                <p className="text-muted-foreground">
-                  Complete our simple online application with your business and personal information. 
-                  It takes just a few minutes.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-secondary">2</span>
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Quick Review</h3>
-                <p className="text-muted-foreground">
-                  Our team reviews your application and may request additional documentation. 
-                  We typically respond within 24 hours.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center hover:shadow-lg transition-shadow glass-card">
-              <CardContent className="p-8">
-                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-bold text-accent">3</span>
-                </div>
-                <h3 className="font-serif font-semibold text-xl mb-3">Get Funded</h3>
-                <p className="text-muted-foreground">
-                  Once approved, funds are typically deposited into your business account 
-                  within 1-3 business days.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+              <Card className="glass-card">
+                <CardContent className="p-6">
+                  <h3 className="font-serif font-semibold text-lg mb-2">A rate</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Price depends on the lender, the product, and your file. A number printed here would be a guess.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-6">
+                  <h3 className="font-serif font-semibold text-lg mb-2">An approval</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Reading a guide does not apply for credit. Nobody on this site can promise a yes or a funding date.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="glass-card">
+                <CardContent className="p-6">
+                  <h3 className="font-serif font-semibold text-lg mb-2">Our own license</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Mortgage licensing sits with Unbeatable Loans, NMLS #{unbeatableLoans.nmls}. This guide is not that license.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 gradient-primary text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-4">Ready to Grow Your Business?</h2>
+          <h2 className="font-serif font-bold text-3xl sm:text-4xl mb-4">Not sure which path fits?</h2>
           <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-            Join businesses across the country that trust Sure Thing Lending for fast, flexible funding.
+            Describe the business and what the money is for. We will point you at the guide, or at the related site, that
+            matches. That reply is a referral, not a loan offer.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white hover:bg-white/90 text-primary">
-              <Link href="/onboarding/apply">Start Your Application</Link>
+              <Link href="/contact">Ask which path fits</Link>
             </Button>
             <Button
               asChild
@@ -211,7 +206,7 @@ export default function HomePage() {
               variant="outline"
               className="border-white/30 text-white hover:bg-white/10 bg-transparent"
             >
-              <Link href="/contact">Talk to a Specialist</Link>
+              <Link href="/guides/how-funding-works">How to compare an offer</Link>
             </Button>
           </div>
         </div>

@@ -828,6 +828,18 @@ function LoanApplicationForm() {
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
+            <div className="mb-8 rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+              This form is not a rate quote and not an approval. Sure Thing Lending does not publish rates or a lending
+              license.               For a mortgage or commercial property loan, start at{" "}
+              <a href="https://unbeatableloans.com" className="text-primary font-medium hover:underline" target="_blank" rel="noopener">
+                Unbeatable Loans
+              </a>
+              . For any other question, the{" "}
+              <Link href="/contact" className="text-primary font-medium hover:underline">
+                contact form
+              </Link>{" "}
+              is the referral path. Do not enter a Social Security number if you only wanted an explanation.
+            </div>
             {/* Progress Steps */}
             <div className="mb-8">
               <div className="flex items-center justify-between">
