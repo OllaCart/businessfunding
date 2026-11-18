@@ -56,7 +56,7 @@ export const fundingPrograms: FundingProgram[] = [
     summary:
       "Property has its own products: commercial mortgages, bridge loans, DSCR loans for rentals, and fix-and-flip loans. A home purchase is in this family too.",
     detail:
-      "These are mortgage products arranged by a licensed broker. The guide links to Unbeatable Loans, NMLS 1827883, where those rates are published. That license is not this site’s.",
+      "These are mortgage products. The guide links to Unbeatable Loans, where those rates are published. NMLS #1827883 is John Pastre’s, not this site’s and not Unbeatable Loans’.",
   },
 ]
 
