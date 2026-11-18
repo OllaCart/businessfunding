@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { ArrowRight, ArrowUpRight, Building2, ShoppingBag, Wallet } from "lucide-react"
 import { fundingProgramCount } from "@/lib/funding-programs"
-import { ollaCart, swiftfi, unbeatableLoans } from "@/lib/site"
+import { johnPastre, ollaCart, swiftfi, unbeatableLoans } from "@/lib/site"
 
 function HeroBackground() {
   return (
@@ -51,7 +51,7 @@ const paths = [
     body: "A shop, a rental, a flip, or a home is a mortgage conversation, not a generic business-loan form. Rates for those products are published elsewhere.",
     externalHref: unbeatableLoans.url,
     externalLabel: "Open Unbeatable Loans",
-    externalNote: `Unbeatable Loans is a licensed mortgage broker (NMLS #${unbeatableLoans.nmls}) and arranges loans with other lenders.`,
+    externalNote: `Unbeatable Loans arranges loans with other lenders and publishes those rates. NMLS #${johnPastre.nmls} is ${johnPastre.name}’s.`,
     guideHref: "/guides/commercial-property",
     guideLabel: "Read the property guide",
     image: "/images/commercial-property.jpg",
@@ -183,7 +183,7 @@ export default function HomePage() {
                 <CardContent className="p-6">
                   <h3 className="font-serif font-semibold text-lg mb-2">Our own license</h3>
                   <p className="text-muted-foreground text-sm">
-                    Mortgage licensing sits with Unbeatable Loans, NMLS #{unbeatableLoans.nmls}. This guide is not that license.
+                    NMLS #{johnPastre.nmls} belongs to {johnPastre.name}. This website does not hold that license, and the number is not Unbeatable Loans’.
                   </p>
                 </CardContent>
               </Card>

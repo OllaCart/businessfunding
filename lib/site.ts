@@ -9,11 +9,15 @@ export const swiftfi = {
   note: "Related site in the same ownership group.",
 }
 
+export const johnPastre = {
+  name: "John Pastre",
+  nmls: "1827883",
+}
+
 export const unbeatableLoans = {
   name: "Unbeatable Loans",
   url: "https://unbeatableloans.com",
-  nmls: "1827883",
-  note: "Related site in the same ownership group. Unbeatable Loans is the licensed mortgage broker.",
+  note: "Related site in the same ownership group. It publishes mortgage rates and arranges loans with other lenders.",
 }
 
 export const ollaCart = {

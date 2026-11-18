@@ -2,7 +2,7 @@ import Link from "next/link"
 import { BusinessHeader } from "@/components/business-header"
 import { BusinessFooter } from "@/components/business-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { pageMetadata, unbeatableLoans, swiftfi, ollaCart } from "@/lib/site"
+import { johnPastre, pageMetadata, unbeatableLoans, swiftfi, ollaCart } from "@/lib/site"
 
 export const metadata = pageMetadata(
   "Disclosures",
@@ -69,9 +69,7 @@ export default function DisclosuresPage() {
                       >
                         Unbeatable Loans
                       </a>{" "}
-                      is a licensed mortgage broker, NMLS #{unbeatableLoans.nmls}. It arranges home and investor
-                      property loans with other lenders and publishes those rates. That license is theirs. It is not a
-                      license for Sure Thing Lending.
+                      arranges home and investor property loans with other lenders and publishes those rates. NMLS #{johnPastre.nmls} belongs to {johnPastre.name}. It is not a license number for Unbeatable Loans or for Sure Thing Lending.
                     </li>
                     <li>
                       <a href={ollaCart.url} className="text-primary hover:underline" target="_blank" rel="noopener">

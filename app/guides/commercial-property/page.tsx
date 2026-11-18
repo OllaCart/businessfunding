@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { EditorialPage } from "@/components/editorial-page"
 import { NextStep } from "@/components/next-step"
-import { pageMetadata, unbeatableLoans } from "@/lib/site"
+import { johnPastre, pageMetadata, unbeatableLoans } from "@/lib/site"
 
 export const metadata = pageMetadata(
   "Commercial and investment property loans",
-  "What commercial, bridge, DSCR, and fix-and-flip loans are for. Unbeatable Loans, NMLS 1827883, publishes those rates and arranges the loan.",
+  `What commercial, bridge, DSCR, and fix-and-flip loans are for. Unbeatable Loans publishes those rates and arranges the loan. NMLS ${johnPastre.nmls} is ${johnPastre.name}’s.`,
   "/guides/commercial-property",
 )
 
@@ -81,9 +81,10 @@ export default function CommercialPropertyGuidePage() {
         note={unbeatableLoans.note}
       >
         <p>
-          Unbeatable Loans is a licensed mortgage broker, NMLS #{unbeatableLoans.nmls}. It publishes rates for
-          conventional, FHA, VA, and USDA loans, and for investor products including DSCR, fix and flip, bridge, and
-          commercial. You can add a home, see a rate and cash to close, and send one application to its lender network.
+          Unbeatable Loans publishes rates for conventional, FHA, VA, and USDA loans, and for investor products
+          including DSCR, fix and flip, bridge, and commercial. NMLS #{johnPastre.nmls} is {johnPastre.name}’s, not a
+          license number for Unbeatable Loans or for this site. You can add a home, see a rate and cash to close, and
+          send one application to its lender network.
           Homebuyer use is free. Investor loan products are on its $99/month Investor plan. That fee is their published
           plan price, not a loan rate from Sure Thing Lending.
         </p>
