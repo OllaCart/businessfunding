@@ -125,7 +125,8 @@ export default function ContactPage() {
                       >
                         Unbeatable Loans
                       </a>{" "}
-                      is the licensed mortgage broker (NMLS #1827883) that publishes those rates. It is a related site.
+                      publishes those rates and arranges those loans with other lenders. NMLS #1827883 is John Pastre’s.
+                      Unbeatable Loans is a related site.
                     </p>
                   </CardContent>
                 </Card>

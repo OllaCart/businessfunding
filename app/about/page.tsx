@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { EditorialPage } from "@/components/editorial-page"
-import { ollaCart, pageMetadata, swiftfi, unbeatableLoans } from "@/lib/site"
+import { johnPastre, ollaCart, pageMetadata, swiftfi, unbeatableLoans } from "@/lib/site"
 
 export const metadata = pageMetadata(
   "About Sure Thing Lending",
@@ -21,7 +21,7 @@ const related = [
     name: unbeatableLoans.name,
     url: unbeatableLoans.url,
     role: "Mortgages and property",
-    body: `Unbeatable Loans is a licensed mortgage broker (NMLS #${unbeatableLoans.nmls}). It publishes rates for home loans and for investor products such as DSCR, fix and flip, bridge, and commercial, and it arranges those loans with other lenders.`,
+    body: `Unbeatable Loans publishes rates for home loans and for investor products such as DSCR, fix and flip, bridge, and commercial, and it arranges those loans with other lenders. NMLS #${johnPastre.nmls} is ${johnPastre.name}’s.`,
   },
   {
     name: ollaCart.name,
